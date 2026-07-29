@@ -296,16 +296,20 @@
 
             <!-- PEJABAT TTD VIEW -->
             <div id="penandatangan" class="page-view">
-                <h3 class="mb-4">Pejabat Penandatangan</h3>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3>Pejabat Penandatangan</h3>
+                    <button class="btn btn-primary" onclick="openModal('modalPejabat')">
+                        <i class="fas fa-plus me-1"></i> Tambah Pejabat
+                    </button>
+                </div>
                 <div class="card">
-                    <div class="card-body">
-                        <table class="table table-hover">
+                    <div class="card-body table-responsive">
+                        <p class="text-muted">Pejabat yang di-set AKTIF akan otomatis muncul di tanda tangan cetakan Surat Tugas dan SPPD.</p>
+                        <table id="tablePejabat" class="table table-striped table-hover w-100">
                             <thead>
-                                <tr><th>Nama Kepala</th><th>NIP</th><th>Jabatan</th><th>Status TTD</th></tr>
+                                <tr><th>No</th><th>Nama Kepala</th><th>NIP</th><th>Jabatan</th><th>Status TTD</th><th>Aksi</th></tr>
                             </thead>
-                            <tbody>
-                                <tr><td>Ir. Nama Kepala Dinas, M.Si</td><td>19700101 199503 1 001</td><td>Kepala Dinas</td><td><span class="badge bg-success">AKTIF</span></td></tr>
-                            </tbody>
+                            <tbody id="tbodyPejabat"></tbody>
                         </table>
                     </div>
                 </div>
@@ -559,6 +563,39 @@
     </div>
 </div>
 
+<!-- MODAL PEJABAT TTD -->
+<div class="modal fade" id="modalPejabat" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Form Pejabat Penandatangan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formPejabat" onsubmit="savePejabat(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="pejabatId">
+                    <div class="mb-3">
+                        <label class="form-label">Nama Lengkap (beserta Gelar)</label>
+                        <input type="text" class="form-control" id="pejabatNama" placeholder="Contoh: Dr. H. Budi, M.Si" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">NIP</label>
+                        <input type="text" class="form-control" id="pejabatNIP" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jabatan (Untuk TTD)</label>
+                        <input type="text" class="form-control" id="pejabatJabatan" placeholder="Contoh: KEPALA DINAS" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- PRINT TEMPLATE -->
 <div id="print-area" style="display: none;">
     <div class="kop-surat">
@@ -621,10 +658,10 @@
         <div class="signature-box">
             Ditetapkan di: Kota Dummy<br>
             Pada Tanggal: <span id="print-tgl-tetap">1 Agustus 2026</span><br>
-            <strong>KEPALA DINAS</strong>
+            <strong id="print-ttd-jabatan">KEPALA DINAS</strong>
             <div class="signature-space"></div>
-            <u><strong>IR. NAMA KEPALA DINAS, M.Si</strong></u><br>
-            NIP. 19700101 199503 1 001
+            <u><strong id="print-ttd-nama">IR. NAMA KEPALA DINAS, M.Si</strong></u><br>
+            NIP. <span id="print-ttd-nip">19700101 199503 1 001</span>
         </div>
     </div>
 </div>
@@ -707,11 +744,15 @@
             active: true
         }
     ];
+    let cachedPejabat = [
+        { id: 'PJ1', nama: 'Ir. Nama Kepala Dinas, M.Si', nip: '19700101 199503 1 001', jabatan: 'KEPALA DINAS', active: true }
+    ];
     let cachedST = [];
 
     let tablePegawai = null;
     let tableDPA = null;
     let tableKop = null;
+    let tablePejabat = null;
     let tableST = null;
     let myChart = null;
 
@@ -740,6 +781,7 @@
                 tablePegawai = $('#tablePegawai').DataTable({ responsive: true });
                 tableDPA = $('#tableDPA').DataTable({ responsive: true });
                 tableKop = $('#tableKop').DataTable({ responsive: true });
+                tablePejabat = $('#tablePejabat').DataTable({ responsive: true });
                 tableST = $('#tableST').DataTable({ responsive: true });
             }
         } catch(e) {
@@ -752,6 +794,7 @@
         try { loadPegawai(); } catch(e) { console.warn("Pegawai Load Notice:", e); }
         try { loadDPA(); } catch(e) { console.warn("DPA Load Notice:", e); }
         try { loadKopSurat(); } catch(e) { console.warn("KopSurat Load Notice:", e); }
+        try { loadPejabat(); } catch(e) { console.warn("Pejabat Load Notice:", e); }
         try { loadST(); } catch(e) { console.warn("ST Load Notice:", e); }
     });
 
@@ -769,6 +812,10 @@
                 const f = document.getElementById('formKop');
                 if (f) f.reset();
                 $('#kopId').val('');
+            } else if (modalId === 'modalPejabat') {
+                const f = document.getElementById('formPejabat');
+                if (f) f.reset();
+                $('#pejabatId').val('');
             } else if (modalId === 'modalST') {
                 const f = document.getElementById('formST');
                 if (f) f.reset();
@@ -1036,6 +1083,115 @@
     }
     window.deleteKopSurat = deleteKopSurat;
 
+    async function loadPejabat() {
+        if (tablePejabat) {
+            tablePejabat.clear();
+            cachedPejabat.forEach((p, index) => {
+                const statusBadge = p.active 
+                    ? '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> AKTIF</span>' 
+                    : '<span class="badge bg-secondary">TIDAK AKTIF</span>';
+                
+                const btnSetAktif = p.active 
+                    ? '' 
+                    : `<button class="btn btn-sm btn-outline-success me-1" onclick="setActivePejabat('${p.id}')" title="Gunakan Pejabat Ini"><i class="fas fa-check"></i> Gunakan</button>`;
+
+                tablePejabat.row.add([
+                    index + 1, p.nama || '-', p.nip || '-', p.jabatan || '-', statusBadge,
+                    `${btnSetAktif}
+                     <button class="btn btn-sm btn-info me-1" onclick="editPejabat('${p.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                     <button class="btn btn-sm btn-danger" onclick="deletePejabat('${p.id}')" title="Hapus"><i class="fas fa-trash"></i></button>`
+                ]);
+            });
+            tablePejabat.draw();
+        }
+    }
+    window.loadPejabat = loadPejabat;
+
+    async function savePejabat(e) {
+        if (e) e.preventDefault();
+        const id = $('#pejabatId').val();
+        const payload = {
+            id: id || generateId(),
+            nama: $('#pejabatNama').val(),
+            nip: $('#pejabatNIP').val(),
+            jabatan: $('#pejabatJabatan').val(),
+            active: false
+        };
+
+        Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        setTimeout(() => {
+            if (id) {
+                const index = cachedPejabat.findIndex(p => p.id === id);
+                if(index > -1) {
+                    payload.active = cachedPejabat[index].active;
+                    cachedPejabat[index] = payload;
+                }
+            } else {
+                payload.active = cachedPejabat.length === 0; // Jika pertama, jadikan aktif otomatis
+                cachedPejabat.push(payload);
+            }
+
+            closeModalAndCleanup('modalPejabat');
+            Swal.fire('Tersimpan!', 'Data Pejabat berhasil disimpan.', 'success');
+            loadPejabat();
+        }, 500);
+    }
+    window.savePejabat = savePejabat;
+
+    function editPejabat(id) {
+        const item = cachedPejabat.find(p => String(p.id) === String(id));
+        if (item) {
+            $('#pejabatId').val(item.id || '');
+            $('#pejabatNama').val(item.nama || '');
+            $('#pejabatNIP').val(item.nip || '');
+            $('#pejabatJabatan').val(item.jabatan || '');
+            openModal('modalPejabat');
+        }
+    }
+    window.editPejabat = editPejabat;
+
+    async function setActivePejabat(id) {
+        Swal.fire({ title: 'Mengaktifkan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        setTimeout(() => {
+            cachedPejabat.forEach(p => p.active = (p.id === id));
+            Swal.fire('Berhasil', 'Pejabat Penandatangan aktif berhasil diperbarui.', 'success');
+            loadPejabat();
+        }, 500);
+    }
+    window.setActivePejabat = setActivePejabat;
+
+    async function deletePejabat(id) {
+        if (cachedPejabat.length <= 1) {
+            Swal.fire('Perhatian', 'Minimal harus ada 1 Pejabat Penandatangan tersimpan.', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Hapus Pejabat?',
+            text: "Data pejabat ini akan dihapus.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Hapus'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                setTimeout(() => {
+                    const item = cachedPejabat.find(p => p.id === id);
+                    cachedPejabat = cachedPejabat.filter(p => p.id !== id);
+                    if(item && item.active && cachedPejabat.length > 0) {
+                        cachedPejabat[0].active = true;
+                    }
+                    Swal.fire('Terhapus!', 'Data Pejabat telah dihapus.', 'success');
+                    loadPejabat();
+                }, 500);
+            }
+        });
+    }
+    window.deletePejabat = deletePejabat;
+
     async function loadDPA() {
         if (tableDPA) {
             tableDPA.clear();
@@ -1177,7 +1333,16 @@
         }
         $('#print-pegawai-list').html(listPegawai);
 
+        // Ambil pengaturan Kop Surat
         previewKopSurat();
+
+        // Ambil pengaturan Pejabat TTD aktif
+        const activePejabat = cachedPejabat.find(p => p.active) || cachedPejabat[0] || {
+            nama: '.......................', nip: '.......................', jabatan: '.......................'
+        };
+        $('#print-ttd-jabatan').text(activePejabat.jabatan);
+        $('#print-ttd-nama').text(activePejabat.nama.toUpperCase());
+        $('#print-ttd-nip').text(activePejabat.nip);
 
         $('#print-area').show();
         window.print();
