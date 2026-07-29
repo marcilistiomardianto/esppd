@@ -676,6 +676,27 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+    // =========================================================================
+    // KONFIGURASI SUPABASE DATABASE
+    // Ganti nilai di bawah ini dengan URL & Anon Key dari Dashboard Supabase Anda
+    // (Project Settings -> API)
+    // =========================================================================
+    const SUPABASE_URL = 'https://bmbzoguskapeotwfvdrz.supabase.co'; // Contoh: 'https://xyzabc123.supabase.co'
+    const SUPABASE_ANON_KEY = 'sb_publishable_vPygC6tHUWpX9MJvcj-QEQ_QH0Ggo7m'; // Contoh: 'eyJhbGciOiJIUzI1NiIsInR5...'
+
+    // Inisialisasi Supabase Client jika Kredensial telah Diisi
+    let supabaseClient = null;
+    try {
+        if (typeof supabase !== 'undefined' && SUPABASE_URL && SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log("✅ Supabase Client berhasil terhubung!");
+        } else {
+            console.info("ℹ️ Supabase menggunakan Kredensial Placeholder. Mode penyimpanan lokal (LocalStorage) aktif.");
+        }
+    } catch (err) {
+        console.warn("⚠️ Gagal inisialisasi Supabase, beralih ke LocalStorage:", err);
+    }
+
     // Pure Vanilla JS Navigation Functions defined at top-level scope
     function switchView(viewId) {
         if (!viewId) return;
@@ -732,7 +753,7 @@
         { id: 'P2', nama: 'Siti Aminah, ST', nip: '199002022015022002', golongan: 'Penata Muda Tk.I - III/b', jabatan: 'Analis Sistem' }
     ];
     let cachedDPA = JSON.parse(localStorage.getItem('esppd_dpa')) || [
-        { id: 'DPA-1', kodeRekening: '5.1.02.04.01.0001', program: 'Program Dukungan Manajemen', kegiatan: 'Pelaksanaan Perjalanan Dinas Biasa', subKegiatan: 'Koordinasi dan Konsultasi SKPD', tahun: '2026' }
+        { id: 'DPA-1', kode_rekening: '5.1.02.04.01.0001', program: 'Program Dukungan Manajemen', kegiatan: 'Pelaksanaan Perjalanan Dinas Biasa', sub_kegiatan: 'Koordinasi dan Konsultasi SKPD', tahun: '2026' }
     ];
     let cachedKopSurat = JSON.parse(localStorage.getItem('esppd_kopsurat')) || [
         {
@@ -850,22 +871,33 @@
         $('body').removeClass('modal-open').css('padding-right', '');
     }
 
-    // MOCK DATABASE DENGAN LOKAL ARRAY UNTUK PREVIEW
-    // Supabase calls are mocked here to prevent fetch errors in the demo.
     const generateId = () => Math.random().toString(36).substr(2, 9);
 
     async function loadDashboard() {
         try {
             $('#count-pegawai').text(cachedPegawai.length || 0);
             $('#count-st').text(cachedST.length || 0);
-            $('#count-sppd').text(cachedST.length || 0); // Asumsi 1 ST = 1 SPPD
+            $('#count-sppd').text(cachedST.length || 0);
             $('#count-laporan').text(0);
         } catch(e) {
             console.error("Dashboard error:", e);
         }
     }
 
+    // --- INTEGRASI SUPABASE: DATA PEGAWAI ---
     async function loadPegawai() {
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('pegawai').select('*').order('created_at', { ascending: false });
+                if (!error && data) {
+                    cachedPegawai = data;
+                    saveToStorage();
+                }
+            } catch(e) {
+                console.warn("Gagal sinkronisasi Pegawai dari Supabase:", e);
+            }
+        }
+
         if (tablePegawai) {
             tablePegawai.clear();
             cachedPegawai.forEach((p, index) => {
@@ -894,7 +926,6 @@
         if (e) e.preventDefault();
         const id = $('#pegawaiId').val();
         const payload = {
-            id: id || generateId(),
             nama: $('#pegawaiNama').val(),
             nip: $('#pegawaiNIP').val(),
             golongan: $('#pegawaiGolongan').val(),
@@ -903,18 +934,35 @@
         
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
+        if (supabaseClient) {
+            try {
+                if (id) {
+                    await supabaseClient.from('pegawai').update(payload).eq('id', id);
+                } else {
+                    await supabaseClient.from('pegawai').insert([payload]);
+                }
+                closeModalAndCleanup('modalPegawai');
+                Swal.fire('Berhasil', 'Data Pegawai berhasil tersimpan ke Supabase', 'success');
+                await loadPegawai();
+                await loadDashboard();
+                return;
+            } catch(err) {
+                console.error("Gagal simpan ke Supabase, mengalihkan ke mode lokal:", err);
+            }
+        }
+
         setTimeout(() => {
+            const localPayload = { id: id || generateId(), ...payload };
             if (id) {
                 const index = cachedPegawai.findIndex(p => p.id === id);
-                if(index > -1) cachedPegawai[index] = payload;
+                if(index > -1) cachedPegawai[index] = localPayload;
             } else {
-                cachedPegawai.push(payload);
+                cachedPegawai.push(localPayload);
             }
 
             saveToStorage();
-
             closeModalAndCleanup('modalPegawai');
-            Swal.fire('Berhasil', 'Data Pegawai berhasil disimpan', 'success');
+            Swal.fire('Berhasil', 'Data Pegawai berhasil disimpan (Mode Lokal)', 'success');
             loadPegawai();
             loadDashboard();
         }, 500);
@@ -946,6 +994,19 @@
         }).then(async (result) => {
             if (result.isConfirmed) {
                 Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                if (supabaseClient) {
+                    try {
+                        await supabaseClient.from('pegawai').delete().eq('id', id);
+                        Swal.fire('Terhapus!', 'Data pegawai telah dihapus dari Supabase.', 'success');
+                        await loadPegawai();
+                        await loadDashboard();
+                        return;
+                    } catch(err) {
+                        console.error("Gagal hapus di Supabase:", err);
+                    }
+                }
+
                 setTimeout(() => {
                     cachedPegawai = cachedPegawai.filter(p => p.id !== id);
                     saveToStorage();
@@ -958,7 +1019,20 @@
     }
     window.deletePegawai = deletePegawai;
 
+    // --- INTEGRASI SUPABASE: KOP SURAT ---
     async function loadKopSurat() {
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('kop_surat').select('*').order('created_at', { ascending: false });
+                if (!error && data && data.length > 0) {
+                    cachedKopSurat = data;
+                    saveToStorage();
+                }
+            } catch(e) {
+                console.warn("Gagal load Kop Surat dari Supabase:", e);
+            }
+        }
+
         if (tableKop) {
             tableKop.clear();
             cachedKopSurat.forEach((k, index) => {
@@ -1012,7 +1086,6 @@
         if (e) e.preventDefault();
         const id = $('#kopId').val();
         const payload = {
-            id: id || generateId(),
             pemda: $('#kopPemda').val(),
             instansi: $('#kopInstansi').val(),
             alamat: $('#kopAlamat').val(),
@@ -1021,21 +1094,38 @@
         };
 
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        if (supabaseClient) {
+            try {
+                if (id) {
+                    await supabaseClient.from('kop_surat').update(payload).eq('id', id);
+                } else {
+                    payload.active = cachedKopSurat.length === 0;
+                    await supabaseClient.from('kop_surat').insert([payload]);
+                }
+                closeModalAndCleanup('modalKop');
+                Swal.fire('Tersimpan!', 'Data Kop Surat berhasil disimpan ke Supabase.', 'success');
+                await loadKopSurat();
+                return;
+            } catch(err) {
+                console.error("Gagal simpan Kop ke Supabase:", err);
+            }
+        }
         
         setTimeout(() => {
+            const localPayload = { id: id || generateId(), ...payload };
             if (id) {
                 const index = cachedKopSurat.findIndex(k => k.id === id);
                 if(index > -1) {
-                    payload.active = cachedKopSurat[index].active; // retain active status
-                    cachedKopSurat[index] = payload;
+                    localPayload.active = cachedKopSurat[index].active;
+                    cachedKopSurat[index] = localPayload;
                 }
             } else {
-                payload.active = cachedKopSurat.length === 0;
-                cachedKopSurat.push(payload);
+                localPayload.active = cachedKopSurat.length === 0;
+                cachedKopSurat.push(localPayload);
             }
 
             saveToStorage();
-
             closeModalAndCleanup('modalKop');
             Swal.fire('Tersimpan!', 'Data Kop Surat berhasil disimpan.', 'success');
             loadKopSurat();
@@ -1058,6 +1148,18 @@
 
     async function setActiveKop(id) {
         Swal.fire({ title: 'Mengaktifkan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        if (supabaseClient) {
+            try {
+                await supabaseClient.from('kop_surat').update({ active: false }).neq('id', id);
+                await supabaseClient.from('kop_surat').update({ active: true }).eq('id', id);
+                Swal.fire('Berhasil', 'Kop Surat aktif berhasil diperbarui di Supabase.', 'success');
+                await loadKopSurat();
+                return;
+            } catch(e) {
+                console.error("Gagal update aktif Kop di Supabase:", e);
+            }
+        }
+
         setTimeout(() => {
             cachedKopSurat.forEach(k => k.active = (k.id === id));
             saveToStorage();
@@ -1084,6 +1186,18 @@
         }).then(async (result) => {
             if (result.isConfirmed) {
                 Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                if (supabaseClient) {
+                    try {
+                        await supabaseClient.from('kop_surat').delete().eq('id', id);
+                        Swal.fire('Terhapus!', 'Kop Surat telah dihapus dari Supabase.', 'success');
+                        await loadKopSurat();
+                        return;
+                    } catch(err) {
+                        console.error("Gagal hapus Kop di Supabase:", err);
+                    }
+                }
+
                 setTimeout(() => {
                     const item = cachedKopSurat.find(k => k.id === id);
                     cachedKopSurat = cachedKopSurat.filter(k => k.id !== id);
@@ -1099,7 +1213,20 @@
     }
     window.deleteKopSurat = deleteKopSurat;
 
+    // --- INTEGRASI SUPABASE: PEJABAT ---
     async function loadPejabat() {
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('pejabat').select('*').order('created_at', { ascending: false });
+                if (!error && data && data.length > 0) {
+                    cachedPejabat = data;
+                    saveToStorage();
+                }
+            } catch(e) {
+                console.warn("Gagal load Pejabat dari Supabase:", e);
+            }
+        }
+
         if (tablePejabat) {
             tablePejabat.clear();
             cachedPejabat.forEach((p, index) => {
@@ -1127,7 +1254,6 @@
         if (e) e.preventDefault();
         const id = $('#pejabatId').val();
         const payload = {
-            id: id || generateId(),
             nama: $('#pejabatNama').val(),
             nip: $('#pejabatNIP').val(),
             jabatan: $('#pejabatJabatan').val(),
@@ -1136,20 +1262,37 @@
 
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
+        if (supabaseClient) {
+            try {
+                if (id) {
+                    await supabaseClient.from('pejabat').update(payload).eq('id', id);
+                } else {
+                    payload.active = cachedPejabat.length === 0;
+                    await supabaseClient.from('pejabat').insert([payload]);
+                }
+                closeModalAndCleanup('modalPejabat');
+                Swal.fire('Tersimpan!', 'Data Pejabat berhasil disimpan ke Supabase.', 'success');
+                await loadPejabat();
+                return;
+            } catch(err) {
+                console.error("Gagal simpan Pejabat ke Supabase:", err);
+            }
+        }
+
         setTimeout(() => {
+            const localPayload = { id: id || generateId(), ...payload };
             if (id) {
                 const index = cachedPejabat.findIndex(p => p.id === id);
                 if(index > -1) {
-                    payload.active = cachedPejabat[index].active;
-                    cachedPejabat[index] = payload;
+                    localPayload.active = cachedPejabat[index].active;
+                    cachedPejabat[index] = localPayload;
                 }
             } else {
-                payload.active = cachedPejabat.length === 0; // Jika pertama, jadikan aktif otomatis
-                cachedPejabat.push(payload);
+                localPayload.active = cachedPejabat.length === 0;
+                cachedPejabat.push(localPayload);
             }
 
             saveToStorage();
-
             closeModalAndCleanup('modalPejabat');
             Swal.fire('Tersimpan!', 'Data Pejabat berhasil disimpan.', 'success');
             loadPejabat();
@@ -1171,6 +1314,18 @@
 
     async function setActivePejabat(id) {
         Swal.fire({ title: 'Mengaktifkan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        if (supabaseClient) {
+            try {
+                await supabaseClient.from('pejabat').update({ active: false }).neq('id', id);
+                await supabaseClient.from('pejabat').update({ active: true }).eq('id', id);
+                Swal.fire('Berhasil', 'Pejabat Penandatangan aktif berhasil diperbarui di Supabase.', 'success');
+                await loadPejabat();
+                return;
+            } catch(e) {
+                console.error("Gagal update aktif Pejabat di Supabase:", e);
+            }
+        }
+
         setTimeout(() => {
             cachedPejabat.forEach(p => p.active = (p.id === id));
             saveToStorage();
@@ -1197,6 +1352,18 @@
         }).then(async (result) => {
             if (result.isConfirmed) {
                 Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                if (supabaseClient) {
+                    try {
+                        await supabaseClient.from('pejabat').delete().eq('id', id);
+                        Swal.fire('Terhapus!', 'Data Pejabat telah dihapus dari Supabase.', 'success');
+                        await loadPejabat();
+                        return;
+                    } catch(err) {
+                        console.error("Gagal hapus Pejabat di Supabase:", err);
+                    }
+                }
+
                 setTimeout(() => {
                     const item = cachedPejabat.find(p => p.id === id);
                     cachedPejabat = cachedPejabat.filter(p => p.id !== id);
@@ -1212,7 +1379,20 @@
     }
     window.deletePejabat = deletePejabat;
 
+    // --- INTEGRASI SUPABASE: DPA / ANGGARAN ---
     async function loadDPA() {
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('dpa').select('*').order('created_at', { ascending: false });
+                if (!error && data) {
+                    cachedDPA = data;
+                    saveToStorage();
+                }
+            } catch(e) {
+                console.warn("Gagal load DPA dari Supabase:", e);
+            }
+        }
+
         if (tableDPA) {
             tableDPA.clear();
             cachedDPA.forEach((d, index) => {
@@ -1230,7 +1410,6 @@
         if (e) e.preventDefault();
         const id = $('#dpaId').val();
         const payload = {
-            id: id || generateId(),
             kode_rekening: $('#dpaKodeRekening').val(),
             program: $('#dpaProgram').val(),
             kegiatan: $('#dpaKegiatan').val(),
@@ -1240,16 +1419,31 @@
         
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
+        if (supabaseClient) {
+            try {
+                if (id) {
+                    await supabaseClient.from('dpa').update(payload).eq('id', id);
+                } else {
+                    await supabaseClient.from('dpa').insert([payload]);
+                }
+                closeModalAndCleanup('modalDPA');
+                Swal.fire('Berhasil', 'Data DPA berhasil disimpan ke Supabase', 'success');
+                await loadDPA();
+                return;
+            } catch(err) {
+                console.error("Gagal simpan DPA ke Supabase:", err);
+            }
+        }
+
         setTimeout(() => {
+            const localPayload = { id: id || generateId(), ...payload };
             if (id) {
                 const index = cachedDPA.findIndex(d => d.id === id);
-                if(index > -1) cachedDPA[index] = payload;
+                if(index > -1) cachedDPA[index] = localPayload;
             } else {
-                cachedDPA.push(payload);
+                cachedDPA.push(localPayload);
             }
-            
             saveToStorage();
-            
             closeModalAndCleanup('modalDPA');
             Swal.fire('Berhasil', 'Data DPA berhasil disimpan', 'success');
             loadDPA();
@@ -1283,6 +1477,17 @@
         }).then(async (result) => {
             if (result.isConfirmed) {
                 Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                if (supabaseClient) {
+                    try {
+                        await supabaseClient.from('dpa').delete().eq('id', id);
+                        Swal.fire('Terhapus!', 'Data DPA telah dihapus dari Supabase.', 'success');
+                        await loadDPA();
+                        return;
+                    } catch(err) {
+                        console.error("Gagal hapus DPA di Supabase:", err);
+                    }
+                }
+
                 setTimeout(() => {
                     cachedDPA = cachedDPA.filter(d => d.id !== id);
                     saveToStorage();
@@ -1294,7 +1499,20 @@
     }
     window.deleteDPA = deleteDPA;
 
+    // --- INTEGRASI SUPABASE: SURAT TUGAS ---
     async function loadST() {
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.from('surat_tugas').select('*').order('created_at', { ascending: false });
+                if (!error && data) {
+                    cachedST = data;
+                    saveToStorage();
+                }
+            } catch(e) {
+                console.warn("Gagal load Surat Tugas dari Supabase:", e);
+            }
+        }
+
         if (tableST) {
             tableST.clear();
             cachedST.forEach((st) => {
@@ -1312,7 +1530,6 @@
     async function saveST(e) {
         if (e) e.preventDefault();
         const payload = {
-            id: generateId(),
             nomor: $('#stNomor').val(), tanggal: $('#stTanggal').val(), dasar: $('#stDasar').val(),
             maksud: $('#stMaksud').val(), tujuan: $('#stTujuan').val(), lama: parseInt($('#stLama').val()),
             berangkat: $('#stBerangkat').val(), kembali: $('#stKembali').val(),
@@ -1321,11 +1538,23 @@
         
         Swal.fire({ title: 'Membuat SPT & SPPD...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
+        if (supabaseClient) {
+            try {
+                await supabaseClient.from('surat_tugas').insert([payload]);
+                closeModalAndCleanup('modalST');
+                Swal.fire('Berhasil', 'Surat Tugas dan SPPD berhasil dibuat di Supabase.', 'success');
+                await loadST();
+                await loadDashboard();
+                return;
+            } catch(err) {
+                console.error("Gagal simpan Surat Tugas ke Supabase:", err);
+            }
+        }
+
         setTimeout(() => {
-            cachedST.push(payload);
-            
+            const localPayload = { id: generateId(), ...payload };
+            cachedST.push(localPayload);
             saveToStorage();
-            
             closeModalAndCleanup('modalST');
             Swal.fire('Berhasil', 'Surat Tugas dan SPPD berhasil dibuat.', 'success');
             loadST();
