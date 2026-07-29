@@ -726,15 +726,15 @@
     }
     window.toggleSidebar = toggleSidebar;
 
-    // Global Safe State Cache
-    let cachedPegawai = [
+    // Global Safe State Cache dengan LocalStorage
+    let cachedPegawai = JSON.parse(localStorage.getItem('esppd_pegawai')) || [
         { id: 'P1', nama: 'Budi Santoso, S.Kom', nip: '198501012010011001', golongan: 'Penata - III/c', jabatan: 'Pranata Komputer' },
         { id: 'P2', nama: 'Siti Aminah, ST', nip: '199002022015022002', golongan: 'Penata Muda Tk.I - III/b', jabatan: 'Analis Sistem' }
     ];
-    let cachedDPA = [
+    let cachedDPA = JSON.parse(localStorage.getItem('esppd_dpa')) || [
         { id: 'DPA-1', kodeRekening: '5.1.02.04.01.0001', program: 'Program Dukungan Manajemen', kegiatan: 'Pelaksanaan Perjalanan Dinas Biasa', subKegiatan: 'Koordinasi dan Konsultasi SKPD', tahun: '2026' }
     ];
-    let cachedKopSurat = [
+    let cachedKopSurat = JSON.parse(localStorage.getItem('esppd_kopsurat')) || [
         {
             id: 'KOP-1',
             pemda: 'PEMERINTAH KABUPATEN DUMMY',
@@ -744,10 +744,19 @@
             active: true
         }
     ];
-    let cachedPejabat = [
+    let cachedPejabat = JSON.parse(localStorage.getItem('esppd_pejabat')) || [
         { id: 'PJ1', nama: 'Ir. Nama Kepala Dinas, M.Si', nip: '19700101 199503 1 001', jabatan: 'KEPALA DINAS', active: true }
     ];
-    let cachedST = [];
+    let cachedST = JSON.parse(localStorage.getItem('esppd_st')) || [];
+
+    // Fungsi menyimpan ke database browser
+    function saveToStorage() {
+        localStorage.setItem('esppd_pegawai', JSON.stringify(cachedPegawai));
+        localStorage.setItem('esppd_dpa', JSON.stringify(cachedDPA));
+        localStorage.setItem('esppd_kopsurat', JSON.stringify(cachedKopSurat));
+        localStorage.setItem('esppd_pejabat', JSON.stringify(cachedPejabat));
+        localStorage.setItem('esppd_st', JSON.stringify(cachedST));
+    }
 
     let tablePegawai = null;
     let tableDPA = null;
@@ -902,6 +911,8 @@
                 cachedPegawai.push(payload);
             }
 
+            saveToStorage();
+
             closeModalAndCleanup('modalPegawai');
             Swal.fire('Berhasil', 'Data Pegawai berhasil disimpan', 'success');
             loadPegawai();
@@ -937,6 +948,7 @@
                 Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 setTimeout(() => {
                     cachedPegawai = cachedPegawai.filter(p => p.id !== id);
+                    saveToStorage();
                     Swal.fire('Terhapus!', 'Data pegawai telah dihapus.', 'success');
                     loadPegawai();
                     loadDashboard();
@@ -1022,6 +1034,8 @@
                 cachedKopSurat.push(payload);
             }
 
+            saveToStorage();
+
             closeModalAndCleanup('modalKop');
             Swal.fire('Tersimpan!', 'Data Kop Surat berhasil disimpan.', 'success');
             loadKopSurat();
@@ -1046,6 +1060,7 @@
         Swal.fire({ title: 'Mengaktifkan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         setTimeout(() => {
             cachedKopSurat.forEach(k => k.active = (k.id === id));
+            saveToStorage();
             Swal.fire('Berhasil', 'Kop Surat aktif berhasil diperbarui.', 'success');
             loadKopSurat();
         }, 500);
@@ -1075,6 +1090,7 @@
                     if(item && item.active && cachedKopSurat.length > 0) {
                         cachedKopSurat[0].active = true;
                     }
+                    saveToStorage();
                     Swal.fire('Terhapus!', 'Kop Surat telah dihapus.', 'success');
                     loadKopSurat();
                 }, 500);
@@ -1132,6 +1148,8 @@
                 cachedPejabat.push(payload);
             }
 
+            saveToStorage();
+
             closeModalAndCleanup('modalPejabat');
             Swal.fire('Tersimpan!', 'Data Pejabat berhasil disimpan.', 'success');
             loadPejabat();
@@ -1155,6 +1173,7 @@
         Swal.fire({ title: 'Mengaktifkan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         setTimeout(() => {
             cachedPejabat.forEach(p => p.active = (p.id === id));
+            saveToStorage();
             Swal.fire('Berhasil', 'Pejabat Penandatangan aktif berhasil diperbarui.', 'success');
             loadPejabat();
         }, 500);
@@ -1184,6 +1203,7 @@
                     if(item && item.active && cachedPejabat.length > 0) {
                         cachedPejabat[0].active = true;
                     }
+                    saveToStorage();
                     Swal.fire('Terhapus!', 'Data Pejabat telah dihapus.', 'success');
                     loadPejabat();
                 }, 500);
@@ -1228,6 +1248,8 @@
                 cachedDPA.push(payload);
             }
             
+            saveToStorage();
+            
             closeModalAndCleanup('modalDPA');
             Swal.fire('Berhasil', 'Data DPA berhasil disimpan', 'success');
             loadDPA();
@@ -1263,6 +1285,7 @@
                 Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 setTimeout(() => {
                     cachedDPA = cachedDPA.filter(d => d.id !== id);
+                    saveToStorage();
                     Swal.fire('Terhapus!', 'Data DPA telah dihapus.', 'success');
                     loadDPA();
                 }, 500);
@@ -1300,6 +1323,8 @@
         
         setTimeout(() => {
             cachedST.push(payload);
+            
+            saveToStorage();
             
             closeModalAndCleanup('modalST');
             Swal.fire('Berhasil', 'Surat Tugas dan SPPD berhasil dibuat.', 'success');
