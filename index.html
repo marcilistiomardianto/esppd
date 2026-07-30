@@ -84,16 +84,20 @@
         .kop-text { flex-grow: 1; }
         .kop-text h4, .kop-text h3, .kop-text p { margin: 0; }
 
+        .table-print-grid { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .table-print-grid th, .table-print-grid td { border: 1px solid #000; padding: 6px 8px; vertical-align: top; font-size: 13px; }
+
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; width: 21cm; min-height: 29.7cm; padding: 2cm; background: white; margin: 0; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; width: 21cm; min-height: 29.7cm; padding: 1.5cm 2cm; background: white; margin: 0; color: #000; font-family: 'Times New Roman', Times, serif; font-size: 12pt; }
             .wrapper, .modal { display: none !important; }
             
-            .surat-title { text-align: center; margin: 20px 0; font-weight: bold; text-decoration: underline; }
-            .signature-area { margin-top: 50px; display: flex; justify-content: flex-end; }
-            .signature-box { text-align: center; width: 300px; }
-            .signature-space { height: 80px; }
+            .surat-title { text-align: center; margin: 15px 0; font-weight: bold; text-decoration: underline; font-size: 14pt; }
+            .signature-area { margin-top: 40px; display: flex; justify-content: flex-end; }
+            .signature-box { text-align: center; width: 280px; }
+            .signature-space { height: 75px; }
+            .page-break { page-break-before: always; margin-top: 20px; }
         }
     </style>
 </head>
@@ -117,7 +121,7 @@
             
             <div class="px-3 pt-3 pb-1 text-muted small fw-bold">TRANSAKSI</div>
             <a class="menu-item" data-view="surat-tugas" onclick="switchView('surat-tugas')"><i class="fas fa-envelope-open-text"></i> Surat Tugas</a>
-            <a class="menu-item" data-view="sppd" onclick="switchView('sppd')"><i class="fas fa-plane-departure"></i> SPPD</a>
+            <a class="menu-item" data-view="sppd" onclick="switchView('sppd')"><i class="fas fa-plane-departure"></i> SPPD & Kwitansi</a>
             
             <div class="px-3 pt-3 pb-1 text-muted small fw-bold">PELAPORAN</div>
             <a class="menu-item" data-view="laporan" onclick="switchView('laporan')"><i class="fas fa-file-alt"></i> Laporan Perjalanan</a>
@@ -131,6 +135,9 @@
                 <span class="fw-bold text-secondary">Sistem Administrasi Perjalanan Dinas</span>
             </div>
             <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-secondary" onclick="exportDataBackup()" title="Backup Data JSON">
+                    <i class="fas fa-download me-1"></i> Backup
+                </button>
                 <button class="btn btn-sm btn-outline-primary" onclick="openModal('modalSupabase')">
                     <i class="fas fa-database me-1"></i> <span id="dbStatusBadge">Koneksi Database</span>
                 </button>
@@ -164,7 +171,7 @@
                     <div class="col-md-3 mb-4">
                         <div class="stat-card bg-warning text-dark">
                             <div>
-                                <h5>SPPD</h5>
+                                <h5>SPPD Active</h5>
                                 <h2 id="count-sppd">0</h2>
                             </div>
                             <i class="fas fa-plane stat-icon"></i>
@@ -181,11 +188,21 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-8">
-                        <div class="card">
+                    <div class="col-md-8 mb-4">
+                        <div class="card h-100">
                             <div class="card-header"><i class="fas fa-chart-bar me-2"></i> Grafik Perjalanan Dinas Tahun Ini</div>
                             <div class="card-body">
                                 <canvas id="chartPerjalanan" height="100"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header"><i class="fas fa-history me-2"></i> Perjalanan Terbaru</div>
+                            <div class="card-body p-0">
+                                <ul class="list-group list-group-flush" id="recentStList">
+                                    <li class="list-group-item text-muted text-center py-4">Belum ada perjalanan dinas</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -351,26 +368,53 @@
             </div>
 
             <div id="sppd" class="page-view">
-                <h3 class="mb-4">Daftar Surat Perintah Perjalanan Dinas (SPPD)</h3>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3>Surat Perintah Perjalanan Dinas (SPPD)</h3>
+                    <span class="badge bg-primary px-3 py-2"><i class="fas fa-file-invoice me-1"></i> Terhubung Surat Tugas</span>
+                </div>
                 <div class="card">
-                    <div class="card-body">
-                        <p class="text-muted">SPPD dibuat otomatis setelah Surat Tugas diterbitkan.</p>
-                        <table class="table table-striped">
-                            <thead><tr><th>No. SPPD</th><th>Nomor ST</th><th>Nama Pelaksana</th><th>Tujuan</th><th>Aksi</th></tr></thead>
-                            <tbody>
-                                <tr><td>090/001/SPPD/2026</td><td>800/001/SPT/2026</td><td>Budi Santoso, S.Kom</td><td>Jakarta</td><td><button class="btn btn-sm btn-primary" onclick="Swal.fire('Cetak', 'Menyiapkan SPPD...', 'info')"><i class="fas fa-print"></i> Cetak SPPD</button></td></tr>
-                            </tbody>
+                    <div class="card-body table-responsive">
+                        <p class="text-muted">Daftar SPPD dibuat otomatis dari Surat Tugas. Anda dapat mencetak SPPD Lembar 1, Lembar 2, serta menghitung dan mencetak Kwitansi Rincian Biaya.</p>
+                        <table id="tableSPPD" class="table table-striped w-100">
+                            <thead>
+                                <tr>
+                                    <th>No. SPPD</th>
+                                    <th>Nomor ST</th>
+                                    <th>Nama Pelaksana Utama</th>
+                                    <th>Tujuan & Waktu</th>
+                                    <th>Status Biaya</th>
+                                    <th>Aksi Cetak / Kwitansi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodySPPD"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
             <div id="laporan" class="page-view">
-                <h3 class="mb-4">Laporan Perjalanan Dinas</h3>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3>Laporan Perjalanan Dinas (LHPD)</h3>
+                    <button class="btn btn-primary" onclick="openModal('modalLHPD')">
+                        <i class="fas fa-plus me-1"></i> Buat Laporan Baru
+                    </button>
+                </div>
                 <div class="card">
-                    <div class="card-body">
-                        <p class="text-muted">Ringkasan & Pelaporan Hasil Perjalanan Dinas.</p>
-                        <button class="btn btn-outline-primary" onclick="Swal.fire('Laporan', 'Form Tambah Laporan Perjalanan', 'info')"><i class="fas fa-plus me-1"></i> Buat Laporan Baru</button>
+                    <div class="card-body table-responsive">
+                        <p class="text-muted">Pelaporan & Hasil Pelaksanaan Tugas Perjalanan Dinas.</p>
+                        <table id="tableLHPD" class="table table-striped w-100">
+                            <thead>
+                                <tr>
+                                    <th>No. Laporan</th>
+                                    <th>Nomor SPT</th>
+                                    <th>Pelapor</th>
+                                    <th>Ringkasan Hasil</th>
+                                    <th>Tanggal Lap.</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyLHPD"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -413,11 +457,11 @@
                         <label class="form-label fw-bold">Tingkat Menurut Perjadin</label>
                         <select class="form-select" id="pegawaiTingkatPerjadin" required>
                             <option value="">-- Pilih Tingkat Perjadin --</option>
-                            <option value="Tingkat A">C1 </option>
-                            <option value="Tingkat B">C2 </option>
-                            <option value="Tingkat C">C3 </option>
-                            <option value="Tingkat D">C4 </option>
-                            <option value="Tingkat E">C5 </option>
+                            <option value="Tingkat A">Tingkat A (Pejabat Negara / Eselon I)</option>
+                            <option value="Tingkat B">Tingkat B (Pejabat Eselon II)</option>
+                            <option value="Tingkat C">Tingkat C (Pejabat Eselon III / Gol. IV)</option>
+                            <option value="Tingkat D">Tingkat D (Pejabat Eselon IV / Gol. III)</option>
+                            <option value="Tingkat E">Tingkat E (Golongan I & II / Non-ASN)</option>
                         </select>
                     </div>
                 </div>
@@ -446,7 +490,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Sub Kegiatan</label>
-                        <textarea class="form-control" id="dpaSubKegiatan" rows="3" placeholder="Contoh: 1.01.02.2.02.0060 Bimbingan Teknis, Pelatihan, dan/atau Magang/PKL untuk Peningkatan Kapasitas Bidang Pendidikan" required></textarea>
+                        <textarea class="form-control" id="dpaSubKegiatan" rows="3" placeholder="Contoh: 1.01.02.2.02.0060 Bimbingan Teknis, Pelatihan, dan/atau Magang/PKL..." required></textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Kode Rekening / Belanja</label>
@@ -486,13 +530,11 @@
                     </div>
                     <div class="col-12 mb-3">
                         <label class="form-label fw-bold">Alamat Kantor & Kontak</label>
-                        <textarea class="form-control" id="kopAlamat" rows="3" placeholder="Jl. Pembangunan No. 123, Kode Pos 12345. Telp: (021) 1234567 | Email: info@dinas.go.id | Web: dinas.go.id" required></textarea>
-                        <small class="text-muted">Masukkan alamat lengkap beserta No. Telepon, Email, dan Website sekaligus.</small>
+                        <textarea class="form-control" id="kopAlamat" rows="3" placeholder="Jl. Pembangunan No. 123, Kode Pos 12345. Telp: (021) 1234567 | Email: info@dinas.go.id" required></textarea>
                     </div>
                     <div class="col-12 mb-3">
-                        <label class="form-label fw-bold">URL / Google Drive File ID Logo</label>
-                        <input type="text" class="form-control" id="kopLogo" placeholder="https://... atau ID File Google Drive">
-                        <small class="text-muted">Kosongkan jika ingin memakai logo standar.</small>
+                        <label class="form-label fw-bold">URL Logo Instansi</label>
+                        <input type="text" class="form-control" id="kopLogo" placeholder="https://... atau URL logo gambar">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -546,54 +588,74 @@
             <form id="formST" onsubmit="saveST(event)">
                 <div class="modal-body row">
                     <div class="col-md-6 mb-3">
-                        <label>Nomor Surat (Otomatis/Manual)</label>
+                        <label class="fw-bold">Nomor Surat</label>
                         <input type="text" class="form-control" id="stNomor" placeholder="800/  /SPT/2026" required>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label>Tanggal Surat</label>
+                        <label class="fw-bold">Tanggal Surat</label>
                         <input type="date" class="form-control" id="stTanggal" required>
                     </div>
                     <div class="col-12 mb-3">
-                        <label>Dasar Pelaksanaan</label>
-                        <textarea class="form-control" id="stDasar" rows="2" required></textarea>
+                        <label class="fw-bold">Pilih Anggaran / DPA</label>
+                        <select class="form-select" id="stDPA" required>
+                            <option value="">-- Pilih DPA / Kode Rekening --</option>
+                        </select>
                     </div>
                     <div class="col-12 mb-3">
-                        <label>Maksud Perjalanan Dinas</label>
-                        <textarea class="form-control" id="stMaksud" rows="2" required></textarea>
+                        <label class="fw-bold">Dasar Pelaksanaan</label>
+                        <textarea class="form-control" id="stDasar" rows="2" placeholder="Surat Undangan / DPA Dinas..." required></textarea>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="fw-bold">Maksud Perjalanan Dinas</label>
+                        <textarea class="form-control" id="stMaksud" rows="2" placeholder="Melaksanakan koordinasi teknis..." required></textarea>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label>Tempat Tujuan</label>
+                        <label class="fw-bold">Tempat Berangkat</label>
+                        <input type="text" class="form-control" id="stBerangkatDari" value="Kota Tempat Kedudukan" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="fw-bold">Tempat Tujuan</label>
                         <input type="text" class="form-control" id="stTujuan" required>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label>Lama Perjalanan (Hari)</label>
-                        <input type="number" class="form-control" id="stLama" required min="1">
+                    <div class="col-md-4 mb-3">
+                        <label class="fw-bold">Lama Perjalanan (Hari)</label>
+                        <input type="number" class="form-control" id="stLama" required min="1" value="3">
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label>Tanggal Berangkat</label>
+                    <div class="col-md-4 mb-3">
+                        <label class="fw-bold">Tanggal Berangkat</label>
                         <input type="date" class="form-control" id="stBerangkat" required>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label>Tanggal Kembali</label>
+                    <div class="col-md-4 mb-3">
+                        <label class="fw-bold">Tanggal Kembali</label>
                         <input type="date" class="form-control" id="stKembali" required>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label class="fw-bold">Alat Angkutan / Transportasi</label>
+                        <select class="form-select" id="stTransport">
+                            <option value="Kendaraan Dinas / Mobil Dinas">Kendaraan Dinas / Mobil Dinas</option>
+                            <option value="Pesawat Udara">Pesawat Udara</option>
+                            <option value="Kereta Api">Kereta Api</option>
+                            <option value="Bus / Transportasi Darat Umum">Bus / Transportasi Darat Umum</option>
+                            <option value="Kapal Laut">Kapal Laut</option>
+                        </select>
                     </div>
                     
                     <hr class="mt-3">
                     <h6 class="fw-bold">Pelaksana Tugas (Maksimal 3 Orang)</h6>
                     <div class="col-12 mb-2">
-                        <label>Pegawai 1 (Ketua/Sendiri) *Wajib</label>
+                        <label class="fw-bold">Pegawai 1 (Ketua / Pelaksana Utama) *Wajib</label>
                         <select class="form-select select-pegawai" id="stPegawai1" required>
                             <option value="">-- Pilih Pegawai --</option>
                         </select>
                     </div>
                     <div class="col-12 mb-2">
-                        <label>Pegawai 2 (Anggota) *Opsional</label>
+                        <label>Pegawai 2 (Pengikut / Anggota) *Opsional</label>
                         <select class="form-select select-pegawai" id="stPegawai2">
                             <option value="">-- Pilih Pegawai --</option>
                         </select>
                     </div>
                     <div class="col-12 mb-3">
-                        <label>Pegawai 3 (Anggota) *Opsional</label>
+                        <label>Pegawai 3 (Pengikut / Anggota) *Opsional</label>
                         <select class="form-select select-pegawai" id="stPegawai3">
                             <option value="">-- Pilih Pegawai --</option>
                         </select>
@@ -601,7 +663,105 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan & Buat SPPD</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Simpan & Buat SPPD</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalKwitansi" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-calculator me-2"></i> Rincian Perhitungan Biaya SPPD & Kwitansi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formKwitansi" onsubmit="saveKwitansiBiaya(event)">
+                <div class="modal-body row">
+                    <input type="hidden" id="kwitansiStId">
+                    <div class="col-md-6 mb-3">
+                        <label class="fw-bold">Nomor SPPD / Bukti</label>
+                        <input type="text" class="form-control" id="kwitansiNoBukti" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="fw-bold">Nama Penerima / Pelaksana Utama</label>
+                        <input type="text" class="form-control" id="kwitansiPenerima" readonly>
+                    </div>
+                    
+                    <h6 class="fw-bold border-bottom pb-2 mt-2">Komponen Biaya Perjalanan Dinas</h6>
+                    <div class="col-md-6 mb-3">
+                        <label>Uang Harian (Per Hari Rp)</label>
+                        <input type="number" class="form-control calc-biaya" id="kwUangHarianSatuan" value="380000">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Total Uang Harian (<span id="kwHariText">0</span> Hari)</label>
+                        <input type="number" class="form-control" id="kwUangHarianTotal" readonly>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Biaya Transportasi PP (Rp)</label>
+                        <input type="number" class="form-control calc-biaya" id="kwBiayaTransport" value="1200000">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Biaya Penginapan / Hotel (Rp)</label>
+                        <input type="number" class="form-control calc-biaya" id="kwBiayaPenginapan" value="1000000">
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label>Biaya Lain-Lain / Represensi (Rp)</label>
+                        <input type="number" class="form-control calc-biaya" id="kwBiayaLain" value="0">
+                    </div>
+
+                    <div class="col-12 p-3 bg-light rounded text-end border">
+                        <span class="fs-6 text-muted">JUMLAH DITERIMA: </span>
+                        <span class="fs-4 fw-bold text-primary" id="kwTotalDisplay">Rp 0</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check me-1"></i> Simpan Biaya</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalLHPD" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Form Laporan Hasil Perjalanan Dinas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formLHPD" onsubmit="saveLHPD(event)">
+                <div class="modal-body row">
+                    <input type="hidden" id="lhpdId">
+                    <div class="col-12 mb-3">
+                        <label class="fw-bold">Pilih Perjalanan Dinas / Surat Tugas</label>
+                        <select class="form-select" id="lhpdStId" required onchange="onSelectSTForLHPD()">
+                            <option value="">-- Pilih Surat Tugas --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="fw-bold">Nomor Laporan</label>
+                        <input type="text" class="form-control" id="lhpdNomor" placeholder="090/ /LHPD/2026" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="fw-bold">Tanggal Laporan</label>
+                        <input type="date" class="form-control" id="lhpdTanggal" required>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="fw-bold">Hasil Pelaksanaan Kegiatan</label>
+                        <textarea class="form-control" id="lhpdHasil" rows="4" placeholder="Jelaskan ringkasan agenda, pencapaian, dan hasil rapat/kunjungan..." required></textarea>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="fw-bold">Saran / Rekomendasi Tindak Lanjut</label>
+                        <textarea class="form-control" id="lhpdSaran" rows="3" placeholder="Saran dan langkah strategis berikutnya..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Simpan Laporan</button>
                 </div>
             </form>
         </div>
@@ -635,72 +795,354 @@
 </div>
 
 <div id="print-area" style="display: none;">
-    <div class="kop-surat">
-        <img src="https://placehold.co/100x100/eeeeee/333333?text=LOGO" class="kop-logo" alt="Logo">
-        <div class="kop-text">
-            <h4>PEMERINTAH KABUPATEN DUMMY</h4>
-            <h3>DINAS TEKNOLOGI INFORMASI</h3>
-            <p>Jl. Pembangunan No. 123, Kode Pos 12345, Telp: (021) 1234567, Email: info@dummy.go.id</p>
+    
+    <!-- Template Cetak SPT -->
+    <div id="print-template-spt" style="display:none;">
+        <div class="kop-surat">
+            <img src="https://placehold.co/100x100/eeeeee/333333?text=LOGO" class="kop-logo" alt="Logo">
+            <div class="kop-text">
+                <h4>PEMERINTAH KABUPATEN DUMMY</h4>
+                <h3>DINAS TEKNOLOGI INFORMASI</h3>
+                <p>Jl. Pembangunan No. 123, Kode Pos 12345, Telp: (021) 1234567, Email: info@dummy.go.id</p>
+            </div>
+        </div>
+        
+        <div class="surat-title">
+            SURAT PERINTAH TUGAS<br>
+            <span style="font-weight: normal; text-decoration: none; font-size: 11pt;" id="print-nomor">Nomor: 800/001/SPT/2026</span>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 15%; vertical-align: top;">Dasar</td>
+                    <td style="width: 2%; vertical-align: top;">:</td>
+                    <td id="print-dasar">Surat Undangan dari Kementerian Kominfo.</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div style="text-align: center; margin: 15px 0; font-weight: bold;">MEMERINTAHKAN:</div>
+        
+        <div style="margin-bottom: 15px;">
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 15%; vertical-align: top;">Kepada</td>
+                    <td style="width: 2%; vertical-align: top;">:</td>
+                    <td>
+                        <ol style="margin:0; padding-left: 15px;" id="print-pegawai-list"></ol>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 15%; vertical-align: top;">Untuk</td>
+                    <td style="width: 2%; vertical-align: top;">:</td>
+                    <td>
+                        <ol style="margin:0; padding-left: 15px;">
+                            <li id="print-maksud">Melaksanakan kordinasi teknis sistem informasi.</li>
+                            <li>Tempat Tujuan: <strong id="print-tujuan">Jakarta</strong></li>
+                            <li>Waktu Pelaksanaan: <strong id="print-waktu">3 Hari</strong></li>
+                        </ol>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <p>Demikian Surat Perintah Tugas ini dibuat untuk dilaksanakan dengan penuh tanggung jawab.</p>
+
+        <div class="signature-area">
+            <div class="signature-box">
+                Ditetapkan di: Kota Tempat Kedudukan<br>
+                Pada Tanggal: <span id="print-tgl-tetap">1 Agustus 2026</span><br>
+                <strong id="print-pejabat-jabatan">KEPALA DINAS</strong>
+                <div class="signature-space"></div>
+                <u><strong id="print-pejabat-nama">IR. NAMA KEPALA DINAS, M.Si</strong></u><br>
+                <span id="print-pejabat-nip">NIP. 19700101 199503 1 001</span>
+            </div>
         </div>
     </div>
-    
-    <div class="surat-title">
-        SURAT PERINTAH TUGAS<br>
-        <span style="font-weight: normal; text-decoration: none; font-size: 14px;" id="print-nomor">Nomor: 800/001/SPT/2026</span>
-    </div>
-    
-    <div style="margin-bottom: 20px;">
-        <table style="width: 100%;">
+
+    <!-- Template Cetak SPPD (Lembar I & II) -->
+    <div id="print-template-sppd" style="display:none;">
+        <div class="kop-surat">
+            <img src="https://placehold.co/100x100/eeeeee/333333?text=LOGO" class="kop-logo" alt="Logo">
+            <div class="kop-text">
+                <h4 id="sppd-print-pemda">PEMERINTAH KABUPATEN DUMMY</h4>
+                <h3 id="sppd-print-instansi">DINAS TEKNOLOGI INFORMASI</h3>
+                <p id="sppd-print-alamat">Jl. Pembangunan No. 123, Kode Pos 12345</p>
+            </div>
+        </div>
+
+        <div style="text-align: right; font-size: 10pt; margin-bottom: 5px;">
+            Lembar Ke : ..................<br>
+            Kode No : ..................<br>
+            Nomor : <span id="sppd-print-nomor-sppd">090/001/SPPD/2026</span>
+        </div>
+
+        <div class="surat-title" style="margin-top:0;">
+            SURAT PERINTAH PERJALANAN DINAS (SPPD)
+        </div>
+
+        <table class="table-print-grid">
             <tr>
-                <td style="width: 15%; vertical-align: top;">Dasar</td>
-                <td style="width: 2%; vertical-align: top;">:</td>
-                <td id="print-dasar">Surat Undangan dari Kementerian Kominfo.</td>
+                <td style="width: 4%;">1.</td>
+                <td style="width: 46%;">Pejabat Berwenang yang memberi perintah</td>
+                <td style="width: 50%;" id="sppd-print-ppk">Kepala Dinas Teknologi Informasi</td>
+            </tr>
+            <tr>
+                <td>2.</td>
+                <td>Nama pegawai yang diperintah</td>
+                <td id="sppd-print-pegawai-nama"><b>Budi Santoso, S.Kom</b></td>
+            </tr>
+            <tr>
+                <td>3.</td>
+                <td>a. Pangkat dan Golongan menurut PP No. 6 Tahun 1997<br>b. Jabatan / Instansi<br>c. Tingkat Biaya Perjalanan Dinas</td>
+                <td>
+                    a. <span id="sppd-print-gol">Penata - III/c</span><br>
+                    b. <span id="sppd-print-jabatan">Pranata Komputer</span><br>
+                    c. <span id="sppd-print-tingkat">Tingkat C</span>
+                </td>
+            </tr>
+            <tr>
+                <td>4.</td>
+                <td>Maksud Perjalanan Dinas</td>
+                <td id="sppd-print-maksud">Koordinasi dan Pelatihan Teknis Sistem Informasi</td>
+            </tr>
+            <tr>
+                <td>5.</td>
+                <td>Alat angkutan yang dipergunakan</td>
+                <td id="sppd-print-transport">Kendaraan Dinas</td>
+            </tr>
+            <tr>
+                <td>6.</td>
+                <td>a. Tempat berangkat<br>b. Tempat tujuan</td>
+                <td>
+                    a. <span id="sppd-print-asal">Kota Asal</span><br>
+                    b. <span id="sppd-print-tujuan">Jakarta</span>
+                </td>
+            </tr>
+            <tr>
+                <td>7.</td>
+                <td>a. Lamanya Perjalanan Dinas<br>b. Tanggal berangkat<br>c. Tanggal harus kembali</td>
+                <td>
+                    a. <span id="sppd-print-lama">3 Hari</span><br>
+                    b. <span id="sppd-print-tgl-berangkat">01-08-2026</span><br>
+                    c. <span id="sppd-print-tgl-kembali">03-08-2026</span>
+                </td>
+            </tr>
+            <tr>
+                <td>8.</td>
+                <td>Pengikut / Anggota Tim</td>
+                <td id="sppd-print-pengikut">-</td>
+            </tr>
+            <tr>
+                <td>9.</td>
+                <td>Pembebanan Anggaran<br>a. Instansi<br>b. Kode Rekening / DPA</td>
+                <td>
+                    <br>
+                    a. <span id="sppd-print-instansi-beban">Dinas Teknologi Informasi</span><br>
+                    b. <span id="sppd-print-dpa">5.1.02.04.01.0001</span>
+                </td>
+            </tr>
+            <tr>
+                <td>10.</td>
+                <td>Keterangan lain-lain</td>
+                <td>Surat Tugas Nomor: <span id="sppd-print-st-no">800/001/SPT/2026</span></td>
             </tr>
         </table>
-    </div>
-    
-    <div style="text-align: center; margin: 20px 0; font-weight: bold;">MEMERINTAHKAN:</div>
-    
-    <div style="margin-bottom: 20px;">
-        <table style="width: 100%;">
+
+        <div class="signature-area">
+            <div class="signature-box">
+                Dikeluarkan di: <span id="sppd-print-tempat">Kota Kedudukan</span><br>
+                Pada Tanggal: <span id="sppd-print-tgl-keluar">1 Agustus 2026</span><br>
+                <strong id="sppd-print-pejabat-jabatan">KEPALA DINAS</strong>
+                <div class="signature-space"></div>
+                <u><strong id="sppd-print-pejabat-nama">IR. NAMA KEPALA DINAS, M.Si</strong></u><br>
+                <span id="sppd-print-pejabat-nip">NIP. 19700101 199503 1 001</span>
+            </div>
+        </div>
+
+        <!-- Halaman 2 SPPD (Pengesahan / Visum) -->
+        <div class="page-break"></div>
+        <h5 style="text-align:center; font-weight:bold; margin-bottom:15px; text-decoration:underline;">LEMBAR VISUM / PENGESAHAN PEJABAT TUJUAN</h5>
+        
+        <table class="table-print-grid">
             <tr>
-                <td style="width: 15%; vertical-align: top;">Kepada</td>
-                <td style="width: 2%; vertical-align: top;">:</td>
+                <td style="width: 50%;"></td>
+                <td style="width: 50%;">
+                    I. Berangkat dari : <span id="visum-asal">Kota Asal</span><br>
+                    Ke : <span id="visum-tujuan">Jakarta</span><br>
+                    Pada Tanggal : <span id="visum-tgl-bkt">01-08-2026</span><br><br>
+                    <div style="text-align:center; height:60px;">[ Tanda Tangan & Cap Instansi ]</div>
+                </td>
+            </tr>
+            <tr>
                 <td>
-                    <ol style="margin:0; padding-left: 15px;" id="print-pegawai-list"></ol>
+                    II. Tiba di : <span id="visum-tujuan2">Jakarta</span><br>
+                    Pada Tanggal : <span id="visum-tgl-tiba">01-08-2026</span><br>
+                    Kepala : ..............................................<br><br>
+                    <div style="text-align:center; height:60px;">( ........................................................... )</div>
+                </td>
+                <td>
+                    Berangkat dari : <span id="visum-tujuan3">Jakarta</span><br>
+                    Ke : <span id="visum-asal2">Kota Asal</span><br>
+                    Pada Tanggal : <span id="visum-tgl-kmb">03-08-2026</span><br>
+                    Kepala : ..............................................<br>
+                    <div style="text-align:center; height:60px;">( ........................................................... )</div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    III. Tiba Kembali di : <span id="visum-asal3">Kota Asal</span><br>
+                    Pada Tanggal : <span id="visum-tgl-kmb2">03-08-2026</span><br><br>
+                    Pejabat Penandatangan,<br>
+                    <div style="text-align:center; height:60px;" id="visum-pejabat-ttd">KEPALA DINAS</div>
+                </td>
+                <td>
+                    Telah diperiksa dengan keterangan bahwa perjalanan tersebut di atas benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan.
                 </td>
             </tr>
         </table>
     </div>
 
-    <div style="margin-bottom: 20px;">
-        <table style="width: 100%;">
+    <!-- Template Cetak Kwitansi -->
+    <div id="print-template-kwitansi" style="display:none;">
+        <div class="kop-surat">
+            <img src="https://placehold.co/100x100/eeeeee/333333?text=LOGO" class="kop-logo" alt="Logo">
+            <div class="kop-text">
+                <h4 class="kw-print-pemda">PEMERINTAH KABUPATEN DUMMY</h4>
+                <h3 class="kw-print-instansi">DINAS TEKNOLOGI INFORMASI</h3>
+            </div>
+        </div>
+
+        <div style="text-align:center; font-weight:bold; font-size:14pt; text-decoration:underline; margin-bottom: 20px;">
+            KWITANSI / BUKTI PEMBAYARAN
+        </div>
+
+        <table style="width: 100%; font-size: 11pt; line-height: 1.8;">
             <tr>
-                <td style="width: 15%; vertical-align: top;">Untuk</td>
-                <td style="width: 2%; vertical-align: top;">:</td>
-                <td>
-                    <ol style="margin:0; padding-left: 15px;">
-                        <li id="print-maksud">Melaksanakan kordinasi teknis sistem informasi.</li>
-                        <li>Tempat Tujuan: <strong id="print-tujuan">Jakarta</strong></li>
-                        <li>Waktu Pelaksanaan: <strong id="print-waktu">3 Hari</strong></li>
-                    </ol>
-                </td>
+                <td style="width: 25%;">Sudah Terima Dari</td>
+                <td style="width: 3%;">:</td>
+                <td>Bendahara Pengeluaran <span class="kw-print-instansi">Dinas Teknologi Informasi</span></td>
+            </tr>
+            <tr>
+                <td>Uang Sejumlah</td>
+                <td>:</td>
+                <td><strong style="background: #eee; padding: 2px 8px;" id="kw-print-terbilang">Tiga Juta Rupiah</strong></td>
+            </tr>
+            <tr>
+                <td style="vertical-align: top;">Untuk Pembayaran</td>
+                <td style="vertical-align: top;">:</td>
+                <td id="kw-print-untuk">Biaya Perjalanan Dinas Dalam Rangka Koordinasi Teknis berdasarkan SPT No: 800/001/SPT/2026</td>
+            </tr>
+            <tr>
+                <td>Terbilang (Rp)</td>
+                <td>:</td>
+                <td><strong style="font-size: 13pt;" id="kw-print-total-rp">Rp 3.000.000,-</strong></td>
             </tr>
         </table>
-    </div>
-    
-    <p>Demikian Surat Perintah Tugas ini dibuat untuk dilaksanakan dengan penuh tanggung jawab.</p>
 
-    <div class="signature-area">
-        <div class="signature-box">
-            Ditetapkan di: Kota Dummy<br>
-            Pada Tanggal: <span id="print-tgl-tetap">1 Agustus 2026</span><br>
-            <strong id="print-pejabat-jabatan">KEPALA DINAS</strong>
-            <div class="signature-space"></div>
-            <u><strong id="print-pejabat-nama">IR. NAMA KEPALA DINAS, M.Si</strong></u><br>
-            <span id="print-pejabat-nip">NIP. 19700101 199503 1 001</span>
+        <table class="table-print-grid" style="margin-top:20px;">
+            <thead>
+                <tr style="background:#f2f2f2;">
+                    <th>No</th>
+                    <th>Rincian Biaya Perjalanan Dinas</th>
+                    <th>Jumlah (Rp)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align:center;">1</td>
+                    <td>Uang Harian (<span id="kw-print-hari">3</span> Hari x <span id="kw-print-satuan">Rp 380.000</span>)</td>
+                    <td style="text-align:right;" id="kw-print-uang-harian">Rp 1.140.000</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center;">2</td>
+                    <td>Biaya Transportasi PP</td>
+                    <td style="text-align:right;" id="kw-print-transport">Rp 1.200.000</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center;">3</td>
+                    <td>Biaya Penginapan / Akomodasi</td>
+                    <td style="text-align:right;" id="kw-print-penginapan">Rp 1.000.000</td>
+                </tr>
+                <tr>
+                    <td style="text-align:center;">4</td>
+                    <td>Lain-Lain / Represensi</td>
+                    <td style="text-align:right;" id="kw-print-lain">Rp 0</td>
+                </tr>
+                <tr style="font-weight:bold; background:#f9f9f9;">
+                    <td colspan="2" style="text-align:right;">JUMLAH TOTAL</td>
+                    <td style="text-align:right;" id="kw-print-grandtotal">Rp 3.340.000</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: space-between; margin-top: 40px; text-align: center;">
+            <div style="width: 45%;">
+                Mengetahui/Menyetujui:<br>
+                Pejabat Pembuat Komitmen
+                <div style="height: 70px;"></div>
+                <u><strong id="kw-print-ppk-nama">IR. NAMA KEPALA DINAS, M.Si</strong></u><br>
+                NIP. <span id="kw-print-ppk-nip">19700101 199503 1 001</span>
+            </div>
+            <div style="width: 45%;">
+                Yang Menerima Uang,<br>
+                Pelaksana Perjalanan Dinas
+                <div style="height: 70px;"></div>
+                <u><strong id="kw-print-penerima-nama">BUDI SANTOSO, S.Kom</strong></u><br>
+                NIP. <span id="kw-print-penerima-nip">19850101 201001 1 001</span>
+            </div>
         </div>
     </div>
+
+    <!-- Template Cetak LHPD -->
+    <div id="print-template-lhpd" style="display:none;">
+        <div class="kop-surat">
+            <img src="https://placehold.co/100x100/eeeeee/333333?text=LOGO" class="kop-logo" alt="Logo">
+            <div class="kop-text">
+                <h4 class="lhpd-print-pemda">PEMERINTAH KABUPATEN DUMMY</h4>
+                <h3 class="lhpd-print-instansi">DINAS TEKNOLOGI INFORMASI</h3>
+            </div>
+        </div>
+
+        <div class="surat-title">
+            LAPORAN HASIL PERJALANAN DINAS (LHPD)<br>
+            <span style="font-weight: normal; font-size: 11pt;" id="lhpd-print-nomor">Nomor: 090/001/LHPD/2026</span>
+        </div>
+
+        <table style="width: 100%; margin-bottom: 20px; font-size:11pt; line-height:1.6;">
+            <tr><td style="width:25%;">1. Dasar Perintah</td><td style="width:2%;">:</td><td id="lhpd-print-spt">SPT Nomor: 800/001/SPT/2026</td></tr>
+            <tr><td>2. Petugas Pelapor</td><td>:</td><td id="lhpd-print-pelapor">Budi Santoso, S.Kom</td></tr>
+            <tr><td>3. Maksud Perjalanan</td><td>:</td><td id="lhpd-print-maksud">Koordinasi Teknis</td></tr>
+            <tr><td>4. Tujuan & Waktu</td><td>:</td><td id="lhpd-print-tujuan">Jakarta (3 Hari)</td></tr>
+        </table>
+
+        <div style="font-weight:bold; margin-bottom:5px;">HASIL PELAKSANAAN KEGIATAN:</div>
+        <div style="border:1px solid #ccc; padding:12px; margin-bottom:20px; font-size:11pt; min-height:120px;" id="lhpd-print-hasil">
+            Hasil kegiatan berjalan lancar...
+        </div>
+
+        <div style="font-weight:bold; margin-bottom:5px;">SARAN / REKOMENDASI TINDAK LANJUT:</div>
+        <div style="border:1px solid #ccc; padding:12px; margin-bottom:20px; font-size:11pt; min-height:80px;" id="lhpd-print-saran">
+            Diperlukan tindak lanjut sistem...
+        </div>
+
+        <div class="signature-area">
+            <div class="signature-box">
+                Tanggal: <span id="lhpd-print-tgl">03 Agustus 2026</span><br>
+                Pelapor / Petugas Tugas,
+                <div class="signature-space"></div>
+                <u><strong id="lhpd-print-ttd-nama">BUDI SANTOSO, S.Kom</strong></u><br>
+                NIP. <span id="lhpd-print-ttd-nip">19850101 201001 1 001</span>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -814,12 +1256,15 @@
     ]);
 
     var cachedST = getStoredData('sppd_st', []);
+    var cachedLHPD = getStoredData('sppd_lhpd', []);
 
     var tablePegawai = null;
     var tableDPA = null;
     var tableKop = null;
     var tablePejabat = null;
     var tableST = null;
+    var tableSPPD = null;
+    var tableLHPD = null;
     var myChart = null;
 
     function getModal(id) {
@@ -847,6 +1292,8 @@
                 tableKop = $('#tableKop').DataTable({ responsive: true });
                 tablePejabat = $('#tablePejabat').DataTable({ responsive: true });
                 tableST = $('#tableST').DataTable({ responsive: true });
+                tableSPPD = $('#tableSPPD').DataTable({ responsive: true });
+                tableLHPD = $('#tableLHPD').DataTable({ responsive: true });
             }
         } catch(e) {}
 
@@ -857,6 +1304,10 @@
         try { loadKopSurat(); } catch(e) {}
         try { loadPejabat(); } catch(e) {}
         try { loadST(); } catch(e) {}
+        try { loadSPPDTable(); } catch(e) {}
+        try { loadLHPDTable(); } catch(e) {}
+
+        $('.calc-biaya').on('input', calculateKwitansiTotal);
     });
 
     function updateDbStatusBadge() {
@@ -902,8 +1353,15 @@
                 const f = document.getElementById('formST');
                 if (f) f.reset();
                 populatePegawaiDropdowns();
+                populateDPADropdown();
                 const num = (cachedST.length + 1).toString().padStart(3, '0');
                 $('#stNomor').val('800/' + num + '/SPT/2026');
+            } else if (modalId === 'modalLHPD') {
+                const f = document.getElementById('formLHPD');
+                if (f) f.reset();
+                populateSTDropdownForLHPD();
+                const num = (cachedLHPD.length + 1).toString().padStart(3, '0');
+                $('#lhpdNomor').val('090/' + num + '/LHPD/2026');
             } else if (modalId === 'modalSupabase') {
                 $('#supabaseUrlInput').val(localStorage.getItem('sppd_supabase_url') || '');
                 $('#supabaseKeyInput').val(localStorage.getItem('sppd_supabase_key') || '');
@@ -933,7 +1391,25 @@
             $('#count-pegawai').text(cachedPegawai.length || 0);
             $('#count-st').text(cachedST.length || 0);
             $('#count-sppd').text(cachedST.length || 0);
-            $('#count-laporan').text(0);
+            $('#count-laporan').text(cachedLHPD.length || 0);
+
+            let recentHtml = '';
+            const recentItems = [...cachedST].reverse().slice(0, 5);
+            if (recentItems.length > 0) {
+                recentItems.forEach(item => {
+                    const p1 = item.pelaksana1 ? item.pelaksana1.split(' (')[0] : '-';
+                    recentHtml += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="d-block text-truncate" style="max-width:200px;">${item.maksud || 'Perjalanan Dinas'}</strong>
+                            <small class="text-muted">${p1} - ${item.tujuan || ''}</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">${item.lama || 1} Hari</span>
+                    </li>`;
+                });
+            } else {
+                recentHtml = `<li class="list-group-item text-muted text-center py-4">Belum ada perjalanan dinas</li>`;
+            }
+            $('#recentStList').html(recentHtml);
         } catch(e) {}
     }
 
@@ -959,7 +1435,7 @@
                     p.jabatan || '-',
                     p.unitKerja || p.unit_kerja || '-',
                     p.tingkatPerjadin || p.tingkat_perjadin || '-',
-                    `<button class="btn btn-sm btn-info me-1" onclick="editPegawai('${p.id}')"><i class="fas fa-edit"></i></button>
+                    `<button class="btn btn-sm btn-info me-1 text-white" onclick="editPegawai('${p.id}')"><i class="fas fa-edit"></i></button>
                      <button class="btn btn-sm btn-danger" onclick="deletePegawai('${p.id}')"><i class="fas fa-trash"></i></button>`
                 ]);
             });
@@ -978,6 +1454,14 @@
     }
     window.populatePegawaiDropdowns = populatePegawaiDropdowns;
 
+    function populateDPADropdown() {
+        let options = '<option value="">-- Pilih DPA / Kode Rekening --</option>';
+        cachedDPA.forEach(d => {
+            options += `<option value="${d.id}">${d.kode_rekening} - ${d.sub_kegiatan || d.kegiatan}</option>`;
+        });
+        $('#stDPA').html(options);
+    }
+
     async function savePegawai(e) {
         if (e) e.preventDefault();
         const id = $('#pegawaiId').val();
@@ -994,9 +1478,7 @@
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         if (supabaseClient) {
-            try {
-                await supabaseClient.from('pegawai').upsert([payload]);
-            } catch(err) {}
+            try { await supabaseClient.from('pegawai').upsert([payload]); } catch(err) {}
         }
 
         if (id) {
@@ -1130,7 +1612,7 @@
                 tableKop.row.add([
                     index + 1, k.pemda || '-', k.instansi || '-', k.alamat || '-', statusBadge,
                     `${btnSetAktif}
-                     <button class="btn btn-sm btn-info me-1" onclick="editKopSurat('${k.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                     <button class="btn btn-sm btn-info text-white me-1" onclick="editKopSurat('${k.id}')" title="Edit"><i class="fas fa-edit"></i></button>
                      <button class="btn btn-sm btn-danger" onclick="deleteKopSurat('${k.id}')" title="Hapus"><i class="fas fa-trash"></i></button>`
                 ]);
             });
@@ -1158,9 +1640,9 @@
         $('#previewKopAlamat').text(alamat);
         if (logo) $('#previewKopLogo').attr('src', logo);
 
-        $('.kop-text h4').text(pemda);
-        $('.kop-text h3').text(instansi);
-        $('.kop-text p').text(alamat);
+        $('.kop-text h4, .kw-print-pemda, .lhpd-print-pemda, #sppd-print-pemda').text(pemda);
+        $('.kop-text h3, .kw-print-instansi, .lhpd-print-instansi, #sppd-print-instansi').text(instansi);
+        $('.kop-text p, #sppd-print-alamat').text(alamat);
         if (logo) $('.kop-logo').attr('src', logo);
     }
     window.previewKopSurat = previewKopSurat;
@@ -1263,7 +1745,7 @@
                 tablePejabat.row.add([
                     index + 1, p.nama || '-', p.nip || '-', p.jabatan || '-', statusBadge,
                     `${btnSetAktif}
-                     <button class="btn btn-sm btn-info me-1" onclick="editPejabat('${p.id}')"><i class="fas fa-edit"></i></button>
+                     <button class="btn btn-sm btn-info text-white me-1" onclick="editPejabat('${p.id}')"><i class="fas fa-edit"></i></button>
                      <button class="btn btn-sm btn-danger" onclick="deletePejabat('${p.id}')"><i class="fas fa-trash"></i></button>`
                 ]);
             });
@@ -1363,7 +1845,7 @@
                     d.sub_kegiatan || '-', 
                     d.kode_rekening || '-', 
                     d.tahun || '-',
-                    `<button class="btn btn-sm btn-info me-1" onclick="editDPA('${d.id}')"><i class="fas fa-edit"></i></button>
+                    `<button class="btn btn-sm btn-info text-white me-1" onclick="editDPA('${d.id}')"><i class="fas fa-edit"></i></button>
                      <button class="btn btn-sm btn-danger" onclick="deleteDPA('${d.id}')"><i class="fas fa-trash"></i></button>`
                 ]);
             });
@@ -1437,9 +1919,14 @@
             cachedST.forEach((st) => {
                 const stString = JSON.stringify(st).replace(/'/g, "&apos;");
                 tableST.row.add([
-                    st.nomor || '-', st.tanggal || '-', st.maksud || '-', st.tujuan || '-', (st.pelaksana1 || '-') + (st.pelaksana2 ? ', ...' : ''),
+                    st.nomor || '-', 
+                    formatDate(st.tanggal), 
+                    st.maksud || '-', 
+                    st.tujuan || '-', 
+                    (st.pelaksana1 ? st.pelaksana1.split(' (')[0] : '-') + (st.pelaksana2 ? ', ...' : ''),
                     `<button class="btn btn-sm btn-primary me-1" title="Cetak SPT" onclick='cetakSPT(${stString})'><i class="fas fa-print"></i> SPT</button>
-                     <button class="btn btn-sm btn-success" title="Cetak SPPD" onclick="Swal.fire('SPPD', 'Mencetak SPPD...', 'info')"><i class="fas fa-print"></i> SPPD</button>`
+                     <button class="btn btn-sm btn-success me-1" title="Cetak SPPD" onclick='cetakSPPDDirect("${st.id}")'><i class="fas fa-print"></i> SPPD</button>
+                     <button class="btn btn-sm btn-danger" title="Hapus" onclick="deleteST('${st.id}')"><i class="fas fa-trash"></i></button>`
                 ]);
             });
             tableST.draw();
@@ -1451,13 +1938,17 @@
         const payload = {
             id: generateId(),
             nomor: $('#stNomor').val(),
+            nomorSppd: '090/' + (cachedST.length + 1).toString().padStart(3, '0') + '/SPPD/2026',
             tanggal: $('#stTanggal').val(),
+            dpaId: $('#stDPA').val(),
             dasar: $('#stDasar').val(),
             maksud: $('#stMaksud').val(),
+            berangkatDari: $('#stBerangkatDari').val() || 'Kota Kedudukan',
             tujuan: $('#stTujuan').val(),
-            lama: parseInt($('#stLama').val()),
+            lama: parseInt($('#stLama').val()) || 1,
             berangkat: $('#stBerangkat').val(),
             kembali: $('#stKembali').val(),
+            transport: $('#stTransport').val(),
             pelaksana1: $('#stPegawai1').val(),
             pelaksana2: $('#stPegawai2').val(),
             pelaksana3: $('#stPegawai3').val()
@@ -1471,13 +1962,201 @@
         closeModalAndCleanup('modalST');
         Swal.fire('Berhasil', 'Surat Tugas dan SPPD berhasil dibuat.', 'success');
         loadST();
+        loadSPPDTable();
         loadDashboard();
     }
     window.saveST = saveST;
 
+    function deleteST(id) {
+        Swal.fire({
+            title: 'Hapus Surat Tugas?',
+            text: "Dokumen SPT dan SPPD terkait akan dihapus.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Ya, Hapus'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                cachedST = cachedST.filter(s => String(s.id) !== String(id));
+                setStoredData('sppd_st', cachedST);
+                Swal.fire('Terhapus!', 'Surat Tugas telah dihapus.', 'success');
+                loadST();
+                loadSPPDTable();
+                loadDashboard();
+            }
+        });
+    }
+    window.deleteST = deleteST;
+
+    function loadSPPDTable() {
+        if (tableSPPD) {
+            tableSPPD.clear();
+            cachedST.forEach((st) => {
+                const statusBiaya = st.biaya ? `<span class="badge bg-success">Rp ${numberFormat(st.biaya.total)}</span>` : `<span class="badge bg-warning text-dark">Belum Diisi</span>`;
+                
+                tableSPPD.row.add([
+                    st.nomorSppd || '-',
+                    st.nomor || '-',
+                    st.pelaksana1 ? st.pelaksana1.split(' (')[0] : '-',
+                    `${st.tujuan} (${st.lama} Hari)`,
+                    statusBiaya,
+                    `<button class="btn btn-sm btn-primary me-1" onclick="cetakSPPDDirect('${st.id}')"><i class="fas fa-print"></i> Cetak SPPD</button>
+                     <button class="btn btn-sm btn-warning text-dark me-1" onclick="openKwitansiModal('${st.id}')"><i class="fas fa-calculator"></i> Rincian Biaya</button>
+                     ${st.biaya ? `<button class="btn btn-sm btn-success" onclick="cetakKwitansiDirect('${st.id}')"><i class="fas fa-receipt"></i> Kwitansi</button>` : ''}`
+                ]);
+            });
+            tableSPPD.draw();
+        }
+    }
+
+    function openKwitansiModal(stId) {
+        const st = cachedST.find(s => String(s.id) === String(stId));
+        if (!st) return;
+
+        $('#kwitansiStId').val(st.id);
+        $('#kwitansiNoBukti').val(st.nomorSppd || st.nomor);
+        $('#kwitansiPenerima').val(st.pelaksana1 ? st.pelaksana1.split(' (')[0] : '-');
+        $('#kwHariText').text(st.lama || 1);
+
+        if (st.biaya) {
+            $('#kwUangHarianSatuan').val(st.biaya.harianSatuan);
+            $('#kwBiayaTransport').val(st.biaya.transport);
+            $('#kwBiayaPenginapan').val(st.biaya.penginapan);
+            $('#kwBiayaLain').val(st.biaya.lain);
+        } else {
+            $('#kwUangHarianSatuan').val(380000);
+            $('#kwBiayaTransport').val(1200000);
+            $('#kwBiayaPenginapan').val(1000000);
+            $('#kwBiayaLain').val(0);
+        }
+
+        calculateKwitansiTotal();
+        openModal('modalKwitansi');
+    }
+    window.openKwitansiModal = openKwitansiModal;
+
+    function calculateKwitansiTotal() {
+        const stId = $('#kwitansiStId').val();
+        const st = cachedST.find(s => String(s.id) === String(stId));
+        const hari = st ? (st.lama || 1) : 1;
+
+        const harianSatuan = parseFloat($('#kwUangHarianSatuan').val()) || 0;
+        const totalHarian = harianSatuan * hari;
+        $('#kwUangHarianTotal').val(totalHarian);
+
+        const transport = parseFloat($('#kwBiayaTransport').val()) || 0;
+        const penginapan = parseFloat($('#kwBiayaPenginapan').val()) || 0;
+        const lain = parseFloat($('#kwBiayaLain').val()) || 0;
+
+        const total = totalHarian + transport + penginapan + lain;
+        $('#kwTotalDisplay').text('Rp ' + numberFormat(total));
+        return { total, harianSatuan, totalHarian, transport, penginapan, lain };
+    }
+
+    function saveKwitansiBiaya(e) {
+        if (e) e.preventDefault();
+        const stId = $('#kwitansiStId').val();
+        const stIndex = cachedST.findIndex(s => String(s.id) === String(stId));
+        
+        if (stIndex > -1) {
+            const calc = calculateKwitansiTotal();
+            cachedST[stIndex].biaya = {
+                harianSatuan: calc.harianSatuan,
+                harianTotal: calc.totalHarian,
+                transport: calc.transport,
+                penginapan: calc.penginapan,
+                lain: calc.lain,
+                total: calc.total
+            };
+            setStoredData('sppd_st', cachedST);
+            closeModalAndCleanup('modalKwitansi');
+            Swal.fire('Tersimpan', 'Rincian biaya perjalanan berhasil disimpan.', 'success');
+            loadSPPDTable();
+        }
+    }
+    window.saveKwitansiBiaya = saveKwitansiBiaya;
+
+    function populateSTDropdownForLHPD() {
+        let options = '<option value="">-- Pilih Surat Tugas --</option>';
+        cachedST.forEach(s => {
+            options += `<option value="${s.id}">${s.nomor} - ${s.maksud}</option>`;
+        });
+        $('#lhpdStId').html(options);
+    }
+
+    function onSelectSTForLHPD() {
+        const stId = $('#lhpdStId').val();
+        const st = cachedST.find(s => String(s.id) === String(stId));
+        if (st) {
+            $('#lhpdTanggal').val(st.kembali || st.tanggal);
+        }
+    }
+    window.onSelectSTForLHPD = onSelectSTForLHPD;
+
+    function loadLHPDTable() {
+        if (tableLHPD) {
+            tableLHPD.clear();
+            cachedLHPD.forEach((l) => {
+                const st = cachedST.find(s => String(s.id) === String(l.stId)) || {};
+                const pelapor = st.pelaksana1 ? st.pelaksana1.split(' (')[0] : '-';
+                const lJson = JSON.stringify(l).replace(/'/g, "&apos;");
+
+                tableLHPD.row.add([
+                    l.nomor || '-',
+                    st.nomor || '-',
+                    pelapor,
+                    l.hasil || '-',
+                    formatDate(l.tanggal),
+                    `<button class="btn btn-sm btn-primary me-1" onclick='cetakLHPDDirect(${lJson})'><i class="fas fa-print"></i> Cetak LHPD</button>
+                     <button class="btn btn-sm btn-danger" onclick="deleteLHPD('${l.id}')"><i class="fas fa-trash"></i></button>`
+                ]);
+            });
+            tableLHPD.draw();
+        }
+    }
+
+    function saveLHPD(e) {
+        if (e) e.preventDefault();
+        const payload = {
+            id: generateId(),
+            stId: $('#lhpdStId').val(),
+            nomor: $('#lhpdNomor').val(),
+            tanggal: $('#lhpdTanggal').val(),
+            hasil: $('#lhpdHasil').val(),
+            saran: $('#lhpdSaran').val()
+        };
+
+        cachedLHPD.push(payload);
+        setStoredData('sppd_lhpd', cachedLHPD);
+        closeModalAndCleanup('modalLHPD');
+        Swal.fire('Berhasil', 'Laporan Hasil Perjalanan Dinas berhasil disimpan.', 'success');
+        loadLHPDTable();
+        loadDashboard();
+    }
+    window.saveLHPD = saveLHPD;
+
+    function deleteLHPD(id) {
+        Swal.fire({
+            title: 'Hapus Laporan?',
+            text: "Laporan Perjalanan Dinas akan dihapus.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Ya, Hapus'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                cachedLHPD = cachedLHPD.filter(l => String(l.id) !== String(id));
+                setStoredData('sppd_lhpd', cachedLHPD);
+                Swal.fire('Terhapus!', 'Laporan telah dihapus.', 'success');
+                loadLHPDTable();
+                loadDashboard();
+            }
+        });
+    }
+    window.deleteLHPD = deleteLHPD;
+
     function cetakSPT(stData) {
         if (!stData) return;
-        
         previewKopSurat();
 
         const activePejabat = cachedPejabat.find(p => p.active) || cachedPejabat[0] || {
@@ -1512,17 +2191,199 @@
         }
         $('#print-pegawai-list').html(listPegawai);
 
+        $('#print-template-spt').show();
+        $('#print-template-sppd').hide();
+        $('#print-template-kwitansi').hide();
+        $('#print-template-lhpd').hide();
+
         $('#print-area').show();
         window.print();
         $('#print-area').hide();
     }
     window.cetakSPT = cetakSPT;
 
+    function cetakSPPDDirect(stId) {
+        const st = cachedST.find(s => String(s.id) === String(stId));
+        if (!st) return;
+        previewKopSurat();
+
+        const activePejabat = cachedPejabat.find(p => p.active) || cachedPejabat[0] || {};
+        const dpa = cachedDPA.find(d => String(d.id) === String(st.dpaId)) || {};
+
+        const p1Name = st.pelaksana1 ? st.pelaksana1.split(' (')[0] : '-';
+        const p1Peg = cachedPegawai.find(p => p.nama === p1Name) || {};
+
+        $('#sppd-print-nomor-sppd').text(st.nomorSppd || st.nomor);
+        $('#sppd-print-ppk').text(activePejabat.jabatan || 'Kepala Dinas');
+        $('#sppd-print-pegawai-nama').html(`<b>${p1Name}</b>`);
+        $('#sppd-print-gol').text(p1Peg.golongan || '-');
+        $('#sppd-print-jabatan').text(p1Peg.jabatan || '-');
+        $('#sppd-print-tingkat').text(p1Peg.tingkatPerjadin || 'Tingkat C');
+
+        $('#sppd-print-maksud').text(st.maksud || '-');
+        $('#sppd-print-transport').text(st.transport || 'Kendaraan Dinas');
+        $('#sppd-print-asal, #visum-asal, #visum-asal2, #visum-asal3').text(st.berangkatDari || 'Kota Kedudukan');
+        $('#sppd-print-tujuan, #visum-tujuan, #visum-tujuan2, #visum-tujuan3').text(st.tujuan || '-');
+        
+        $('#sppd-print-lama').text(`${st.lama || 1} Hari`);
+        $('#sppd-print-tgl-berangkat, #visum-tgl-bkt, #visum-tgl-tiba').text(formatDate(st.berangkat));
+        $('#sppd-print-tgl-kembali, #visum-tgl-kmb, #visum-tgl-kmb2').text(formatDate(st.kembali));
+
+        let pengikut = [];
+        if (st.pelaksana2) pengikut.push(st.pelaksana2.split(' (')[0]);
+        if (st.pelaksana3) pengikut.push(st.pelaksana3.split(' (')[0]);
+        $('#sppd-print-pengikut').text(pengikut.length > 0 ? pengikut.join(', ') : '-');
+
+        $('#sppd-print-instansi-beban').text($('#previewKopInstansi').text());
+        $('#sppd-print-dpa').text(dpa.kode_rekening ? `${dpa.kode_rekening} (${dpa.sub_kegiatan || dpa.kegiatan})` : '-');
+        $('#sppd-print-st-no').text(st.nomor);
+
+        $('#sppd-print-tempat').text('Kota Kedudukan');
+        $('#sppd-print-tgl-keluar').text(formatDate(st.tanggal));
+        $('#sppd-print-pejabat-jabatan, #visum-pejabat-ttd').text((activePejabat.jabatan || 'KEPALA DINAS').toUpperCase());
+        $('#sppd-print-pejabat-nama').text((activePejabat.nama || '').toUpperCase());
+        $('#sppd-print-pejabat-nip').text(`NIP. ${activePejabat.nip || '-'}`);
+
+        $('#print-template-spt').hide();
+        $('#print-template-sppd').show();
+        $('#print-template-kwitansi').hide();
+        $('#print-template-lhpd').hide();
+
+        $('#print-area').show();
+        window.print();
+        $('#print-area').hide();
+    }
+    window.cetakSPPDDirect = cetakSPPDDirect;
+
+    function cetakKwitansiDirect(stId) {
+        const st = cachedST.find(s => String(s.id) === String(stId));
+        if (!st || !st.biaya) {
+            Swal.fire('Perhatian', 'Rincian biaya belum diisi.', 'warning');
+            return;
+        }
+        previewKopSurat();
+
+        const activePejabat = cachedPejabat.find(p => p.active) || cachedPejabat[0] || {};
+        const p1Name = st.pelaksana1 ? st.pelaksana1.split(' (')[0] : '-';
+        const p1Peg = cachedPegawai.find(p => p.nama === p1Name) || {};
+
+        $('#kw-print-terbilang').text(terbilangRupiah(st.biaya.total));
+        $('#kw-print-untuk').text(`Pembayaran Perjalanan Dinas ${st.maksud} tujuan ${st.tujuan} sesuai SPT No: ${st.nomor}`);
+        $('#kw-print-total-rp').text('Rp ' + numberFormat(st.biaya.total) + ',-');
+
+        $('#kw-print-hari').text(st.lama || 1);
+        $('#kw-print-satuan').text('Rp ' + numberFormat(st.biaya.harianSatuan));
+        $('#kw-print-uang-harian').text('Rp ' + numberFormat(st.biaya.harianTotal));
+        $('#kw-print-transport').text('Rp ' + numberFormat(st.biaya.transport));
+        $('#kw-print-penginapan').text('Rp ' + numberFormat(st.biaya.penginapan));
+        $('#kw-print-lain').text('Rp ' + numberFormat(st.biaya.lain));
+        $('#kw-print-grandtotal').text('Rp ' + numberFormat(st.biaya.total));
+
+        $('#kw-print-ppk-nama').text((activePejabat.nama || '').toUpperCase());
+        $('#kw-print-ppk-nip').text(activePejabat.nip || '-');
+
+        $('#kw-print-penerima-nama').text(p1Name.toUpperCase());
+        $('#kw-print-penerima-nip').text(p1Peg.nip || '-');
+
+        $('#print-template-spt').hide();
+        $('#print-template-sppd').hide();
+        $('#print-template-kwitansi').show();
+        $('#print-template-lhpd').hide();
+
+        $('#print-area').show();
+        window.print();
+        $('#print-area').hide();
+    }
+    window.cetakKwitansiDirect = cetakKwitansiDirect;
+
+    function cetakLHPDDirect(lhpd) {
+        if (!lhpd) return;
+        previewKopSurat();
+
+        const st = cachedST.find(s => String(s.id) === String(lhpd.stId)) || {};
+        const p1Name = st.pelaksana1 ? st.pelaksana1.split(' (')[0] : '-';
+        const p1Peg = cachedPegawai.find(p => p.nama === p1Name) || {};
+
+        $('#lhpd-print-nomor').text(`Nomor: ${lhpd.nomor}`);
+        $('#lhpd-print-spt').text(`SPT Nomor: ${st.nomor || '-'}`);
+        $('#lhpd-print-pelapor').text(p1Name);
+        $('#lhpd-print-maksud').text(st.maksud || '-');
+        $('#lhpd-print-tujuan').text(`${st.tujuan || '-'} (${st.lama || 1} Hari)`);
+
+        $('#lhpd-print-hasil').text(lhpd.hasil || '-');
+        $('#lhpd-print-saran').text(lhpd.saran || '-');
+
+        $('#lhpd-print-tgl').text(formatDate(lhpd.tanggal));
+        $('#lhpd-print-ttd-nama').text(p1Name.toUpperCase());
+        $('#lhpd-print-ttd-nip').text(p1Peg.nip || '-');
+
+        $('#print-template-spt').hide();
+        $('#print-template-sppd').hide();
+        $('#print-template-kwitansi').hide();
+        $('#print-template-lhpd').show();
+
+        $('#print-area').show();
+        window.print();
+        $('#print-area').hide();
+    }
+    window.cetakLHPDDirect = cetakLHPDDirect;
+
+    function exportDataBackup() {
+        const backupData = {
+            pegawai: cachedPegawai,
+            dpa: cachedDPA,
+            kop: cachedKopSurat,
+            pejabat: cachedPejabat,
+            st: cachedST,
+            lhpd: cachedLHPD,
+            exportedAt: new Date().toISOString()
+        };
+
+        const jsonStr = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Backup_eSPPD_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    window.exportDataBackup = exportDataBackup;
+
     function formatDate(dateStr) {
         if (!dateStr) return '';
         const d = new Date(dateStr);
         if (isNaN(d.getTime())) return dateStr;
         return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function numberFormat(num) {
+        return new Intl.NumberFormat('id-ID').format(num || 0);
+    }
+
+    function terbilangRupiah(nilai) {
+        var bilangan = [
+            "", "Satu", "Dua", "Tiga", "Empat", "Lima",
+            "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"
+        ];
+
+        var terbilang = function(n) {
+            if (n < 12) return bilangan[n];
+            if (n < 20) return terbilang(n - 10) + " Belas";
+            if (n < 100) return terbilang(Math.floor(n / 10)) + " Puluh " + terbilang(n % 10);
+            if (n < 200) return "Seratus " + terbilang(n - 100);
+            if (n < 1000) return terbilang(Math.floor(n / 100)) + " Ratus " + terbilang(n % 100);
+            if (n < 2000) return "Seribu " + terbilang(n - 1000);
+            if (n < 1000000) return terbilang(Math.floor(n / 1000)) + " Ribu " + terbilang(n % 1000);
+            if (n < 1000000000) return terbilang(Math.floor(n / 1000000)) + " Juta " + terbilang(n % 1000000);
+            return n.toString();
+        };
+
+        var hasil = terbilang(Math.floor(nilai)).trim();
+        return (hasil ? hasil : "Nol") + " Rupiah";
     }
 
     function initChart() {
@@ -1540,10 +2401,10 @@
                     label: 'Jumlah SPPD',
                     data: [2, 5, 3, 8, 4, 1, 0, 0, 0, 0, 0, 0],
                     backgroundColor: 'rgba(13, 110, 253, 0.7)',
-                    borderWidth: 1
+                    borderRadius: 4
                 }]
             },
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
         });
     }
 </script>
