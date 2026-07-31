@@ -619,6 +619,8 @@
         if(id === 'modalDpa') {
             document.getElementById('dpaId').value = '';
             document.getElementById('dpaTahun').value = new Date().getFullYear();
+            document.getElementById('dpaKegiatan').value = '';
+            document.getElementById('dpaSubKegiatan').value = '';
         }
         const modal = new bootstrap.Modal(document.getElementById(id));
         modal.show();
@@ -837,6 +839,7 @@
                 <td class="fw-bold">${d.kegiatan || '-'}</td>
                 <td>${d.sub_kegiatan || '-'}</td>
                 <td class="text-end">
+                    <button class="btn btn-sm btn-outline-warning" onclick="editDpa('${d.id}')" title="Edit"><i class="fas fa-edit"></i></button>
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteDpa('${d.id}')" title="Hapus"><i class="fas fa-trash"></i></button>
                 </td>
             `;
@@ -865,6 +868,17 @@
             loadDpa();
         } catch(err) {
             Swal.fire('Gagal', 'Pastikan tabel "dpa" ada di Supabase. Error: ' + err.message, 'error');
+        }
+    }
+
+    function editDpa(id) {
+        const item = cachedDpa.find(d => String(d.id) === String(id));
+        if (item) {
+            document.getElementById('dpaId').value = item.id;
+            document.getElementById('dpaTahun').value = item.tahun_anggaran || new Date().getFullYear();
+            document.getElementById('dpaKegiatan').value = item.kegiatan || '';
+            document.getElementById('dpaSubKegiatan').value = item.sub_kegiatan || '';
+            openModal('modalDpa');
         }
     }
     
