@@ -3,958 +3,1191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>e-SPPD - Sistem Perjalanan Dinas</title>
+    <title>e-SPPD | Sistem Informasi Perjalanan Dinas</title>
     
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SweetAlert2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    
+    <!-- CSS Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root {
-            --sidebar-width: 260px;
-            --primary-bg: #0f172a; /* Slate 900 */
-            --sidebar-hover: #1e293b; /* Slate 800 */
-            --accent-color: #3b82f6; /* Blue 500 */
-            --text-muted: #94a3b8;
+            --bs-primary: #3b82f6;
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: #1e293b;
+            --body-bg: #f8fafc;
+            --card-border: #e2e8f0;
         }
-        
+
         body {
-            background-color: #f8fafc;
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--body-bg);
+            color: #334155;
             overflow-x: hidden;
         }
 
-        #wrapper {
-            display: flex;
-            width: 100%;
-            align-items: stretch;
-        }
-
+        /* Sidebar Styling */
         #sidebar {
-            min-width: var(--sidebar-width);
-            max-width: var(--sidebar-width);
-            background: var(--primary-bg);
-            color: #fff;
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--sidebar-bg);
+            color: #f8fafc;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 100vh;
-            z-index: 1000;
+            z-index: 1040;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.05);
         }
-
-        #sidebar.collapsed {
-            margin-left: calc(var(--sidebar-width) * -1);
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            background: #0b1120;
+        #sidebar .sidebar-header {
+            padding: 25px 20px;
+            background-color: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-
-        .sidebar-header h4 { margin: 0; font-weight: 600; font-size: 1.2rem; }
-        
-        .menu-title {
-            padding: 10px 20px;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            letter-spacing: 1px;
-            margin-top: 10px;
+        #sidebar .sidebar-header h4 {
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
-
-        #sidebar ul.components { padding: 10px 0; }
-        
+        #sidebar ul.components {
+            padding: 15px 0;
+        }
         #sidebar ul li a {
             padding: 12px 20px;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            color: #cbd5e1;
+            margin: 4px 15px;
+            font-size: 0.95em;
+            font-weight: 500;
+            display: block;
+            color: #94a3b8;
             text-decoration: none;
-            transition: 0.2s;
-            border-left: 4px solid transparent;
+            border-radius: 8px;
+            transition: all 0.2s;
         }
-
         #sidebar ul li a:hover, #sidebar ul li.active > a {
             color: #fff;
             background: var(--sidebar-hover);
-            border-left-color: var(--accent-color);
+            box-shadow: inset 4px 0 0 var(--bs-primary);
         }
-
         #sidebar ul li a i {
             width: 25px;
-            font-size: 1.1rem;
             text-align: center;
             margin-right: 10px;
+            font-size: 1.1em;
         }
 
+        /* Main Content Styling */
         #content {
-            width: 100%;
+            margin-left: 260px;
+            padding: 0;
             min-height: 100vh;
-            transition: all 0.3s;
-            display: flex;
-            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .top-navbar {
-            background: #fff;
+        /* Navbar Styling */
+        .navbar-custom {
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            padding: 15px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 12px 20px;
+            z-index: 1030;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .navbar-custom .dropdown-toggle {
+            font-weight: 600;
+            color: #475569 !important;
         }
 
-        .main-container {
-            padding: 25px;
-            flex-grow: 1;
-        }
-
-        .view-section {
-            display: none;
-            animation: fadeIn 0.4s;
+        /* Content Area */
+        .page-content {
+            padding: 30px;
         }
         
-        .view-section.active { display: block; }
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        .view-section.active {
+            display: block;
+        }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Headings */
+        h3.text-secondary {
+            color: #1e293b !important;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        /* Utilities */
         .card {
-            border: none;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .card-header {
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            margin-bottom: 24px;
             background-color: #fff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 15px 20px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Stat Cards Restyling */
+        .stat-card {
+            border-left: none;
+            position: relative;
+            overflow: hidden;
+            padding: 20px !important;
+        }
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--bs-primary);
+            border-radius: 12px 0 0 12px;
+        }
+        .stat-card.success::before { background-color: #10b981; }
+        .stat-card.warning::before { background-color: #f59e0b; }
+        .stat-card.danger::before { background-color: #ef4444; }
+
+        .stat-card h6 {
+            font-size: 0.85rem;
             font-weight: 600;
-            border-radius: 10px 10px 0 0 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-card h3 {
+            font-weight: 700;
+            color: #0f172a;
+        }
+        
+        /* Icon wrapper trick */
+        .stat-card i.fa-2x {
+            width: 54px;
+            height: 54px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--bs-primary) !important;
+            opacity: 1 !important;
+        }
+        .stat-card.success i.fa-2x { background-color: rgba(16, 185, 129, 0.1); color: #10b981 !important; }
+        .stat-card.warning i.fa-2x { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b !important; }
+        .stat-card.danger i.fa-2x { background-color: rgba(239, 68, 68, 0.1); color: #ef4444 !important; }
+
+        /* Tables Restyling */
+        .table-responsive {
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table thead th {
+            background-color: #f8fafc;
+            border-bottom: 1px solid var(--card-border);
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 16px;
+        }
+        .table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+            color: #475569;
+        }
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f8fafc;
         }
 
-        .stat-card { border-left: 5px solid var(--accent-color); }
-        .stat-card.success { border-left-color: #10b981; }
-        .stat-card.warning { border-left-color: #f59e0b; }
+        /* Buttons */
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 8px 16px;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background-color: var(--bs-primary);
+            border: none;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.4);
+        }
+        
+        /* Modals */
+        .modal-content {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .modal-header {
+            border-bottom: 1px solid var(--card-border);
+            background-color: #f8fafc;
+            border-radius: 16px 16px 0 0;
+            padding: 20px 24px;
+        }
+        .modal-title {
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            padding: 10px 15px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
 
+        /* Badge */
+        .badge {
+            padding: 0.5em 0.8em;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        /* Mobile Toggle */
+        #sidebarCollapse { display: none; }
+        
         @media (max-width: 768px) {
-            #sidebar {
-                margin-left: calc(var(--sidebar-width) * -1);
-                position: fixed;
-            }
-            #sidebar.show { margin-left: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
+            #sidebar { margin-left: -260px; }
+            #sidebar.active { margin-left: 0; }
+            #content { margin-left: 0; }
+            #content.active { margin-left: 260px; }
+            #sidebarCollapse { display: inline-block; }
         }
     </style>
 </head>
 <body>
 
-<div id="wrapper">
-    <!-- Sidebar -->
-    <nav id="sidebar">
-        <div class="sidebar-header">
-            <h4><i class="fas fa-paper-plane text-primary"></i> e-SPPD</h4>
-            <small class="text-muted">Gov-Tech System</small>
-        </div>
+    <div class="wrapper d-flex">
         
-        <ul class="list-unstyled components">
-            <li class="active">
-                <a href="#" onclick="switchView('dashboardView', this)"><i class="fas fa-home"></i> Dashboard</a>
-            </li>
-            
-            <div class="menu-title">Data Master</div>
-            <li>
-                <a href="#" onclick="switchView('pegawaiView', this)"><i class="fas fa-users"></i> Master Pegawai</a>
-            </li>
-            <li>
-                <a href="#" onclick="switchView('dpaView', this)"><i class="fas fa-file-invoice-dollar"></i> Master DPA</a>
-            </li>
-            <li>
-                <a href="#" onclick="switchView('kopSuratView', this)"><i class="fas fa-image"></i> Kop Surat & Logo</a>
-            </li>
-            <li>
-                <a href="#" onclick="switchView('pejabatView', this)"><i class="fas fa-user-tie"></i> Pejabat Penandatangan</a>
-            </li>
-            
-            <div class="menu-title">Transaksi Perjalanan</div>
-            <li>
-                <a href="#" onclick="switchView('sptView', this)"><i class="fas fa-file-signature"></i> Surat Tugas (SPT)</a>
-            </li>
-            <li>
-                <a href="#" onclick="switchView('sppdView', this)"><i class="fas fa-plane-departure"></i> Cetak SPPD</a>
-            </li>
-            <li>
-                <a href="#" onclick="switchView('laporanView', this)"><i class="fas fa-file-alt"></i> Laporan (LHPD)</a>
-            </li>
-        </ul>
-    </nav>
-
-    <!-- Content -->
-    <div id="content">
-        <!-- Top Navbar -->
-        <div class="top-navbar">
-            <button type="button" id="sidebarCollapse" class="btn btn-light shadow-sm" onclick="toggleSidebar()">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="d-flex align-items-center">
-                <span id="dbStatusBadge" class="badge bg-secondary me-3 p-2">
-                    <i class="fas fa-wifi text-danger"></i> Offline / Belum Config
-                </span>
-                <div class="dropdown">
-                    <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle"></i> Administrator
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow">
-                        <li><a class="dropdown-item" href="#" onclick="openModal('modalSupabase')"><i class="fas fa-database me-2"></i>Database Config</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                    </ul>
-                </div>
+        <!-- SIDEBAR -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h4 class="m-0"><i class="fas fa-paper-plane text-primary me-2"></i>e-SPPD</h4>
+                <small class="text-muted">Versi 2.0</small>
             </div>
-        </div>
+            <ul class="list-unstyled components">
+                <li class="active">
+                    <a href="#" onclick="switchView('dashboardView', this)"><i class="fas fa-home"></i> Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#masterDataSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle">
+                        <i class="fas fa-database"></i> Data Master
+                    </a>
+                    <ul class="collapse list-unstyled" id="masterDataSubmenu">
+                        <li><a href="#" onclick="switchView('pegawaiView', this)"><i class="fas fa-users"></i> Master Pegawai</a></li>
+                        <li><a href="#" onclick="switchView('dpaView', this)"><i class="fas fa-wallet"></i> Master DPA</a></li>
+                        <li><a href="#" onclick="switchView('kopSuratView', this)"><i class="fas fa-heading"></i> Kop Surat</a></li>
+                        <li><a href="#" onclick="switchView('pejabatView', this)"><i class="fas fa-user-tie"></i> Penandatangan</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" onclick="switchView('sptView', this)"><i class="fas fa-file-signature"></i> Surat Tugas (SPT)</a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchView('sppdView', this)"><i class="fas fa-file-invoice"></i> Dokumen SPPD</a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchView('laporanView', this)"><i class="fas fa-chart-line"></i> Laporan (LHPD)</a>
+                </li>
+            </ul>
+        </nav>
 
-        <!-- Main Content Area -->
-        <div class="main-container">
+        <!-- MAIN CONTENT -->
+        <div id="content">
             
-            <!-- 1. DASHBOARD VIEW -->
-            <div id="dashboardView" class="view-section active">
-                <h3 class="mb-4 text-secondary">Dashboard Overview</h3>
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <div class="card stat-card shadow-sm h-100">
-                            <div class="card-body">
-                                <h6 class="text-muted text-uppercase">Total Pegawai</h6>
-                                <h2 id="stat-pegawai">0</h2>
+            <!-- TOP NAVBAR -->
+            <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-primary">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    
+                    <div class="ms-auto d-flex align-items-center">
+                        <span id="connectionBadge" class="badge bg-warning text-dark me-3 p-2 shadow-sm" onclick="$('#modalSettings').modal('show')" style="cursor: pointer;">
+                            <i class="fas fa-plug"></i> Mode Online Wajib - Klik Konfigurasi
+                        </span>
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle text-dark fw-bold" href="#" role="button" data-bs-toggle="dropdown">
+                                <img src="https://placehold.co/40x40/3498db/ffffff?text=AD" class="rounded-circle me-2" alt="User">
+                                Administrator
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalSettings"><i class="fas fa-cog me-2"></i>Pengaturan Database</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-sign-out-alt me-2"></i>Keluar</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="page-content">
+                
+                <!-- 1. DASHBOARD VIEW -->
+                <div id="dashboardView" class="view-section active">
+                    <h3 class="text-secondary mb-4">Dashboard Utama</h3>
+                    <div class="row">
+                        <div class="col-md-3 mb-4">
+                            <div class="card stat-card p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-1">Total Pegawai</h6>
+                                        <h3 class="m-0" id="statPegawai">0</h3>
+                                    </div>
+                                    <i class="fas fa-users fa-2x text-primary opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card stat-card success p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-1">Surat Tugas (Tahun Ini)</h6>
+                                        <h3 class="m-0" id="statSpt">0</h3>
+                                    </div>
+                                    <i class="fas fa-file-signature fa-2x text-success opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card stat-card warning p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-1">SPPD Diterbitkan</h6>
+                                        <h3 class="m-0" id="statSppd">0</h3>
+                                    </div>
+                                    <i class="fas fa-file-invoice fa-2x text-warning opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card stat-card danger p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-1">Laporan Masuk</h6>
+                                        <h3 class="m-0" id="statLaporan">0</h3>
+                                    </div>
+                                    <i class="fas fa-chart-line fa-2x text-danger opacity-50"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card stat-card success shadow-sm h-100">
-                            <div class="card-body">
-                                <h6 class="text-muted text-uppercase">Surat Tugas (Bulan Ini)</h6>
-                                <h2>0</h2>
+                    <!-- Placeholder Chart -->
+                    <div class="card p-4 text-center text-muted" style="height: 300px; display: flex; align-items: center; justify-content: center; background: #f8f9fa;">
+                        <div>
+                            <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                            <p>Area Grafik Perjalanan Dinas Per Bulan (Membutuhkan Library Chart.js)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. MASTER PEGAWAI VIEW -->
+                <div id="pegawaiView" class="view-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="text-secondary m-0">Master Pegawai</h3>
+                        <button class="btn btn-primary" onclick="document.getElementById('formPegawai').reset(); document.getElementById('pegawaiId').value=''; new bootstrap.Modal(document.getElementById('modalPegawai')).show();"><i class="fas fa-plus"></i> Tambah Pegawai</button>
+                    </div>
+                    <div class="card shadow-sm">
+                        <div class="card-body table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nama Lengkap</th>
+                                        <th>NIP</th>
+                                        <th>Jabatan</th>
+                                        <th>Gol.</th>
+                                        <th>Unit Kerja</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelPegawai">
+                                    <!-- Data via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. MASTER DPA VIEW -->
+                <div id="dpaView" class="view-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="text-secondary m-0">Master DPA (Dokumen Pelaksanaan Anggaran)</h3>
+                        <button class="btn btn-primary" onclick="document.getElementById('formDpa').reset(); document.getElementById('dpaId').value=''; new bootstrap.Modal(document.getElementById('modalDpa')).show();"><i class="fas fa-plus"></i> Tambah DPA</button>
+                    </div>
+                    <div class="card shadow-sm">
+                        <div class="card-body table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Kode / Program Kegiatan</th>
+                                        <th>Sub Kegiatan</th>
+                                        <th>Tahun</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelDpa">
+                                    <!-- Data via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. KOP SURAT VIEW -->
+                <div id="kopSuratView" class="view-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="text-secondary m-0">Master Kop Surat</h3>
+                        <button class="btn btn-primary" onclick="document.getElementById('formKopSurat').reset(); document.getElementById('kopId').value=''; document.getElementById('kopLogoPreview').src='https://placehold.co/100x100/e2e8f0/94a3b8?text=Logo'; new bootstrap.Modal(document.getElementById('modalKopSurat')).show();"><i class="fas fa-plus"></i> Tambah Kop Surat</button>
+                    </div>
+                    <div class="card shadow-sm">
+                        <div class="card-body table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Logo</th>
+                                        <th>Nama Pemda</th>
+                                        <th>Nama Instansi / Sekretariat</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelKopSurat">
+                                    <!-- Data akan dirender di sini -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Kop Surat -->
+                <div class="modal fade" id="modalKopSurat" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Form Kop Surat</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="formKopSurat" onsubmit="saveKopSurat(event)">
+                                    <input type="hidden" id="kopId">
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3 text-center">
+                                            <img id="kopLogoPreview" src="https://placehold.co/100x100/e2e8f0/94a3b8?text=Logo" alt="Preview Logo" class="img-thumbnail mb-2" style="max-height: 100px;">
+                                            <p class="text-muted small">Preview Logo</p>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label">URL Logo (Supabase Storage / Link Publik)</label>
+                                            <input type="url" id="kopLogo" class="form-control" placeholder="https://..." onchange="document.getElementById('kopLogoPreview').src = this.value || 'https://placehold.co/100x100/e2e8f0/94a3b8?text=Logo'">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Nama Pemerintah Daerah</label>
+                                            <input type="text" id="kopPemda" class="form-control" required placeholder="Contoh: PEMERINTAH PROVINSI JAWA BARAT">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Nama Instansi / Dinas</label>
+                                            <input type="text" id="kopInstansi" class="form-control" required placeholder="Contoh: SEKRETARIAT DAERAH / DINAS KESEHATAN">
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label">Alamat Lengkap</label>
+                                            <textarea id="kopAlamat" class="form-control" rows="3" required placeholder="Contoh: Jl. Diponegoro No. 22, Bandung..."></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="text-end mt-3">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Kop Surat</button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card stat-card warning shadow-sm h-100">
-                            <div class="card-body">
-                                <h6 class="text-muted text-uppercase">Dokumen SPPD</h6>
-                                <h2>0</h2>
-                            </div>
+                </div>
+
+                <!-- 5. PEJABAT PENANDATANGAN VIEW (Placeholder) -->
+                <div id="pejabatView" class="view-section">
+                    <h3 class="text-secondary mb-4">Pejabat Penandatangan</h3>
+                    <div class="alert alert-info"><i class="fas fa-info-circle"></i> Fitur manajemen Pejabat sedang dalam pengembangan (Blueprint Mode).</div>
+                </div>
+
+                <!-- 6. SURAT TUGAS VIEW (Form Structure) -->
+                <div id="sptView" class="view-section">
+                    <h3 class="text-secondary mb-4">Buat Surat Perintah Tugas (SPT)</h3>
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <form id="formSpt" onsubmit="alert('Simulasi Simpan SPT Berhasil!'); return false;">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Nomor Surat (Otomatis)</label>
+                                        <input type="text" class="form-control bg-light" id="sptNomor" readonly>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Tanggal Surat</label>
+                                        <input type="date" class="form-control" required>
+                                    </div>
+                                    
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-bold">Pilih DPA Pembayaran</label>
+                                        <select class="form-select" id="sptDpa" required>
+                                            <option value="">-- Pilih DPA (Load from Master) --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-bold">Dasar Pelaksanaan</label>
+                                        <textarea class="form-control" rows="2" placeholder="Contoh: Surat Edaran Mendagri No..." required></textarea>
+                                    </div>
+
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label fw-bold">Maksud Perjalanan Dinas</label>
+                                        <textarea class="form-control" rows="2" placeholder="Dalam rangka..." required></textarea>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold">Tujuan / Lokasi</label>
+                                        <input type="text" class="form-control" placeholder="Kota / Instansi Tujuan" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">Tgl. Berangkat</label>
+                                        <input type="date" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label fw-bold">Tgl. Kembali</label>
+                                        <input type="date" class="form-control" required>
+                                    </div>
+
+                                    <!-- Simulasi Multi Select Pegawai -->
+                                    <div class="col-md-12 mb-4 border-top pt-3">
+                                        <label class="form-label fw-bold text-primary"><i class="fas fa-users"></i> Pilih Pegawai yang Ditugaskan</label>
+                                        <p class="small text-muted">Gunakan tombol Ctrl (Windows) atau Cmd (Mac) untuk memilih lebih dari satu pegawai.</p>
+                                        <select multiple class="form-select" id="sptPegawai" style="height: 150px;" required>
+                                            <!-- Data via JS -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="text-end border-top pt-3">
+                                    <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save"></i> Simpan & Buat SPPD</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card stat-card shadow-sm h-100" style="border-left-color: #8b5cf6;">
-                            <div class="card-body">
-                                <h6 class="text-muted text-uppercase">Laporan Masuk</h6>
-                                <h2>0</h2>
-                            </div>
-                        </div>
-                    </div>
+                </div>
+
+                <!-- 7 & 8. SPPD & LAPORAN (Placeholder) -->
+                <div id="sppdView" class="view-section">
+                    <h3 class="text-secondary mb-4">Dokumen SPPD</h3>
+                    <div class="alert alert-info"><i class="fas fa-info-circle"></i> Fitur Dokumen SPPD (Auto-generate dari SPT) sedang dalam pengembangan.</div>
                 </div>
                 
-                <div class="card shadow-sm mt-3">
-                    <div class="card-body text-center py-5 text-muted">
-                        <i class="fas fa-chart-line fa-3x mb-3 text-light"></i>
-                        <h5>Area Grafik & Statistik</h5>
-                        <p>Membutuhkan koneksi Supabase & data transaksi untuk merender grafik perjalanan dinas.</p>
-                    </div>
+                <div id="laporanView" class="view-section">
+                    <h3 class="text-secondary mb-4">Laporan Hasil Perjalanan Dinas (LHPD)</h3>
+                    <div class="alert alert-info"><i class="fas fa-info-circle"></i> Fitur Form Laporan & Upload Dokumentasi sedang dalam pengembangan.</div>
                 </div>
-            </div>
 
-            <!-- 2. MASTER PEGAWAI VIEW -->
-            <div id="pegawaiView" class="view-section">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="text-secondary">Master Pegawai</h3>
-                    <div>
-                        <button class="btn btn-success me-2" onclick="Swal.fire('Info', 'Fitur Import Excel akan tersedia pada rilis selanjutnya.', 'info')"><i class="fas fa-file-excel"></i> Import</button>
-                        <button class="btn btn-primary" onclick="openModal('modalPegawai')"><i class="fas fa-plus"></i> Tambah Data</button>
-                    </div>
-                </div>
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>NIP</th>
-                                        <th>Nama Pegawai</th>
-                                        <th>Golongan</th>
-                                        <th>Jabatan</th>
-                                        <th>Unit Kerja</th>
-                                        <th class="text-end">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tableBodyPegawai">
-                                    <tr><td colspan="6" class="text-center py-4 text-muted">Belum ada data atau sedang memuat...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3. MASTER DPA VIEW -->
-            <div id="dpaView" class="view-section">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="text-secondary">Master DPA (Anggaran)</h3>
-                    <button class="btn btn-primary" onclick="openModal('modalDpa')"><i class="fas fa-plus"></i> Tambah DPA</button>
-                </div>
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Tahun</th>
-                                        <th>Program / Kegiatan</th>
-                                        <th>Sub Kegiatan</th>
-                                        <th class="text-end">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tableBodyDpa">
-                                    <tr><td colspan="4" class="text-center py-4 text-muted">Belum ada data DPA.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. KOP SURAT VIEW -->
-            <div id="kopSuratView" class="view-section">
-                <h3 class="mb-4 text-secondary">Pengaturan Kop Surat</h3>
-                <div class="card shadow-sm">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-image fa-3x mb-3 text-muted"></i>
-                        <h5>Formulir Kop Surat Resmi</h5>
-                        <p class="text-muted">Di sini Anda akan mengatur Logo Pemda, Nama Instansi, dan Alamat untuk Header Cetakan PDF.</p>
-                        <button class="btn btn-outline-primary" onclick="notImplemented()">Buka Pengaturan Kop</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 5. PEJABAT PENANDATANGAN VIEW -->
-            <div id="pejabatView" class="view-section">
-                <h3 class="mb-4 text-secondary">Pejabat Penandatangan</h3>
-                <div class="card shadow-sm">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-signature fa-3x mb-3 text-muted"></i>
-                        <h5>Master Pejabat</h5>
-                        <p class="text-muted">Kelola data Kepala Dinas atau Pejabat yang berwenang menandatangani Surat Tugas dan SPPD.</p>
-                        <button class="btn btn-outline-primary" onclick="notImplemented()">Kelola Pejabat</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 6. SURAT TUGAS (SPT) VIEW -->
-            <div id="sptView" class="view-section">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="text-secondary">Buat Surat Tugas Baru</h3>
-                    <button class="btn btn-secondary" onclick="notImplemented()"><i class="fas fa-list"></i> Lihat Riwayat SPT</button>
-                </div>
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white">Formulir Pendaftaran Perjalanan Dinas</div>
-                    <div class="card-body">
-                        <form id="formSPT" onsubmit="event.preventDefault(); notImplemented('Simpan SPT');">
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Nomor Surat</label>
-                                    <div class="input-group">
-                                        <input type="text" id="sptNomor" class="form-control" readonly required>
-                                        <button type="button" class="btn btn-primary" onclick="generateNomorSPT()"><i class="fas fa-sync"></i> Generate</button>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Tanggal Surat</label>
-                                    <input type="date" id="sptTanggal" class="form-control" required>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Beban DPA</label>
-                                    <select class="form-select" id="sptDpaSelect" required>
-                                        <option value="">-- Pilih DPA --</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="col-md-12 mb-3">
-                                    <label class="form-label">Dasar Surat / Regulasi</label>
-                                    <textarea class="form-control" rows="2" required placeholder="Contoh: Dokumen Pelaksanaan Anggaran..."></textarea>
-                                </div>
-
-                                <div class="col-md-12 mb-3">
-                                    <label class="form-label">Maksud Perjalanan Dinas</label>
-                                    <textarea class="form-control" rows="2" required placeholder="Contoh: Melakukan koordinasi ke..."></textarea>
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Tempat Tujuan</label>
-                                    <input type="text" class="form-control" required>
-                                </div>
-                                
-                                <div class="col-md-3 mb-3">
-                                    <label class="form-label">Tanggal Berangkat</label>
-                                    <input type="date" class="form-control" required>
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    <label class="form-label">Tanggal Kembali</label>
-                                    <input type="date" class="form-control" required>
-                                </div>
-
-                                <div class="col-md-12 mb-3 border-top pt-3">
-                                    <label class="form-label fw-bold">Pilih Pegawai (Multi-Select)</label>
-                                    <p class="text-muted small mb-2">Pegawai yang dipilih akan otomatis didaftarkan sebagai peserta pada SPT dan SPPD.</p>
-                                    <div class="border p-3 rounded" style="max-height: 200px; overflow-y: auto;" id="sptPegawaiCheckboxList">
-                                        <!-- Checkboxes will be populated here via JS -->
-                                        <div class="text-muted fst-italic">Silakan tambahkan data di Master Pegawai terlebih dahulu.</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <hr>
-                            <div class="text-end">
-                                <button type="reset" class="btn btn-light me-2">Reset</button>
-                                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan & Buat Surat Tugas</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 7. SPPD VIEW -->
-            <div id="sppdView" class="view-section">
-                <h3 class="mb-4 text-secondary">Pencetakan SPPD</h3>
-                <div class="card shadow-sm">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-print fa-3x mb-3 text-muted"></i>
-                        <h5>Daftar Surat Perjalanan Dinas</h5>
-                        <p class="text-muted">Data di halaman ini dibuat otomatis (Auto-Generate) setelah Surat Tugas (SPT) diterbitkan.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 8. LAPORAN VIEW -->
-            <div id="laporanView" class="view-section">
-                <h3 class="mb-4 text-secondary">Laporan Hasil Perjalanan Dinas (LHPD)</h3>
-                <div class="card shadow-sm">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-folder-open fa-3x mb-3 text-muted"></i>
-                        <h5>Formulir & Unggah Laporan</h5>
-                        <p class="text-muted">Fasilitas input Kesimpulan, Rekomendasi, dan Upload Dokumentasi SPJ.</p>
-                    </div>
-                </div>
-            </div>
-
-        </div> <!-- End Main Container -->
-    </div> <!-- End Content -->
-</div> <!-- End Wrapper -->
-
-<!-- MODAL: Config Supabase -->
-<div class="modal fade" id="modalSupabase" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-database text-primary"></i> Konfigurasi Database</h5>
-                <button type="button" class="btn-close" onclick="closeModal('modalSupabase')"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-warning py-2 mb-3 small">
-                    <i class="fas fa-info-circle"></i> Aplikasi ini dirancang **hanya online** dan membutuhkan koneksi langsung ke Supabase PostgreSQL.
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Supabase Project URL</label>
-                    <input type="text" id="supaUrl" class="form-control" placeholder="https://xxxxxx.supabase.co">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Supabase Anon Key (API)</label>
-                    <input type="password" id="supaKey" class="form-control" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6...">
-                </div>
-            </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('modalSupabase')">Batal</button>
-                <button type="button" class="btn btn-primary" onclick="saveSupabaseConfig()"><i class="fas fa-plug"></i> Hubungkan</button>
             </div>
         </div>
     </div>
-</div>
 
-<!-- MODAL: Form Pegawai -->
-<div class="modal fade" id="modalPegawai" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form onsubmit="savePegawai(event)">
+    <!-- MODALS SECTION -->
+    
+    <!-- Modal Settings Supabase -->
+    <div class="modal fade" id="modalSettings" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="fas fa-database"></i> Koneksi Database Supabase</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted">Masukkan kredensial Supabase Anda untuk menyimpan data ke Cloud (PostgreSQL).</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Supabase Project URL</label>
+                        <input type="text" id="supaUrl" class="form-control" placeholder="https://xxxx.supabase.co">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Supabase Anon Key</label>
+                        <textarea id="supaKey" class="form-control" rows="3" placeholder="eyJh..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="initSupabase(true)">Hubungkan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pegawai -->
+    <div class="modal fade" id="modalPegawai" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Form Data Pegawai</h5>
-                    <button type="button" class="btn-close" onclick="closeModal('modalPegawai')"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" id="pegawaiId">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">NIP</label>
-                            <input type="text" id="pegawaiNIP" class="form-control" required placeholder="Contoh: 198001012010011001">
+                    <form id="formPegawai" onsubmit="savePegawai(event)">
+                        <input type="hidden" id="pegawaiId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nama Lengkap & Gelar</label>
+                                <input type="text" id="pegNama" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">NIP</label>
+                                <input type="text" id="pegNip" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Pangkat / Golongan</label>
+                                <input type="text" id="pegPangkat" class="form-control" placeholder="Contoh: Penata Tk. I (III/d)" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Jabatan</label>
+                                <input type="text" id="pegJabatan" class="form-control" required>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Unit Kerja</label>
+                                <input type="text" id="pegUnit" class="form-control" required>
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Nama Lengkap (beserta gelar)</label>
-                            <input type="text" id="pegawaiNama" class="form-control" required>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Data</button>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Pangkat/Golongan</label>
-                            <input type="text" id="pegawaiGolongan" class="form-control" required placeholder="Contoh: Penata Tk. I - III/d">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Jabatan</label>
-                            <input type="text" id="pegawaiJabatan" class="form-control" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Unit Kerja</label>
-                            <input type="text" id="pegawaiUnitKerja" class="form-control" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Tingkat Perjadin (Standar Biaya)</label>
-                            <select id="pegawaiTingkatPerjadin" class="form-select">
-                                <option value="A">Tingkat A (Pejabat Tinggi)</option>
-                                <option value="B">Tingkat B (Pejabat Administrator)</option>
-                                <option value="C">Tingkat C (Pejabat Pengawas/Pelaksana)</option>
-                            </select>
-                        </div>
-                    </div>
+                    </form>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalPegawai')">Batal</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Pegawai</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- MODAL: Form DPA -->
-<div class="modal fade" id="modalDpa" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form onsubmit="saveDpa(event)">
+    <!-- Modal DPA -->
+    <div class="modal fade" id="modalDpa" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Form Data Anggaran (DPA)</h5>
-                    <button type="button" class="btn-close" onclick="closeModal('modalDpa')"></button>
+                    <h5 class="modal-title">Form Master DPA</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" id="dpaId">
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label">Tahun Anggaran</label>
-                            <input type="number" id="dpaTahun" class="form-control" required min="2020" max="2100">
-                        </div>
-                        <div class="col-md-12 mb-3">
+                    <form id="formDpa" onsubmit="saveDpa(event)">
+                        <input type="hidden" id="dpaId">
+                        <div class="mb-3">
                             <label class="form-label">Nama Program / Kegiatan</label>
-                            <input type="text" id="dpaKegiatan" class="form-control" required placeholder="Program Penunjang Urusan Pemerintahan Daerah...">
+                            <input type="text" id="dpaKegiatan" class="form-control" required>
                         </div>
-                        <div class="col-md-12 mb-3">
+                        <div class="mb-3">
                             <label class="form-label">Sub Kegiatan</label>
-                            <input type="text" id="dpaSubKegiatan" class="form-control" required placeholder="Administrasi Perjalanan Dinas...">
+                            <input type="text" id="dpaSubKegiatan" class="form-control" required>
                         </div>
-                    </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Tahun Anggaran</label>
+                                <input type="number" id="dpaTahun" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan DPA</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalDpa')">Batal</button>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan DPA</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Bootstrap JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<!-- Supabase JS -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script>
-    // --- APP STATE & GLOBAL VARIABLES ---
-    let supabaseClient = null;
-    let cachedPegawai = [];
-    let cachedDpa = [];
-
-    // --- UI NAVIGATION & HELPERS ---
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-        if(window.innerWidth <= 768) {
-            document.getElementById('sidebar').classList.toggle('show');
-        }
-    }
-
-    function switchView(viewId, element) {
-        // Hide all views
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        // Show selected view
-        document.getElementById(viewId).classList.add('active');
+    <script>
+        // --- APP STATE & GLOBAL VARIABLES ---
+        let supabaseClient = null;
+        let cachedPegawai = [];
+        let cachedDpa = [];
+        let cachedKopSurat = [];
         
-        // Update Sidebar styling
-        document.querySelectorAll('#sidebar ul li').forEach(el => el.classList.remove('active'));
-        if(element) element.parentElement.classList.add('active');
-        
-        // Auto-close sidebar on mobile
-        if(window.innerWidth <= 768) {
-            document.getElementById('sidebar').classList.remove('show');
+        // --- UTILS ---
+        function generateId() {
+            // Gunakan crypto.randomUUID jika didukung browser, jika tidak fallback ke format pseudo-UUID
+            if (typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+            // Fallback (hanya untuk browser lama/tanpa SSL)
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
         }
 
-        // View Specific Initialization
-        if(viewId === 'sptView') {
-            document.getElementById('sptTanggal').valueAsDate = new Date();
-            if(document.getElementById('sptNomor').value === '') generateNomorSPT();
-            populatePegawaiCheckboxes();
-            populateDpaSelect();
-        }
-    }
+        // UI Router
+        function switchView(viewId, element) {
+            $('.view-section').removeClass('active');
+            $('#' + viewId).addClass('active');
+            
+            if(element) {
+                $('#sidebar ul li').removeClass('active');
+                $(element).parent().addClass('active');
+                // Jika dari dropdown
+                if($(element).closest('ul').hasClass('collapse')) {
+                    $(element).closest('ul').parent().addClass('active');
+                }
+            }
+            
+            if(window.innerWidth <= 768) {
+                $('#sidebar, #content').removeClass('active');
+            }
 
-    function openModal(id) {
-        if(id === 'modalPegawai') document.getElementById('pegawaiId').value = ''; 
-        if(id === 'modalDpa') {
-            document.getElementById('dpaId').value = '';
+            // Hook for specific views
+            if(viewId === 'sptView') {
+                document.getElementById('sptNomor').value = `800.1.11/001/BID.SMP/${new Date().getFullYear()}`;
+                populateSptDropdowns();
+            }
+        }
+
+        // Sidebar Toggle
+        $(document).ready(function () {
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar, #content').toggleClass('active');
+            });
+
+            // Try auto-connect if keys in localstorage (just for developer convenience)
+            const savedUrl = localStorage.getItem('supaUrl');
+            const savedKey = localStorage.getItem('supaKey');
+            if(savedUrl && savedKey) {
+                document.getElementById('supaUrl').value = savedUrl;
+                document.getElementById('supaKey').value = savedKey;
+                initSupabase(false);
+            }
+            
+            // Set default year for forms
             document.getElementById('dpaTahun').value = new Date().getFullYear();
-            document.getElementById('dpaKegiatan').value = '';
-            document.getElementById('dpaSubKegiatan').value = '';
-        }
-        const modal = new bootstrap.Modal(document.getElementById(id));
-        modal.show();
-    }
-
-    function closeModal(id) {
-        const modalEl = document.getElementById(id);
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if(modal) modal.hide();
-    }
-
-    function notImplemented(feature = 'Fitur ini') {
-        Swal.fire('Tahap Pengembangan', `${feature} belum diimplementasikan pada demo fondasi arsitektur ini.`, 'info');
-    }
-
-    function generateId() {
-        // Menghasilkan UUID v4 yang valid untuk Supabase/PostgreSQL
-        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-            return crypto.randomUUID();
-        }
-        // Fallback jika crypto.randomUUID tidak didukung (misal bukan https)
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
         });
-    }
 
-    // --- SUPABASE CONNECTION LOGIC (ONLINE ONLY) ---
-    function initSupabase() {
-        const url = localStorage.getItem('sppd_supa_url');
-        const key = localStorage.getItem('sppd_supa_key');
-        
-        const badge = document.getElementById('dbStatusBadge');
-        
-        if (url && key) {
+        // --- SUPABASE INIT ---
+        function initSupabase(showNotif = false) {
+            const url = document.getElementById('supaUrl').value;
+            const key = document.getElementById('supaKey').value;
+
+            if(!url || !key) {
+                if(showNotif) Swal.fire('Error', 'URL dan Key tidak boleh kosong', 'error');
+                return;
+            }
+
             try {
                 supabaseClient = window.supabase.createClient(url, key);
-                badge.innerHTML = '<i class="fas fa-check-circle text-white me-1"></i> Connected to Supabase';
+                
+                // Save for next session
+                localStorage.setItem('supaUrl', url);
+                localStorage.setItem('supaKey', key);
+                
+                if(showNotif) {
+                    Swal.fire('Terhubung!', 'Koneksi ke Supabase berhasil.', 'success');
+                    $('#modalSettings').modal('hide');
+                }
+
+                // Update UI Badge
+                const badge = document.getElementById('connectionBadge');
+                badge.innerHTML = '<i class="fas fa-check-circle"></i> Database Online Terhubung';
                 badge.className = 'badge bg-success me-3 p-2 shadow-sm';
                 
                 // Fetch data upon successful connection
-                loadPegawai();
-                loadDpa();
+                loadPegawai(true);
+                loadDpa(true);
+                loadKopSurat(true);
             } catch (e) {
-                console.error("Gagal inisialisasi Supabase:", e);
-                supabaseClient = null;
-                setOfflineBadge(badge);
+                if(showNotif) Swal.fire('Gagal', 'Kredensial tidak valid', 'error');
+                console.error(e);
             }
-        } else {
-            setOfflineBadge(badge);
         }
-    }
 
-    function setOfflineBadge(badge) {
-        badge.innerHTML = '<i class="fas fa-wifi text-danger me-1"></i> Offline / Belum Config';
-        badge.className = 'badge bg-dark me-3 p-2';
-    }
-
-    function saveSupabaseConfig() {
-        const url = document.getElementById('supaUrl').value.trim();
-        const key = document.getElementById('supaKey').value.trim();
-        
-        if (!url || !key) {
-            Swal.fire('Error', 'URL dan Key API tidak boleh kosong', 'error');
-            return;
+        // --- MODULE: PEGAWAI (CRUD) ---
+        async function loadPegawai(isInit = false) {
+            if (!supabaseClient || !isInit) return;
+            try {
+                const { data, error } = await supabaseClient.from('pegawai').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                
+                cachedPegawai = data || [];
+                renderTabelPegawai();
+                
+                // Update Dashboard Stat
+                document.getElementById('statPegawai').innerText = cachedPegawai.length;
+            } catch (e) {
+                console.error("Error loading pegawai:", e);
+            }
         }
-        
-        localStorage.setItem('sppd_supa_url', url);
-        localStorage.setItem('sppd_supa_key', key);
-        
-        initSupabase();
-        closeModal('modalSupabase');
-        Swal.fire('Tersambung', 'Konfigurasi Supabase disimpan di sesi browser. Sistem akan memuat data Cloud.', 'success');
-    }
 
-    function checkConnection() {
-        if (!supabaseClient) {
-            Swal.fire('Wajib Mode Online', 'Sistem menggunakan arsitektur Cloud. Silakan konfigurasi Supabase (Tombol Database Config di kanan atas).', 'warning');
-            return false;
-        }
-        return true;
-    }
-
-    // --- MODULE: MASTER PEGAWAI (CRUD) ---
-    async function loadPegawai() {
-        if (!supabaseClient) return;
-        try {
-            const { data, error } = await supabaseClient.from('pegawai').select('*');
-            if (error) throw error;
-            cachedPegawai = data || [];
-            renderTabelPegawai();
-        } catch(e) { console.error("Error loading pegawai:", e); }
-    }
-
-    function renderTabelPegawai() {
-        const tbody = document.getElementById('tableBodyPegawai');
-        tbody.innerHTML = '';
-        
-        document.getElementById('stat-pegawai').innerText = cachedPegawai.length;
-        
-        if (cachedPegawai.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Belum ada data pegawai di Cloud.</td></tr>';
-            return;
-        }
-        
-        cachedPegawai.forEach(p => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><span class="badge bg-secondary">${p.nip || '-'}</span></td>
-                <td class="fw-bold">${p.nama || '-'}</td>
-                <td>${p.golongan || '-'}</td>
-                <td>${p.jabatan || '-'}</td>
-                <td>${p.unit_kerja || '-'}</td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-warning" onclick="editPegawai('${p.id}')" title="Edit"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deletePegawai('${p.id}')" title="Hapus"><i class="fas fa-trash"></i></button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    async function savePegawai(e) {
-        e.preventDefault();
-        if (!checkConnection()) return;
-
-        const id = document.getElementById('pegawaiId').value;
-        const payload = {
-            id: id || generateId(),
-            nama: document.getElementById('pegawaiNama').value,
-            nip: document.getElementById('pegawaiNIP').value,
-            golongan: document.getElementById('pegawaiGolongan').value,
-            jabatan: document.getElementById('pegawaiJabatan').value,
-            unit_kerja: document.getElementById('pegawaiUnitKerja').value,
-            tingkat_perjadin: document.getElementById('pegawaiTingkatPerjadin').value
-        };
-        
-        Swal.fire({ title: 'Menyimpan ke Cloud...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-        try { 
-            const { error } = await supabaseClient.from('pegawai').upsert([payload]); 
-            if (error) throw error; 
+        function renderTabelPegawai() {
+            const tbody = document.getElementById('tabelPegawai');
+            tbody.innerHTML = '';
             
-            closeModal('modalPegawai');
-            Swal.fire('Berhasil', 'Data Pegawai tersimpan secara online.', 'success');
-            loadPegawai(); // Refresh from cloud to ensure sync
-        } catch(err) {
-            Swal.fire('Gagal Menyimpan', 'Terjadi kesalahan DB: pastikan tabel "pegawai" ada di Supabase dan RLS diizinkan. Detail: ' + err.message, 'error');
+            if (cachedPegawai.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Belum ada data pegawai</td></tr>';
+                return;
+            }
+
+            cachedPegawai.forEach(p => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${p.nama}</td>
+                        <td>${p.nip}</td>
+                        <td>${p.jabatan}</td>
+                        <td>${p.pangkat_gol}</td>
+                        <td>${p.unit_kerja}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deletePegawai('${p.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
-    }
 
-    function editPegawai(id) {
-        const item = cachedPegawai.find(p => String(p.id) === String(id));
-        if (item) {
-            document.getElementById('pegawaiId').value = item.id;
-            document.getElementById('pegawaiNIP').value = item.nip || '';
-            document.getElementById('pegawaiNama').value = item.nama || '';
-            document.getElementById('pegawaiGolongan').value = item.golongan || '';
-            document.getElementById('pegawaiJabatan').value = item.jabatan || '';
-            document.getElementById('pegawaiUnitKerja').value = item.unit_kerja || '';
-            document.getElementById('pegawaiTingkatPerjadin').value = item.tingkat_perjadin || 'C';
-            openModal('modalPegawai');
+        async function savePegawai(e) {
+            e.preventDefault();
+            if (!supabaseClient) {
+                Swal.fire('Mode Offline', 'Silakan hubungkan ke Supabase terlebih dahulu di Pengaturan.', 'warning');
+                return;
+            }
+
+            const payload = {
+                id: document.getElementById('pegawaiId').value || generateId(),
+                nama: document.getElementById('pegNama').value,
+                nip: document.getElementById('pegNip').value,
+                pangkat_gol: document.getElementById('pegPangkat').value,
+                jabatan: document.getElementById('pegJabatan').value,
+                unit_kerja: document.getElementById('pegUnit').value
+            };
+
+            try {
+                // Online Sync Mode
+                Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                const { error } = await supabaseClient.from('pegawai').upsert([payload]);
+                
+                if (error) throw error;
+
+                Swal.fire('Berhasil', 'Data pegawai disimpan.', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('modalPegawai')).hide();
+                loadPegawai(true); // Force reload from server after save
+            } catch (err) {
+                Swal.fire('Gagal Menyimpan', 'Terjadi kesalahan DB: pastikan tabel "pegawai" ada di Supabase dan RLS diizinkan. Detail: ' + err.message, 'error');
+            }
         }
-    }
 
-    function deletePegawai(id) {
-        if (!checkConnection()) return;
+        function deletePegawai(id) {
+            if (!supabaseClient) {
+                Swal.fire('Mode Offline', 'Koneksikan ke Supabase untuk menghapus data.', 'warning');
+                return;
+            }
 
-        Swal.fire({
-            title: 'Hapus Permanen?',
-            text: "Data akan dihapus dari Supabase Cloud.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Hapus'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ title: 'Menghapus...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                try { 
-                    const { error } = await supabaseClient.from('pegawai').delete().eq('id', id); 
-                    if (error) throw error;
-                    Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
-                    loadPegawai();
-                } catch(e) {
-                    Swal.fire('Gagal', e.message, 'error');
+            Swal.fire({
+                title: 'Hapus Pegawai?',
+                text: "Data ini tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Ya, hapus!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const { error } = await supabaseClient.from('pegawai').delete().eq('id', id);
+                        if (error) throw error;
+                        loadPegawai(true); // reload
+                        Swal.fire('Terhapus', '', 'success');
+                    } catch(e) {
+                        Swal.fire('Gagal', 'Error: ' + e.message, 'error');
+                    }
                 }
+            });
+        }
+
+        // --- MODULE: DPA (CRUD) ---
+        async function loadDpa(isInit = false) {
+            if (!supabaseClient || !isInit) return;
+            try {
+                const { data, error } = await supabaseClient.from('dpa').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                cachedDpa = data || [];
+                renderTabelDpa();
+            } catch(e) { console.error("Error loading DPA:", e); }
+        }
+
+        function renderTabelDpa() {
+            const tbody = document.getElementById('tabelDpa');
+            tbody.innerHTML = '';
+            
+            if (cachedDpa.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Belum ada data DPA</td></tr>';
+                return;
             }
-        });
-    }
 
-    // --- MODULE: MASTER DPA (CRUD) ---
-    async function loadDpa() {
-        if (!supabaseClient) return;
-        try {
-            const { data, error } = await supabaseClient.from('dpa').select('*');
-            if (error) throw error;
-            cachedDpa = data || [];
-            renderTabelDpa();
-        } catch(e) { console.error("Error loading DPA:", e); }
-    }
-
-    function renderTabelDpa() {
-        const tbody = document.getElementById('tableBodyDpa');
-        tbody.innerHTML = '';
-        
-        if (cachedDpa.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Belum ada data DPA di Cloud.</td></tr>';
-            return;
+            cachedDpa.forEach(d => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${d.kegiatan}</td>
+                        <td>${d.sub_kegiatan}</td>
+                        <td><span class="badge bg-secondary">${d.tahun_anggaran}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning me-1" onclick="editDpa('${d.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteDpa('${d.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
-        
-        cachedDpa.forEach(d => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><span class="badge bg-primary">${d.tahun_anggaran || '-'}</span></td>
-                <td class="fw-bold">${d.kegiatan || '-'}</td>
-                <td>${d.sub_kegiatan || '-'}</td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-outline-warning" onclick="editDpa('${d.id}')" title="Edit"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteDpa('${d.id}')" title="Hapus"><i class="fas fa-trash"></i></button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
 
-    async function saveDpa(e) {
-        e.preventDefault();
-        if (!checkConnection()) return;
-
-        const id = document.getElementById('dpaId').value;
-        const payload = {
-            id: id || generateId(),
-            tahun_anggaran: parseInt(document.getElementById('dpaTahun').value) || 0,
-            kegiatan: document.getElementById('dpaKegiatan').value,
-            sub_kegiatan: document.getElementById('dpaSubKegiatan').value
-        };
-        
-        Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-        try { 
-            const { error } = await supabaseClient.from('dpa').upsert([payload]); 
-            if (error) throw error; 
-            closeModal('modalDpa');
-            Swal.fire('Berhasil', 'Data DPA tersimpan.', 'success');
-            loadDpa();
-        } catch(err) {
-            Swal.fire('Gagal', 'Pastikan tabel "dpa" ada di Supabase. Error: ' + err.message, 'error');
-        }
-    }
-
-    function editDpa(id) {
-        const item = cachedDpa.find(d => String(d.id) === String(id));
-        if (item) {
-            document.getElementById('dpaId').value = item.id;
-            document.getElementById('dpaTahun').value = item.tahun_anggaran || new Date().getFullYear();
-            document.getElementById('dpaKegiatan').value = item.kegiatan || '';
-            document.getElementById('dpaSubKegiatan').value = item.sub_kegiatan || '';
-            openModal('modalDpa');
-        }
-    }
-    
-    async function deleteDpa(id) {
-         if (!checkConnection()) return;
-         Swal.fire({
-            title: 'Hapus DPA?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus'
-        }).then(async (result) => {
-            if(result.isConfirmed) {
-                try { 
-                    await supabaseClient.from('dpa').delete().eq('id', id); 
-                    loadDpa();
-                    Swal.fire('Terhapus', '', 'success');
-                } catch(e) {}
+        async function saveDpa(e) {
+            e.preventDefault();
+            if (!supabaseClient) {
+                Swal.fire('Offline', 'Koneksikan ke Supabase terlebih dahulu.', 'warning');
+                return;
             }
-        });
-    }
 
-    // --- MODULE: SURAT TUGAS (SPT) LOGIC ---
-    function generateNomorSPT() {
-        // Dinamis Tahun menggunakan date system (Requirement: Otomatis tahun berjalan)
-        const currentYear = new Date().getFullYear();
-        // Simulasi nomor urut (Di sistem nyata diambil MAX number dari DB + 1)
-        const randomNum = Math.floor(Math.random() * 100) + 1;
-        const formattedNum = randomNum.toString().padStart(3, '0');
-        
-        const inputNomor = document.getElementById('sptNomor');
-        inputNomor.value = `800.1.11/${formattedNum}/BID.SMP/${currentYear}`;
-        
-        // Animasi UI
-        inputNomor.style.transition = "background-color 0.3s";
-        inputNomor.style.backgroundColor = "#e0f2fe";
-        setTimeout(() => inputNomor.style.backgroundColor = "", 400);
-    }
+            const payload = {
+                id: document.getElementById('dpaId').value || generateId(),
+                kegiatan: document.getElementById('dpaKegiatan').value,
+                sub_kegiatan: document.getElementById('dpaSubKegiatan').value,
+                tahun_anggaran: parseInt(document.getElementById('dpaTahun').value)
+            };
 
-    function populatePegawaiCheckboxes() {
-        const container = document.getElementById('sptPegawaiCheckboxList');
-        if (cachedPegawai.length === 0) {
-            container.innerHTML = '<div class="text-danger small"><i class="fas fa-exclamation-triangle"></i> Data pegawai kosong. Tambahkan di menu Master Pegawai.</div>';
-            return;
+            try {
+                Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                const { error } = await supabaseClient.from('dpa').upsert([payload]);
+                if (error) throw error;
+                
+                Swal.fire('Berhasil', 'Data DPA disimpan.', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('modalDpa')).hide();
+                loadDpa(true);
+            } catch(err) {
+                Swal.fire('Gagal', 'Pastikan tabel "dpa" ada di Supabase. Error: ' + err.message, 'error');
+            }
         }
-        
-        container.innerHTML = '';
-        cachedPegawai.forEach(p => {
-            const div = document.createElement('div');
-            div.className = 'form-check mb-2';
-            div.innerHTML = `
-                <input class="form-check-input" type="checkbox" value="${p.id}" id="chk_${p.id}">
-                <label class="form-check-label" for="chk_${p.id}">
-                    <strong>${p.nama}</strong> - <small class="text-muted">${p.jabatan} (NIP. ${p.nip})</small>
-                </label>
-            `;
-            container.appendChild(div);
-        });
-    }
 
-    function populateDpaSelect() {
-        const select = document.getElementById('sptDpaSelect');
-        select.innerHTML = '<option value="">-- Pilih Beban DPA --</option>';
-        cachedDpa.forEach(d => {
-            const opt = document.createElement('option');
-            opt.value = d.id;
-            opt.textContent = `[${d.tahun_anggaran}] ${d.kegiatan} - ${d.sub_kegiatan}`;
-            select.appendChild(opt);
-        });
-    }
+        function editDpa(id) {
+            const d = cachedDpa.find(x => x.id === id);
+            if(d) {
+                document.getElementById('dpaId').value = d.id;
+                document.getElementById('dpaKegiatan').value = d.kegiatan;
+                document.getElementById('dpaSubKegiatan').value = d.sub_kegiatan;
+                document.getElementById('dpaTahun').value = d.tahun_anggaran;
+                new bootstrap.Modal(document.getElementById('modalDpa')).show();
+            }
+        }
 
-    // --- INIT APP ---
-    document.addEventListener("DOMContentLoaded", function() {
-        // Pulihkan input Supabase jika ada cache
-        document.getElementById('supaUrl').value = localStorage.getItem('sppd_supa_url') || '';
-        document.getElementById('supaKey').value = localStorage.getItem('sppd_supa_key') || '';
-        
-        initSupabase();
-    });
+        function deleteDpa(id) {
+            if (!supabaseClient) return;
+            Swal.fire({
+                title: 'Hapus DPA?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Ya, hapus!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const { error } = await supabaseClient.from('dpa').delete().eq('id', id);
+                        if(error) throw error;
+                        loadDpa(true);
+                        Swal.fire('Terhapus', '', 'success');
+                    } catch(e) {}
+                }
+            });
+        }
 
-</script>
+        // --- MODULE: KOP SURAT (CRUD) ---
+        async function loadKopSurat(isInit = false) {
+            if (!supabaseClient || !isInit) return;
+            try {
+                const { data, error } = await supabaseClient.from('kop_surat').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                
+                cachedKopSurat = data || [];
+                renderTabelKopSurat();
+            } catch(e) { console.error("Error loading Kop Surat:", e); }
+        }
+
+        function renderTabelKopSurat() {
+            const tbody = document.getElementById('tabelKopSurat');
+            tbody.innerHTML = '';
+            
+            if (cachedKopSurat.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Belum ada data Kop Surat</td></tr>';
+                return;
+            }
+
+            cachedKopSurat.forEach(k => {
+                const isAktif = k.is_aktif ? '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Sedang Dipakai</span>' : '<span class="badge bg-secondary">Tidak Aktif</span>';
+                const btnAktif = k.is_aktif ? '' : `<button class="btn btn-sm btn-success me-1" onclick="setKopSuratAktif('${k.id}')" title="Gunakan Kop Ini"><i class="fas fa-check"></i> Set Aktif</button>`;
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td><img src="${k.logo_url || 'https://placehold.co/50x50/e2e8f0/94a3b8?text=Logo'}" alt="Logo" class="img-thumbnail" style="max-height: 50px;"></td>
+                        <td class="fw-bold">${k.nama_pemda}</td>
+                        <td>${k.nama_instansi}</td>
+                        <td>${isAktif}</td>
+                        <td>
+                            ${btnAktif}
+                            <button class="btn btn-sm btn-outline-warning me-1" onclick="editKopSurat('${k.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteKopSurat('${k.id}')" title="Hapus"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function setKopSuratAktif(id) {
+            if (!supabaseClient) return;
+            Swal.fire({ title: 'Mengganti Kop Surat...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            try {
+                // Memperbarui semua kop surat secara massal: jadikan false semua kecuali ID yang dipilih
+                const updates = cachedKopSurat.map(k => ({
+                    id: k.id,
+                    logo_url: k.logo_url,
+                    nama_pemda: k.nama_pemda,
+                    nama_instansi: k.nama_instansi,
+                    alamat: k.alamat,
+                    is_aktif: k.id === id // Hanya akan bernilai TRUE untuk ID yang diklik
+                }));
+                
+                const { error } = await supabaseClient.from('kop_surat').upsert(updates);
+                if (error) throw error;
+                
+                Swal.fire('Berhasil', 'Kop Surat aktif telah diubah.', 'success');
+                loadKopSurat(true); // force reload from DB
+            } catch(err) {
+                Swal.fire('Gagal', 'Pastikan kolom "is_aktif" (tipe: boolean) sudah dibuat di tabel kop_surat. Error: ' + err.message, 'error');
+            }
+        }
+
+        function editKopSurat(id) {
+            const k = cachedKopSurat.find(x => x.id === id);
+            if(k) {
+                document.getElementById('kopId').value = k.id;
+                document.getElementById('kopLogo').value = k.logo_url || '';
+                document.getElementById('kopPemda').value = k.nama_pemda || '';
+                document.getElementById('kopInstansi').value = k.nama_instansi || '';
+                document.getElementById('kopAlamat').value = k.alamat || '';
+                document.getElementById('kopLogoPreview').src = k.logo_url || 'https://placehold.co/100x100/e2e8f0/94a3b8?text=Logo';
+                new bootstrap.Modal(document.getElementById('modalKopSurat')).show();
+            }
+        }
+
+        async function saveKopSurat(e) {
+            e.preventDefault();
+            if (!supabaseClient) {
+                Swal.fire('Offline', 'Koneksikan ke Supabase terlebih dahulu.', 'warning');
+                return;
+            }
+
+            const id = document.getElementById('kopId').value;
+            const currentData = cachedKopSurat.find(k => k.id === id);
+            
+            const payload = {
+                id: id || generateId(),
+                logo_url: document.getElementById('kopLogo').value,
+                nama_pemda: document.getElementById('kopPemda').value,
+                nama_instansi: document.getElementById('kopInstansi').value,
+                alamat: document.getElementById('kopAlamat').value,
+                // Jika data baru dan tabel masih kosong, otomatis jadikan aktif
+                is_aktif: id ? currentData.is_aktif : (cachedKopSurat.length === 0) 
+            };
+            
+            Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try { 
+                const { error } = await supabaseClient.from('kop_surat').upsert([payload]); 
+                if (error) throw error; 
+                
+                Swal.fire('Berhasil', 'Kop Surat tersimpan.', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('modalKopSurat')).hide();
+                loadKopSurat(true); // force reload
+            } catch(err) {
+                Swal.fire('Gagal', 'Error: ' + err.message, 'error');
+            }
+        }
+
+        function deleteKopSurat(id) {
+            if (!supabaseClient) return;
+            
+            const k = cachedKopSurat.find(x => x.id === id);
+            if (k && k.is_aktif) {
+                Swal.fire('Ditolak', 'Kop surat yang sedang aktif tidak dapat dihapus. Silakan set aktif kop surat lain terlebih dahulu.', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Hapus Kop Surat?',
+                text: "Data ini tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, hapus!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const { error } = await supabaseClient.from('kop_surat').delete().eq('id', id);
+                        if (error) throw error;
+                        loadKopSurat(true); // force reload
+                        Swal.fire('Terhapus!', 'Kop Surat berhasil dihapus.', 'success');
+                    } catch(err) {
+                        Swal.fire('Gagal', 'Error: ' + err.message, 'error');
+                    }
+                }
+            });
+        }
+
+        // --- MODULE: SURAT TUGAS (SPT) LOGIC ---
+        function populateSptDropdowns() {
+            // Populate DPA Select
+            const dpaSelect = document.getElementById('sptDpa');
+            dpaSelect.innerHTML = '<option value="">-- Pilih DPA --</option>';
+            cachedDpa.forEach(d => {
+                dpaSelect.innerHTML += `<option value="${d.id}">[${d.tahun_anggaran}] ${d.kegiatan} - ${d.sub_kegiatan}</option>`;
+            });
+
+            // Populate Pegawai Multi-select
+            const pegSelect = document.getElementById('sptPegawai');
+            pegSelect.innerHTML = '';
+            cachedPegawai.forEach(p => {
+                pegSelect.innerHTML += `<option value="${p.id}">${p.nama} (${p.nip})</option>`;
+            });
+        }
+    </script>
 </body>
 </html>
