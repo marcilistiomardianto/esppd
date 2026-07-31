@@ -82,6 +82,7 @@
         /* Main Content Styling */
         #content {
             margin-left: 260px;
+            width: calc(100% - 260px); /* Memaksa konten mengisi penuh sisa layar kanan */
             padding: 0;
             min-height: 100vh;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -239,8 +240,8 @@
         @media (max-width: 768px) {
             #sidebar { margin-left: -260px; }
             #sidebar.active { margin-left: 0; }
-            #content { margin-left: 0; }
-            #content.active { margin-left: 260px; }
+            #content { margin-left: 0; width: 100%; } /* Layar penuh di HP */
+            #content.active { margin-left: 260px; width: calc(100% - 260px); }
             #sidebarCollapse { display: inline-block; }
         }
     </style>
