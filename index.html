@@ -1276,12 +1276,16 @@
         async function loadPejabat(isInit = false) {
             if (!supabaseClient || !isInit) return;
             try {
-                const { data, error } = await supabaseClient.from('penandatangan').select('*').order('created_at', { ascending: false });
+                // Perbaikan: Hapus .order('created_at') karena mencegah error jika kolom tidak ada
+                const { data, error } = await supabaseClient.from('penandatangan').select('*');
                 if (error) throw error;
                 
                 cachedPejabat = data || [];
                 renderTabelPejabat();
-            } catch(e) { console.error("Error loading Pejabat:", e); }
+            } catch(e) { 
+                console.error("Error loading Pejabat:", e); 
+                document.getElementById('tabelPejabat').innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Gagal Memuat Data: ${e.message}</td></tr>`;
+            }
         }
 
         function renderTabelPejabat() {
@@ -1396,13 +1400,17 @@
         async function loadSpt(isInit = false) {
             if (!supabaseClient || !isInit) return;
             try {
-                const { data, error } = await supabaseClient.from('surat_tugas').select('*').order('created_at', { ascending: false });
+                // Perbaikan: Hapus .order('created_at') karena mencegah error jika kolom tidak ada
+                const { data, error } = await supabaseClient.from('surat_tugas').select('*');
                 if (error) throw error;
                 
                 cachedSpt = data || [];
                 document.getElementById('dashSptCount').innerText = cachedSpt.length;
                 renderTabelSpt();
-            } catch(e) { console.error("Error loading SPT:", e); }
+            } catch(e) { 
+                console.error("Error loading SPT:", e); 
+                document.getElementById('tabelSpt').innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Gagal Memuat Data: ${e.message}</td></tr>`;
+            }
         }
 
         function renderTabelSpt() {
