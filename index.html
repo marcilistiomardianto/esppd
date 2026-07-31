@@ -810,36 +810,6 @@
     <script>
         // --- CORE & CONFIG ---
         let supabaseClient = null;
-
-        // --- UI NAVIGATION & SIDEBAR ---
-        function switchView(viewId, element) {
-            // Sembunyikan semua halaman
-            document.querySelectorAll('.view-section').forEach(el => {
-                el.classList.add('d-none');
-            });
-            // Tampilkan halaman yang dituju
-            document.getElementById(viewId).classList.remove('d-none');
-            
-            // Hapus status aktif dari semua menu sidebar
-            document.querySelectorAll('#sidebar ul li').forEach(el => {
-                el.classList.remove('active');
-            });
-            // Tambahkan status aktif pada menu yang diklik
-            if (element) {
-                element.classList.add('active');
-            }
-        }
-
-        // Fungsi buka/tutup Sidebar di mode HP
-        document.addEventListener('DOMContentLoaded', function() {
-            const btnCollapse = document.getElementById('sidebarCollapse');
-            if(btnCollapse) {
-                btnCollapse.addEventListener('click', function() {
-                    document.getElementById('sidebar').classList.toggle('active');
-                    document.getElementById('content').classList.toggle('active');
-                });
-            }
-        });
         
         // Cache Variables
         let cachedPegawai = [];
@@ -860,175 +830,639 @@
             });
         }
 
-        // --- HELPER FUNGSI PRINT ---
-        function formatDateID(dateStr) {
-            if(!dateStr) return '';
-            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            const d = new Date(dateStr);
-            return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-        }
-
-        function angkaTerbilang(angka) {
-            const huruf = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
-            angka = parseInt(angka);
-            if (angka < 12) return huruf[angka];
-            if (angka < 20) return huruf[angka - 10] + " belas";
-            if (angka < 100) return huruf[Math.floor(angka / 10)] + " puluh " + huruf[angka % 10];
-            return angka; // fallback jika angkanya terlalu besar
-        }
-
-        // --- FUNGSI PRINT SPT (TEMPLATE A4 RESMI) ---
-        function printSpt(id) {
-            const spt = cachedSpt.find(s => s.id === id);
-            if (!spt) return Swal.fire('Error', 'Data SPT tidak ditemukan', 'error');
-
-            const kop = cachedKopSurat.find(k => k.is_aktif);
-            if (!kop) return Swal.fire('Peringatan', 'Belum ada Kop Surat yang aktif. Silakan set aktif (centang hijau) di menu Kop Surat terlebih dahulu.', 'warning');
-
-            const pejabat = cachedPejabat.find(p => p.is_aktif);
-            if (!pejabat) return Swal.fire('Peringatan', 'Belum ada Pejabat Penandatangan yang aktif. Silakan set aktif di menu Pejabat terlebih dahulu.', 'warning');
-
-            // Ambil data Pegawai 1, 2, 3
-            const peg1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
-            const peg2 = spt.pegawai_2_id ? cachedPegawai.find(p => p.id === spt.pegawai_2_id) : null;
-            const peg3 = spt.pegawai_3_id ? cachedPegawai.find(p => p.id === spt.pegawai_3_id) : null;
-
-            let pegawaiHtml = '';
-            const listPegawai = [peg1, peg2, peg3].filter(p => p !== null && p !== undefined);
+        // --- INIT ---
+        document.addEventListener("DOMContentLoaded", function() {
+            // Check if config exists
+            const sUrl = localStorage.getItem('supaUrl');
+            const sKey = localStorage.getItem('supaKey');
             
-            listPegawai.forEach((p, index) => {
-                pegawaiHtml += `
-                    <table style="width: 100%; margin-bottom: 12px; border-collapse: collapse;">
-                        <tr>
-                            <td style="width: 25px; vertical-align: top;">${index + 1}.</td>
-                            <td style="width: 110px;">Nama</td>
-                            <td style="width: 15px;">:</td>
-                            <td><b>${p.nama}</b></td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>Pangkat/Gol</td>
-                            <td>:</td>
-                            <td>${p.pangkat_golongan}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>NIP</td>
-                            <td>:</td>
-                            <td>${p.nip}</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td>Jabatan</td>
-                            <td>:</td>
-                            <td>${p.jabatan}</td>
-                        </tr>
-                    </table>
+            if (sUrl && sKey) {
+                try {
+                    supabaseClient = supabase.createClient(sUrl, sKey);
+                    // Initial load data dari cloud
+                    loadPegawai(true);
+                    loadDpa(true);
+                    loadKopSurat(true);
+                    loadPejabat(true);
+                    loadSpt(true);
+                } catch (e) {
+                    console.error("Supabase Init Error", e);
+                }
+            } else {
+                new bootstrap.Modal(document.getElementById('modalConfig')).show();
+            }
+
+            // Init Chart
+            initChart();
+        });
+
+        // --- NAVIGATION ---
+        function switchView(viewId, element) {
+            // Hide all views
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.add('d-none');
+            });
+            // Show target view
+            document.getElementById(viewId).classList.remove('d-none');
+            
+            // Update active menu
+            document.querySelectorAll('#sidebar ul li').forEach(el => {
+                el.classList.remove('active');
+            });
+            if(element) element.classList.add('active');
+        }
+
+        // --- CONFIG MODAL ---
+        function showConfigModal() {
+            document.getElementById('supaUrl').value = localStorage.getItem('supaUrl') || '';
+            document.getElementById('supaKey').value = localStorage.getItem('supaKey') || '';
+            new bootstrap.Modal(document.getElementById('modalConfig')).show();
+        }
+
+        function saveConfig() {
+            const url = document.getElementById('supaUrl').value;
+            const key = document.getElementById('supaKey').value;
+            if(url && key) {
+                localStorage.setItem('supaUrl', url);
+                localStorage.setItem('supaKey', key);
+                location.reload();
+            }
+        }
+
+        // --- MODULE: PEGAWAI (CRUD) ---
+        async function loadPegawai(isInit = false) {
+            if (!supabaseClient || !isInit) return;
+            try {
+                const { data, error } = await supabaseClient.from('pegawai').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                
+                cachedPegawai = data || [];
+                document.getElementById('dashPegawaiCount').innerText = cachedPegawai.length;
+                renderTabelPegawai();
+            } catch(e) { console.error("Error loading pegawai:", e); }
+        }
+
+        function renderTabelPegawai() {
+            const tbody = document.getElementById('tabelPegawai');
+            tbody.innerHTML = '';
+            
+            if (cachedPegawai.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Belum ada data pegawai.</td></tr>';
+                return;
+            }
+
+            cachedPegawai.forEach(peg => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${peg.nama}</td>
+                        <td>${peg.nip}</td>
+                        <td>${peg.jabatan}</td>
+                        <td>${peg.pangkat_golongan}</td>
+                        <td>${peg.unit_kerja}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-warning" onclick="editPegawai('${peg.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deletePegawai('${peg.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
                 `;
             });
+        }
 
-            const tglSurat = formatDateID(spt.tanggal_surat) || '...................';
-            const tglBerangkat = formatDateID(spt.tanggal_berangkat);
-            const tglKembali = formatDateID(spt.tanggal_kembali);
+        async function savePegawai() {
+            if (!supabaseClient) {
+                Swal.fire('Error', 'Sistem berjalan dalam mode online wajib. Harap konfigurasi Supabase.', 'error');
+                return;
+            }
 
-            // Buka tab / window baru
-            const printWindow = window.open('', '_blank', 'width=800,height=900');
+            const id = document.getElementById('pegawaiId').value || generateId();
+            const payload = {
+                id: id,
+                nama: document.getElementById('pegNama').value,
+                nip: document.getElementById('pegNip').value,
+                pangkat_golongan: document.getElementById('pegPangkat').value,
+                jabatan: document.getElementById('pegJabatan').value,
+                unit_kerja: document.getElementById('pegUnit').value,
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                const { data, error } = await supabaseClient.from('pegawai').upsert(payload).select();
+                if (error) throw error;
+                
+                // Update Cache and re-render without full fetch
+                const index = cachedPegawai.findIndex(p => p.id === id);
+                if (index > -1) cachedPegawai[index] = payload;
+                else cachedPegawai.unshift(payload);
+
+                renderTabelPegawai();
+                document.getElementById('dashPegawaiCount').innerText = cachedPegawai.length;
+                
+                bootstrap.Modal.getInstance(document.getElementById('modalPegawai')).hide();
+                Swal.fire('Sukses', 'Data pegawai berhasil disimpan', 'success');
+            } catch (error) {
+                Swal.fire('Gagal Menyimpan', 'Terjadi kesalahan DB: pastikan tabel "pegawai" ada di Supabase dan RLS diizinkan. Detail: ' + error.message, 'error');
+            }
+        }
+        
+        function editPegawai(id) {
+            const peg = cachedPegawai.find(p => p.id === id);
+            if(peg) {
+                document.getElementById('pegawaiId').value = peg.id;
+                document.getElementById('pegNama').value = peg.nama;
+                document.getElementById('pegNip').value = peg.nip;
+                document.getElementById('pegPangkat').value = peg.pangkat_golongan;
+                document.getElementById('pegJabatan').value = peg.jabatan;
+                document.getElementById('pegUnit').value = peg.unit_kerja;
+                new bootstrap.Modal(document.getElementById('modalPegawai')).show();
+            }
+        }
+
+        async function deletePegawai(id) {
+            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
             
-            const html = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Print SPT - ${spt.nomor_surat}</title>
-                    <style>
-                        @page { size: A4; margin: 2cm; }
-                        body { font-family: 'Times New Roman', Times, serif; font-size: 11.5pt; line-height: 1.5; color: #000; background: #fff; padding: 2cm; margin:0;}
-                        .kop-surat { display: flex; align-items: center; justify-content: center; border-bottom: 3.5px solid #000; padding-bottom: 15px; margin-bottom: 25px; text-align: center; position: relative;}
-                        .kop-logo { width: 90px; height: 110px; object-fit: contain; position: absolute; left: 0; top: 0;}
-                        .kop-text h3 { margin: 0; font-size: 14pt; text-transform: uppercase; font-weight: normal; letter-spacing: 0.5px;}
-                        .kop-text h1 { margin: 0; font-size: 18pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;}
-                        .kop-text p { margin: 0; font-size: 11pt; margin-top: 5px;}
-                        .surat-title { text-align: center; margin-bottom: 30px; }
-                        .surat-title h2 { margin: 0; text-decoration: underline; font-size: 14pt; font-weight: bold;}
-                        .surat-title p { margin: 0; font-size: 12pt; }
-                        .content-table { width: 100%; margin-bottom: 15px; border-collapse: collapse;}
-                        .content-table td { vertical-align: top; padding: 2px 0; }
-                        .col-label { width: 120px; }
-                        .col-colon { width: 15px; text-align: center; }
-                        .ttd-container { width: 380px; float: right; margin-top: 50px; }
-                        .bsre-footer { margin-top: 150px; font-size: 8pt; text-align: center; color: #333; border-top: 1px solid #ccc; padding-top: 10px; clear: both;}
-                    </style>
-                </head>
-                <body onload="window.print()">
-                    <div class="kop-surat">
-                        <img src="${kop.logo_url}" class="kop-logo" onerror="this.style.display='none'">
-                        <div class="kop-text">
-                            <h3>${kop.nama_pemda}</h3>
-                            <h1>${kop.nama_instansi}</h1>
-                            <p>${kop.alamat}</p>
+            if(confirm('Yakin ingin menghapus pegawai ini?')) {
+                try {
+                    const { error } = await supabaseClient.from('pegawai').delete().eq('id', id);
+                    if (error) throw error;
+                    
+                    cachedPegawai = cachedPegawai.filter(p => p.id !== id);
+                    renderTabelPegawai();
+                    document.getElementById('dashPegawaiCount').innerText = cachedPegawai.length;
+                    
+                    Swal.fire('Terhapus!', '', 'success');
+                } catch (error) {
+                    Swal.fire('Gagal', 'Error menghapus data: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // --- MODULE: DPA (CRUD) ---
+        async function loadDpa(isInit = false) {
+            if (!supabaseClient || !isInit) return;
+            try {
+                const { data, error } = await supabaseClient.from('dpa').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                
+                cachedDpa = data || [];
+                renderTabelDpa();
+            } catch(e) { console.error("Error loading DPA:", e); }
+        }
+
+        function renderTabelDpa() {
+            const tbody = document.getElementById('tabelDpa');
+            tbody.innerHTML = '';
+            
+            if (cachedDpa.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Belum ada data DPA.</td></tr>';
+                return;
+            }
+
+            cachedDpa.forEach(dpa => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${dpa.kegiatan}</td>
+                        <td>${dpa.sub_kegiatan}</td>
+                        <td>${dpa.tahun_anggaran}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-warning" onclick="editDpa('${dpa.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteDpa('${dpa.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function saveDpa() {
+            if (!supabaseClient) {
+                Swal.fire('Error', 'Sistem berjalan dalam mode online wajib.', 'error');
+                return;
+            }
+
+            const id = document.getElementById('dpaId').value || generateId();
+            const tahun = document.getElementById('dpaTahun').value || new Date().getFullYear(); // Tahun Dinamis
+            
+            const payload = {
+                id: id,
+                kegiatan: document.getElementById('dpaKegiatan').value,
+                sub_kegiatan: document.getElementById('dpaSubKegiatan').value,
+                tahun_anggaran: parseInt(tahun),
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                const { data, error } = await supabaseClient.from('dpa').upsert(payload).select();
+                if (error) throw error;
+                
+                const index = cachedDpa.findIndex(d => d.id === id);
+                if (index > -1) cachedDpa[index] = payload;
+                else cachedDpa.unshift(payload);
+
+                renderTabelDpa();
+                bootstrap.Modal.getInstance(document.getElementById('modalDpa')).hide();
+                Swal.fire('Sukses', 'Data DPA berhasil disimpan', 'success');
+            } catch (error) {
+                Swal.fire('Gagal Menyimpan', 'Terjadi kesalahan DB: ' + error.message, 'error');
+            }
+        }
+        
+        function editDpa(id) {
+            const dpa = cachedDpa.find(d => d.id === id);
+            if(dpa) {
+                document.getElementById('dpaId').value = dpa.id;
+                document.getElementById('dpaKegiatan').value = dpa.kegiatan;
+                document.getElementById('dpaSubKegiatan').value = dpa.sub_kegiatan;
+                document.getElementById('dpaTahun').value = dpa.tahun_anggaran;
+                new bootstrap.Modal(document.getElementById('modalDpa')).show();
+            }
+        }
+
+        async function deleteDpa(id) {
+            if (!supabaseClient) return;
+            if(confirm('Yakin ingin menghapus DPA ini?')) {
+                try {
+                    const { error } = await supabaseClient.from('dpa').delete().eq('id', id);
+                    if (error) throw error;
+                    
+                    cachedDpa = cachedDpa.filter(d => d.id !== id);
+                    renderTabelDpa();
+                    Swal.fire('Terhapus!', '', 'success');
+                } catch (error) {
+                    Swal.fire('Gagal', 'Error menghapus data: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // --- MODULE: KOP SURAT (CRUD & LIVE PREVIEW) ---
+        async function loadKopSurat(isInit = false) {
+            if (!supabaseClient || !isInit) return;
+            try {
+                const { data, error } = await supabaseClient.from('kop_surat').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                
+                cachedKopSurat = data || [];
+                renderTabelKopSurat();
+            } catch(e) { console.error("Error loading Kop Surat:", e); }
+        }
+
+        function renderKopSuratPreview() {
+            const container = document.getElementById('kopPreviewContainer');
+            const activeKop = cachedKopSurat.find(k => k.is_aktif === true);
+
+            if (activeKop) {
+                container.innerHTML = `
+                    <div class="p-4 bg-white" style="border: 1px solid #e0e0e0; border-radius: 4px;">
+                        <div class="d-flex align-items-center">
+                            <!-- Logo Kiri -->
+                            <div style="width: 120px; text-align: center;">
+                                <img src="${activeKop.logo_url || 'https://placehold.co/100x100?text=LOGO'}" alt="Logo" style="max-width: 100px; max-height: 100px; object-fit: contain;">
+                            </div>
+                            
+                            <!-- Teks Tengah (Times New Roman) -->
+                            <div class="flex-grow-1 text-center px-3" style="font-family: 'Times New Roman', Times, serif; color: #000;">
+                                <h4 class="m-0 text-uppercase" style="font-size: 1.3rem; letter-spacing: 0.5px;">${activeKop.nama_pemda}</h4>
+                                <h2 class="m-0 fw-bold text-uppercase" style="font-size: 1.6rem; letter-spacing: 0.5px;">${activeKop.nama_instansi}</h2>
+                                <p class="m-0 mt-1" style="font-size: 1rem;">${activeKop.alamat}</p>
+                            </div>
+                            
+                            <!-- Spacer Kanan (Agar teks benar-benar di tengah) -->
+                            <div style="width: 120px;"></div>
                         </div>
+                        <!-- Garis Hitam Tebal -->
+                        <div style="border-bottom: 3px solid #000; margin-top: 15px;"></div>
                     </div>
-
-                    <div class="surat-title">
-                        <h2>SURAT TUGAS</h2>
-                        <p>Nomor: ${spt.nomor_surat}</p>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="alert alert-warning m-0 text-center text-dark border-0">
+                        <i class="fas fa-exclamation-circle fa-2x mb-2 d-block text-warning"></i>
+                        <strong>Belum ada Kop Surat yang Aktif.</strong><br>
+                        Silakan buat baru atau klik tombol "Set Aktif" (centang hijau) pada tabel di bawah.
                     </div>
+                `;
+            }
+        }
 
-                    <table class="content-table">
-                        <tr>
-                            <td class="col-label">Dasar</td>
-                            <td class="col-colon">:</td>
-                            <td style="text-align: justify; white-space: pre-line;">${spt.dasar}</td>
-                        </tr>
-                    </table>
+        function renderTabelKopSurat() {
+            const tbody = document.getElementById('tabelKopSurat');
+            tbody.innerHTML = '';
+            
+            renderKopSuratPreview(); // Render live preview
+            
+            if (cachedKopSurat.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data Kop Surat.</td></tr>';
+                return;
+            }
 
-                    <div style="margin: 15px 0;">
-                        <b>Memerintahkan:</b>
-                    </div>
+            cachedKopSurat.forEach(kop => {
+                const btnStatus = kop.is_aktif 
+                    ? `<span class="badge bg-success"><i class="fas fa-check-circle"></i> Aktif Digunakan</span>` 
+                    : `<button class="btn btn-sm btn-outline-success" onclick="setKopSuratAktif('${kop.id}')"><i class="fas fa-check"></i> Set Aktif</button>`;
 
-                    <table class="content-table">
-                        <tr>
-                            <td class="col-label">Kepada</td>
-                            <td class="col-colon">:</td>
-                            <td>${pegawaiHtml}</td>
-                        </tr>
-                        <tr>
-                            <td class="col-label">Untuk</td>
-                            <td class="col-colon">:</td>
-                            <td style="text-align: justify;">
-                                Dalam rangka ${spt.maksud} di ${spt.tempat_tujuan} selama ${spt.lama_hari} (${angkaTerbilang(spt.lama_hari)}) hari dari tanggal ${tglBerangkat} s/d ${tglKembali}.
-                            </td>
-                        </tr>
-                    </table>
+                tbody.innerHTML += `
+                    <tr>
+                        <td><img src="${kop.logo_url || 'https://placehold.co/100'}" style="width:40px; height:40px; object-fit:contain;"></td>
+                        <td class="fw-bold">${kop.nama_pemda}</td>
+                        <td>${kop.nama_instansi}</td>
+                        <td>${btnStatus}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-warning" onclick="editKopSurat('${kop.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteKopSurat('${kop.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
 
-                    <div class="ttd-container">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tr>
-                                <td style="width: 120px;">Ditetapkan di</td>
-                                <td>: ${spt.tempat_berangkat}</td>
-                            </tr>
-                            <tr>
-                                <td style="border-bottom: 1px solid #000; padding-bottom: 5px;">Pada tanggal</td>
-                                <td style="border-bottom: 1px solid #000; padding-bottom: 5px;">: ${tglSurat}</td>
-                            </tr>
-                        </table>
-                        <p style="margin-top: 15px; margin-bottom: 80px;">
-                            <b>${pejabat.jabatan},</b>
-                        </p>
-                        <p style="margin: 0;"><b><u>${pejabat.nama_kepala}</u></b></p>
-                        <p style="margin: 0;">${pejabat.pangkat_golongan}</p>
-                        <p style="margin: 0;">NIP. ${pejabat.nip}</p>
-                    </div>
+        async function saveKopSurat() {
+            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
 
-                    <div class="bsre-footer">
-                        Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik<br>
-                        yang diterbitkan oleh Balai Besar Sertifikasi Elektronik (BSrE), Badan Siber dan Sandi Negara (BSSN).
-                    </div>
-                </body>
-                </html>
-            `;
+            const id = document.getElementById('kopId').value || generateId();
+            const payload = {
+                id: id,
+                logo_url: document.getElementById('kopLogoUrl').value,
+                nama_pemda: document.getElementById('kopNamaPemda').value,
+                nama_instansi: document.getElementById('kopNamaInstansi').value,
+                alamat: document.getElementById('kopAlamat').value,
+                is_aktif: cachedKopSurat.length === 0 ? true : false, // Default true jika baru pertama
+                updated_at: new Date().toISOString()
+            };
 
-            printWindow.document.write(html);
-            printWindow.document.close();
+            try {
+                const { error } = await supabaseClient.from('kop_surat').upsert(payload);
+                if (error) throw error;
+                
+                const index = cachedKopSurat.findIndex(k => k.id === id);
+                if (index > -1) {
+                    payload.is_aktif = cachedKopSurat[index].is_aktif; // keep existing status on edit
+                    cachedKopSurat[index] = payload;
+                } else {
+                    cachedKopSurat.unshift(payload);
+                }
+
+                renderTabelKopSurat();
+                bootstrap.Modal.getInstance(document.getElementById('modalKopSurat')).hide();
+                Swal.fire('Sukses', 'Data Kop Surat disimpan', 'success');
+            } catch (error) {
+                Swal.fire('Gagal Menyimpan', error.message, 'error');
+            }
+        }
+
+        function editKopSurat(id) {
+            const kop = cachedKopSurat.find(k => k.id === id);
+            if(kop) {
+                document.getElementById('kopId').value = kop.id;
+                document.getElementById('kopLogoUrl').value = kop.logo_url;
+                document.getElementById('kopLogoPreview').src = kop.logo_url || 'https://placehold.co/100x100/e2e8f0/94a3b8?text=Logo';
+                document.getElementById('kopNamaPemda').value = kop.nama_pemda;
+                document.getElementById('kopNamaInstansi').value = kop.nama_instansi;
+                document.getElementById('kopAlamat').value = kop.alamat;
+                new bootstrap.Modal(document.getElementById('modalKopSurat')).show();
+            }
+        }
+
+        async function deleteKopSurat(id) {
+            if (!supabaseClient) return;
+            const kop = cachedKopSurat.find(k => k.id === id);
+            if(kop && kop.is_aktif) {
+                return Swal.fire('Ditolak', 'Kop Surat ini sedang aktif. Set aktif kop surat lain terlebih dahulu.', 'warning');
+            }
+
+            if(confirm('Yakin menghapus kop surat ini?')) {
+                try {
+                    const { error } = await supabaseClient.from('kop_surat').delete().eq('id', id);
+                    if (error) throw error;
+                    
+                    cachedKopSurat = cachedKopSurat.filter(k => k.id !== id);
+                    renderTabelKopSurat();
+                    Swal.fire('Terhapus!', '', 'success');
+                } catch (error) {
+                    Swal.fire('Gagal', error.message, 'error');
+                }
+            }
+        }
+
+        async function setKopSuratAktif(id) {
+            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
+            
+            try {
+                // 1. Matikan semua kop surat yang aktif saat ini
+                const currentActive = cachedKopSurat.find(k => k.is_aktif);
+                if (currentActive) {
+                    await supabaseClient.from('kop_surat').update({ is_aktif: false }).eq('id', currentActive.id);
+                    currentActive.is_aktif = false;
+                }
+
+                // 2. Aktifkan kop surat yang dipilih
+                await supabaseClient.from('kop_surat').update({ is_aktif: true }).eq('id', id);
+                
+                // 3. Update memory/cache
+                const newActive = cachedKopSurat.find(k => k.id === id);
+                if (newActive) newActive.is_aktif = true;
+
+                renderTabelKopSurat();
+                Swal.fire({
+                    title: 'Berhasil!',
+                    text: 'Kop Surat telah diubah dan siap digunakan untuk cetak dokumen.',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } catch (error) {
+                Swal.fire('Gagal', 'Terjadi kesalahan DB: ' + error.message, 'error');
+            }
+        }
+
+        // --- MODULE: PEJABAT PENANDATANGAN (CRUD) ---
+        async function loadPejabat(isInit = false) {
+            if (!supabaseClient || !isInit) return;
+            try {
+                // Perbaikan: Hapus .order('created_at') karena mencegah error jika kolom tidak ada
+                const { data, error } = await supabaseClient.from('penandatangan').select('*');
+                if (error) throw error;
+                
+                cachedPejabat = data || [];
+                renderTabelPejabat();
+            } catch(e) { 
+                console.error("Error loading Pejabat:", e); 
+                document.getElementById('tabelPejabat').innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Gagal Memuat Data: ${e.message}</td></tr>`;
+            }
+        }
+
+        function renderTabelPejabat() {
+            const tbody = document.getElementById('tabelPejabat');
+            tbody.innerHTML = '';
+            
+            if (cachedPejabat.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Belum ada data Pejabat.</td></tr>';
+                return;
+            }
+
+            cachedPejabat.forEach(pej => {
+                const btnStatus = pej.is_aktif 
+                    ? `<span class="badge bg-success"><i class="fas fa-check-circle"></i> Aktif</span>` 
+                    : `<button class="btn btn-sm btn-outline-success" onclick="setPejabatAktif('${pej.id}')"><i class="fas fa-check"></i> Set Aktif</button>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${pej.nama_kepala}</td>
+                        <td>${pej.nip}</td>
+                        <td>${pej.jabatan}</td>
+                        <td>${pej.nama_instansi}</td>
+                        <td>${btnStatus}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-warning" onclick="editPejabat('${pej.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deletePejabat('${pej.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function savePejabat() {
+            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
+
+            const id = document.getElementById('pejabatId').value || generateId();
+            const payload = {
+                id: id,
+                nama_kepala: document.getElementById('pejNama').value,
+                nip: document.getElementById('pejNip').value,
+                pangkat_golongan: document.getElementById('pejPangkat').value,
+                jabatan: document.getElementById('pejJabatan').value,
+                nama_instansi: document.getElementById('pejInstansi').value,
+                is_aktif: cachedPejabat.length === 0 ? true : false,
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                const { error } = await supabaseClient.from('penandatangan').upsert(payload);
+                if (error) throw error;
+                
+                await loadPejabat(true); // Memaksa tarik ulang (reload) dari server Supabase
+                
+                bootstrap.Modal.getInstance(document.getElementById('modalPejabat')).show();
+                bootstrap.Modal.getInstance(document.getElementById('modalPejabat')).hide();
+                Swal.fire('Sukses', 'Data Pejabat berhasil disimpan', 'success');
+            } catch (error) {
+                Swal.fire('Gagal Menyimpan', error.message, 'error');
+            }
+        }
+
+        function editPejabat(id) {
+            const pej = cachedPejabat.find(p => p.id === id);
+            if(pej) {
+                document.getElementById('pejabatId').value = pej.id;
+                document.getElementById('pejNama').value = pej.nama_kepala;
+                document.getElementById('pejNip').value = pej.nip;
+                document.getElementById('pejPangkat').value = pej.pangkat_golongan;
+                document.getElementById('pejJabatan').value = pej.jabatan;
+                document.getElementById('pejInstansi').value = pej.nama_instansi;
+                new bootstrap.Modal(document.getElementById('modalPejabat')).show();
+            }
+        }
+
+        async function deletePejabat(id) {
+            if (!supabaseClient) return;
+            const pej = cachedPejabat.find(p => p.id === id);
+            if(pej && pej.is_aktif) {
+                return Swal.fire('Ditolak', 'Pejabat ini sedang aktif. Set aktif pejabat lain terlebih dahulu.', 'warning');
+            }
+
+            if(confirm('Yakin menghapus Pejabat ini?')) {
+                try {
+                    const { error } = await supabaseClient.from('penandatangan').delete().eq('id', id);
+                    if (error) throw error;
+                    
+                    await loadPejabat(true); // Memaksa tarik ulang (reload) dari server Supabase
+                    Swal.fire('Terhapus!', '', 'success');
+                } catch (error) {
+                    Swal.fire('Gagal', error.message, 'error');
+                }
+            }
+        }
+
+        async function setPejabatAktif(id) {
+            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
+            try {
+                const currentActive = cachedPejabat.find(p => p.is_aktif);
+                if (currentActive) {
+                    await supabaseClient.from('penandatangan').update({ is_aktif: false }).eq('id', currentActive.id);
+                }
+                await supabaseClient.from('penandatangan').update({ is_aktif: true }).eq('id', id);
+                
+                await loadPejabat(true); // Memaksa tarik ulang (reload) dari server Supabase
+                Swal.fire({ title: 'Berhasil!', text: 'Pejabat Penandatangan Aktif telah diubah.', icon: 'success', timer: 1500, showConfirmButton: false });
+            } catch (error) {
+                Swal.fire('Gagal', error.message, 'error');
+            }
+        }
+
+        // --- MODULE: SURAT TUGAS (SPT) ---
+        async function loadSpt(isInit = false) {
+            if (!supabaseClient || !isInit) return;
+            try {
+                // Perbaikan: Hapus .order('created_at') karena mencegah error jika kolom tidak ada
+                const { data, error } = await supabaseClient.from('surat_tugas').select('*');
+                if (error) throw error;
+                
+                cachedSpt = data || [];
+                document.getElementById('dashSptCount').innerText = cachedSpt.length;
+                renderTabelSpt();
+            } catch(e) { 
+                console.error("Error loading SPT:", e); 
+                document.getElementById('tabelSpt').innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Gagal Memuat Data: ${e.message}</td></tr>`;
+            }
+        }
+
+        function renderTabelSpt() {
+            const tbody = document.getElementById('tabelSpt');
+            tbody.innerHTML = '';
+            
+            if (cachedSpt.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data Surat Tugas.</td></tr>';
+                return;
+            }
+
+            cachedSpt.forEach(spt => {
+                // Cari nama pegawai dari ID
+                const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                const namaPegawai = peg ? peg.nama : '<i>Pegawai Dihapus</i>';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <span class="fw-bold text-primary">${spt.nomor_surat}</span><br>
+                            <small class="text-muted"><i class="fas fa-calendar-alt me-1"></i>${spt.tanggal_surat}</small>
+                        </td>
+                        <td>${spt.maksud}</td>
+                        <td>
+                            <span class="fw-bold">${spt.tempat_tujuan}</span><br>
+                            <small class="text-muted">${spt.lama_hari} Hari (${spt.tanggal_berangkat})</small>
+                        </td>
+                        <td>${namaPegawai}</td>
+                        <td class="text-end">
+                            <div class="d-flex flex-column align-items-end gap-1">
+                                <div>
+                                    <button class="btn btn-sm btn-primary" onclick="printSpt('${spt.id}')" title="Print SPT"><i class="fas fa-print"></i> SPT</button>
+                                    <button class="btn btn-sm btn-warning text-white" onclick="editSpt('${spt.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-success" onclick="printSppd('${spt.id}')" title="Print SPPD"><i class="fas fa-print"></i> SPPD</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteSpt('${spt.id}')" title="Hapus"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // FUNGSI PRINT (PLACEHOLDER)
+        function printSpt(id) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Cetak SPT',
+                text: 'Fitur cetak dokumen Template HTML/PDF untuk SPT (Surat Perintah Tugas) sedang dalam tahap pengembangan.'
+            });
         }
 
         function printSppd(id) {
