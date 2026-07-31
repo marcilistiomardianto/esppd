@@ -1355,13 +1355,13 @@
                 populatePegawaiDropdowns();
                 populateDPADropdown();
                 const num = (cachedST.length + 1).toString().padStart(3, '0');
-                $('#stNomor').val('800/' + num + '/SPT/2026');
+                const tahun = new Date().getFullYear();
+                $('#stNomor').val('800/' + num + '/SPT/' + tahun);
             } else if (modalId === 'modalLHPD') {
-                const f = document.getElementById('formLHPD');
-                if (f) f.reset();
                 populateSTDropdownForLHPD();
                 const num = (cachedLHPD.length + 1).toString().padStart(3, '0');
-                $('#lhpdNomor').val('090/' + num + '/LHPD/2026');
+                const tahun = new Date().getFullYear();
+                $('#lhpdNomor').val('090/' + num + '/LHPD/' + tahun);
             } else if (modalId === 'modalSupabase') {
                 $('#supabaseUrlInput').val(localStorage.getItem('sppd_supabase_url') || '');
                 $('#supabaseKeyInput').val(localStorage.getItem('sppd_supabase_key') || '');
@@ -1938,7 +1938,7 @@
         const payload = {
             id: generateId(),
             nomor: $('#stNomor').val(),
-            nomorSppd: '090/' + (cachedST.length + 1).toString().padStart(3, '0') + '/SPPD/2026',
+            nomorSppd: '090/' + (cachedST.length + 1).toString().padStart(3, '0') + '/SPPD/' + new Date().getFullYear(),
             tanggal: $('#stTanggal').val(),
             dpaId: $('#stDPA').val(),
             dasar: $('#stDasar').val(),
