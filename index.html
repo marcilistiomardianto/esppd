@@ -860,10 +860,10 @@
         const id = document.getElementById('dpaId').value;
         const payload = {
             id: id || generateId(),
-            tahun_anggaran: document.getElementById('dpaTahun').value,
+            tahun_anggaran: parseInt(document.getElementById('dpaTahun').value) || 0,
             kegiatan: document.getElementById('dpaKegiatan').value,
             sub_kegiatan: document.getElementById('dpaSubKegiatan').value,
-            pagu: document.getElementById('dpaPagu').value
+            pagu: parseFloat(document.getElementById('dpaPagu').value) || 0
         };
         
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
