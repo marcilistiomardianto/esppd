@@ -1456,13 +1456,208 @@
             });
         }
 
-        // FUNGSI PRINT (PLACEHOLDER)
+        // --- FUNGSI PRINT SPT (SURAT TUGAS) ---
         function printSpt(id) {
-            Swal.fire({
-                icon: 'info',
-                title: 'Cetak SPT',
-                text: 'Fitur cetak dokumen Template HTML/PDF untuk SPT (Surat Perintah Tugas) sedang dalam tahap pengembangan.'
+            const spt = cachedSpt.find(s => s.id === id);
+            if (!spt) return Swal.fire('Error', 'Data SPT tidak ditemukan.', 'error');
+
+            const kop = cachedKopSurat.find(k => k.is_aktif === true);
+            if (!kop) return Swal.fire('Peringatan', 'Belum ada Kop Surat yang aktif. Silakan atur di menu Kop Surat.', 'warning');
+
+            const pejabat = cachedPejabat.find(p => p.is_aktif === true);
+            if (!pejabat) return Swal.fire('Peringatan', 'Belum ada Pejabat Penandatangan yang aktif. Silakan atur di menu Pejabat.', 'warning');
+
+            // Ambil data pegawai yang ditugaskan
+            const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+            const p2 = cachedPegawai.find(p => p.id === spt.pegawai_2_id);
+            const p3 = cachedPegawai.find(p => p.id === spt.pegawai_3_id);
+
+            const pegawais = [p1, p2, p3].filter(p => p !== undefined);
+
+            // Fungsi Bantuan: Format Tanggal Indonesia
+            const formatTgl = (tglStr) => {
+                if (!tglStr) return '';
+                const bln = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                const [y, m, d] = tglStr.split('-');
+                return `${parseInt(d)} ${bln[parseInt(m)]} ${y}`;
+            };
+
+            // Fungsi Bantuan: Terbilang Sederhana (Untuk Lama Hari)
+            const terbilang = (angka) => {
+                const huruf = ['nol', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
+                if (angka < 12) return huruf[angka];
+                if (angka < 20) return huruf[angka - 10] + ' belas';
+                if (angka < 100) return huruf[Math.floor(angka / 10)] + ' puluh ' + (angka % 10 !== 0 ? huruf[angka % 10] : '');
+                return angka;
+            };
+
+            // Bangun deretan HTML untuk Pegawai yang ditugaskan
+            let pegawaiHtml = '';
+            pegawais.forEach((p, index) => {
+                pegawaiHtml += `
+                    <tr>
+                        <td width="3%" valign="top">${index + 1}.</td>
+                        <td width="15%" valign="top">Nama</td>
+                        <td width="2%" valign="top">:</td>
+                        <td width="80%" valign="top"><b>${p.nama}</b></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td valign="top">Pangkat/Gol</td>
+                        <td valign="top">:</td>
+                        <td valign="top">${p.pangkat_golongan}</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td valign="top">NIP</td>
+                        <td valign="top">:</td>
+                        <td valign="top">${p.nip}</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td valign="top">Jabatan</td>
+                        <td valign="top">:</td>
+                        <td valign="top">${p.jabatan}</td>
+                    </tr>
+                `;
             });
+
+            // Susun dasar pelaksanaan (mengubah baris baru jadi enter HTML)
+            const dasarHtml = (spt.dasar || '').split('\n').map(item => `<div>${item}</div>`).join('');
+
+            // --- TEMPLATE HTML A4 UNTUK CETAK ---
+            const htmlContent = `
+            <!DOCTYPE html>
+            <html lang="id">
+            <head>
+                <meta charset="UTF-8">
+                <title>Cetak SPT - ${spt.nomor_surat}</title>
+                <style>
+                    @page { size: A4; margin: 2cm; }
+                    body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; color: #000; margin: 0; padding: 0; }
+                    
+                    /* Kop Surat */
+                    .kop-surat { display: flex; align-items: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px; }
+                    .kop-logo { width: 90px; text-align: center; }
+                    .kop-logo img { width: 100%; height: auto; object-fit: contain; }
+                    .kop-teks { flex-grow: 1; text-align: center; padding: 0 15px; }
+                    .kop-teks h4 { margin: 0; font-size: 14pt; font-weight: normal; text-transform: uppercase; }
+                    .kop-teks h2 { margin: 0; font-size: 16pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+                    .kop-teks p { margin: 5px 0 0; font-size: 10pt; }
+                    
+                    /* Judul Surat */
+                    .judul-surat { text-align: center; margin-bottom: 30px; }
+                    .judul-surat h3 { margin: 0; font-size: 14pt; font-weight: bold; text-decoration: underline; }
+                    .judul-surat p { margin: 0; font-size: 12pt; }
+                    
+                    /* Tabel Konten */
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+                    td { vertical-align: top; padding: 2px 0; }
+                    
+                    /* Area Tanda Tangan */
+                    .ttd-area { width: 350px; float: right; margin-top: 30px; text-align: left; }
+                    .ttd-area p { margin: 0; }
+                    .ttd-area .jabatan { font-weight: bold; min-height: 80px; } /* Space for signature */
+                    .ttd-area .nama { font-weight: bold; text-decoration: underline; margin-top: 80px; }
+                    
+                    /* Footer e-Sign */
+                    .footer-esign { clear: both; margin-top: 50px; font-size: 9pt; text-align: center; color: #555; border-top: 1px solid #ccc; padding-top: 10px; font-style: italic; }
+                </style>
+            </head>
+            <body>
+                <!-- Kop Surat -->
+                <div class="kop-surat">
+                    <div class="kop-logo">
+                        <img src="${kop.logo_url || 'https://placehold.co/100'}" alt="Logo">
+                    </div>
+                    <div class="kop-teks">
+                        <h4>${kop.nama_pemda}</h4>
+                        <h2>${kop.nama_instansi}</h2>
+                        <p>${kop.alamat}</p>
+                    </div>
+                    <div style="width: 90px;"></div> <!-- Spacer -->
+                </div>
+
+                <!-- Judul -->
+                <div class="judul-surat">
+                    <h3>SURAT TUGAS</h3>
+                    <p>Nomor: ${spt.nomor_surat}</p>
+                </div>
+
+                <!-- Isi Surat -->
+                <table>
+                    <tr>
+                        <td width="15%"><b>Dasar</b></td>
+                        <td width="2%">:</td>
+                        <td width="83%">${dasarHtml}</td>
+                    </tr>
+                </table>
+
+                <div style="text-align: center; font-weight: bold; margin: 20px 0;">Memerintahkan:</div>
+
+                <table>
+                    <tr>
+                        <td width="15%"><b>Kepada</b></td>
+                        <td width="2%">:</td>
+                        <td width="83%">
+                            <table style="margin-bottom: 0;">
+                                ${pegawaiHtml}
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                <br>
+                <table>
+                    <tr>
+                        <td width="15%"><b>Untuk</b></td>
+                        <td width="2%">:</td>
+                        <td width="83%" style="text-align: justify;">
+                            Dalam rangka ${spt.maksud} di ${spt.tempat_tujuan} selama ${spt.lama_hari} (${terbilang(spt.lama_hari)}) hari dari tanggal ${formatTgl(spt.tanggal_berangkat)} s/d ${formatTgl(spt.tanggal_kembali)}.
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Bagian Tanda Tangan -->
+                <div class="ttd-area">
+                    <table style="margin-bottom: 5px;">
+                        <tr>
+                            <td width="40%">Ditetapkan di</td>
+                            <td width="5%">:</td>
+                            <td width="55%">${spt.tempat_berangkat || 'Tempat Kedudukan'}</td>
+                        </tr>
+                        <tr>
+                            <td>Pada tanggal</td>
+                            <td>:</td>
+                            <td>${formatTgl(spt.tanggal_surat)}</td>
+                        </tr>
+                    </table>
+                    
+                    <p>${pejabat.jabatan},</p>
+                    <p class="nama">${pejabat.nama_kepala}</p>
+                    <p>${pejabat.pangkat_golongan}</p>
+                    <p>NIP. ${pejabat.nip}</p>
+                </div>
+
+                <!-- Footer BSrE -->
+                <div class="footer-esign">
+                    Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik<br>
+                    yang diterbitkan oleh Balai Besar Sertifikasi Elektronik (BSrE), Badan Siber dan Sandi Negara (BSSN).
+                </div>
+
+                <!-- Script untuk Print Otomatis -->
+                <script>
+                    window.onload = function() {
+                        window.print();
+                    }
+                <\/script>
+            </body>
+            </html>
+            `;
+
+            // Buka Jendela Baru dan Tulis Dokumen
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(htmlContent);
+            printWindow.document.close();
         }
 
         function printSppd(id) {
