@@ -468,9 +468,30 @@
                 </div>
             </div>
             
+            <!-- 6. SURAT PERINTAH TUGAS (SPT) VIEW -->
             <div id="sptView" class="view-section d-none">
-                <h3 class="text-secondary mb-4">Surat Perintah Tugas (SPT)</h3>
-                <div class="alert alert-info">Modul SPT sedang dalam pengembangan. Mendukung multi-select pegawai dan auto-numbering.</div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="text-secondary m-0">Surat Perintah Tugas (SPT)</h3>
+                    <button class="btn btn-primary" onclick="openModalSpt()"><i class="fas fa-plus"></i> Buat SPT Baru</button>
+                </div>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>No. & Tgl Surat</th>
+                                    <th>Maksud Perjalanan</th>
+                                    <th>Tujuan & Waktu</th>
+                                    <th>Pegawai Utama</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelSpt">
+                                <tr><td colspan="5" class="text-center py-4">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             
             <div id="sppdView" class="view-section d-none">
@@ -682,6 +703,109 @@
         </div>
     </div>
 
+    <!-- Modal Surat Tugas (SPT) -->
+    <div class="modal fade" id="modalSpt" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Buat Surat Perintah Tugas</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-light">
+                    <form id="formSpt">
+                        <input type="hidden" id="sptId">
+                        
+                        <div class="row bg-white p-3 mb-3 border rounded">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Nomor Surat</label>
+                                <input type="text" class="form-control" id="sptNomor" placeholder="800/002/SPT/2026" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Tanggal Surat</label>
+                                <input type="date" class="form-control" id="sptTglSurat" required>
+                            </div>
+                            
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">Pilih Anggaran / DPA</label>
+                                <select class="form-select" id="sptDpa" onchange="autoFillDasarDpa()" required>
+                                    <option value="">-- Pilih DPA / Kode Rekening --</option>
+                                    <!-- Diisi oleh JS -->
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">Dasar Pelaksanaan</label>
+                                <textarea class="form-control" id="sptDasar" rows="2" placeholder="Surat Undangan No... / DPA Dinas..." required></textarea>
+                            </div>
+                            
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">Maksud Perjalanan Dinas</label>
+                                <textarea class="form-control" id="sptMaksud" rows="2" placeholder="Melaksanakan koordinasi teknis..." required></textarea>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Tempat Berangkat</label>
+                                <input type="text" class="form-control" id="sptBerangkat" value="" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Tempat Tujuan</label>
+                                <input type="text" class="form-control" id="sptTujuan" required>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Lama (Hari)</label>
+                                <input type="number" class="form-control" id="sptLama" min="1" oninput="calculateTglKembali()" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Tanggal Berangkat</label>
+                                <input type="date" class="form-control" id="sptTglBerangkat" onchange="calculateTglKembali()" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Tanggal Kembali</label>
+                                <input type="date" class="form-control" id="sptTglKembali" readonly required>
+                            </div>
+                            
+                            <div class="col-md-12 mb-2">
+                                <label class="form-label fw-bold">Alat Angkutan / Transportasi</label>
+                                <select class="form-select" id="sptAngkutan" required>
+                                    <option value="Angkutan Darat">Angkutan Darat</option>
+                                    <option value="Angkutan Laut">Angkutan Laut</option>
+                                    <option value="Angkutan Udara">Angkutan Udara</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row bg-white p-3 border rounded">
+                            <h6 class="fw-bold mb-3 border-bottom pb-2">Pelaksana Tugas (Maksimal 3 Orang)</h6>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Pegawai 1 (Ketua / Pelaksana Utama) <span class="text-danger">*Wajib</span></label>
+                                <select class="form-select" id="sptPegawai1" required>
+                                    <option value="">-- Pilih Pegawai --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Pegawai 2 (Pengikut / Anggota) <span class="text-muted">*Opsional</span></label>
+                                <select class="form-select" id="sptPegawai2">
+                                    <option value="">-- Pilih Pegawai --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12 mb-1">
+                                <label class="form-label">Pegawai 3 (Pengikut / Anggota) <span class="text-muted">*Opsional</span></label>
+                                <select class="form-select" id="sptPegawai3">
+                                    <option value="">-- Pilih Pegawai --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSpt()"><i class="fas fa-save me-1"></i> Simpan & Buat SPPD</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT -->
     <script>
         // --- CORE & CONFIG ---
@@ -692,6 +816,7 @@
         let cachedDpa = [];
         let cachedKopSurat = [];
         let cachedPejabat = [];
+        let cachedSpt = [];
 
         // Valid UUID v4 Generator
         function generateId() {
@@ -719,6 +844,7 @@
                     loadDpa(true);
                     loadKopSurat(true);
                     loadPejabat(true);
+                    loadSpt(true);
                 } catch (e) {
                     console.error("Supabase Init Error", e);
                 }
@@ -1146,146 +1272,214 @@
             }
         }
 
-        // --- MODULE: PEJABAT PENANDATANGAN (CRUD) ---
-        async function loadPejabat(isInit = false) {
+        // --- MODULE: SURAT TUGAS (SPT) ---
+        async function loadSpt(isInit = false) {
             if (!supabaseClient || !isInit) return;
             try {
-                const { data, error } = await supabaseClient.from('penandatangan').select('*').order('created_at', { ascending: false });
+                const { data, error } = await supabaseClient.from('surat_tugas').select('*').order('created_at', { ascending: false });
                 if (error) throw error;
                 
-                cachedPejabat = data || [];
-                renderTabelPejabat();
-            } catch(e) { console.error("Error loading Pejabat:", e); }
+                cachedSpt = data || [];
+                document.getElementById('dashSptCount').innerText = cachedSpt.length;
+                renderTabelSpt();
+            } catch(e) { console.error("Error loading SPT:", e); }
         }
 
-        function renderTabelPejabat() {
-            const tbody = document.getElementById('tabelPejabat');
+        function renderTabelSpt() {
+            const tbody = document.getElementById('tabelSpt');
             tbody.innerHTML = '';
             
-            if (cachedPejabat.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Belum ada data Pejabat Penandatangan.</td></tr>';
+            if (cachedSpt.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data Surat Tugas.</td></tr>';
                 return;
             }
 
-            cachedPejabat.forEach(pej => {
-                const btnStatus = pej.is_aktif 
-                    ? `<span class="badge bg-success"><i class="fas fa-check-circle"></i> Aktif</span>` 
-                    : `<button class="btn btn-sm btn-outline-success" onclick="setPejabatAktif('${pej.id}')"><i class="fas fa-check"></i> Set Aktif</button>`;
+            cachedSpt.forEach(spt => {
+                // Cari nama pegawai dari ID
+                const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                const namaPegawai = peg ? peg.nama : '<i>Pegawai Dihapus</i>';
 
                 tbody.innerHTML += `
                     <tr>
-                        <td class="fw-bold">${pej.nama_kepala}</td>
-                        <td>${pej.nip}</td>
-                        <td>${pej.jabatan}</td>
-                        <td>${pej.nama_instansi}</td>
-                        <td>${btnStatus}</td>
+                        <td>
+                            <span class="fw-bold text-primary">${spt.nomor_surat}</span><br>
+                            <small class="text-muted"><i class="fas fa-calendar-alt me-1"></i>${spt.tanggal_surat}</small>
+                        </td>
+                        <td>${spt.maksud}</td>
+                        <td>
+                            <span class="fw-bold">${spt.tempat_tujuan}</span><br>
+                            <small class="text-muted">${spt.lama_hari} Hari (${spt.tanggal_berangkat})</small>
+                        </td>
+                        <td>${namaPegawai}</td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-outline-warning" onclick="editPejabat('${pej.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deletePejabat('${pej.id}')"><i class="fas fa-trash"></i></button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="editSpt('${spt.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteSpt('${spt.id}')"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        async function savePejabat() {
-            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
+        function populateSelectsSpt() {
+            // Dropdown DPA
+            const selDpa = document.getElementById('sptDpa');
+            selDpa.innerHTML = '<option value="">-- Pilih DPA / Kode Rekening --</option>';
+            cachedDpa.forEach(d => {
+                selDpa.innerHTML += `<option value="${d.id}">${d.kegiatan} - ${d.sub_kegiatan} (${d.tahun_anggaran})</option>`;
+            });
 
-            const id = document.getElementById('pejabatId').value || generateId();
+            // Dropdown Pegawai
+            const optsPegawai = '<option value="">-- Pilih Pegawai --</option>' + 
+                cachedPegawai.map(p => `<option value="${p.id}">${p.nama} - ${p.nip}</option>`).join('');
+            
+            document.getElementById('sptPegawai1').innerHTML = optsPegawai;
+            document.getElementById('sptPegawai2').innerHTML = optsPegawai;
+            document.getElementById('sptPegawai3').innerHTML = optsPegawai;
+        }
+
+        function openModalSpt() {
+            document.getElementById('formSpt').reset();
+            document.getElementById('sptId').value = '';
+            
+            // Set auto nomor tahun berjalan
+            const year = new Date().getFullYear();
+            const count = String(cachedSpt.length + 1).padStart(3, '0');
+            document.getElementById('sptNomor').value = `800/${count}/SPT/${year}`;
+            
+            populateSelectsSpt();
+            new bootstrap.Modal(document.getElementById('modalSpt')).show();
+        }
+
+        function autoFillDasarDpa() {
+            const dpaId = document.getElementById('sptDpa').value;
+            const textDasar = document.getElementById('sptDasar');
+            
+            if (dpaId) {
+                const dpa = cachedDpa.find(d => d.id === dpaId);
+                if (dpa) {
+                    const currentText = textDasar.value;
+                    const dpaText = `DPA Tahun ${dpa.tahun_anggaran} Kegiatan: ${dpa.kegiatan} - ${dpa.sub_kegiatan}`;
+                    
+                    // Jika teks masih kosong atau berisi contoh bawaan, timpa. Jika sudah diisi user, tambahkan di bawahnya.
+                    if(currentText.trim() === '' || currentText.includes('Surat Undangan No')) {
+                        textDasar.value = dpaText;
+                    } else if (!currentText.includes(dpaText)) {
+                        textDasar.value = currentText + '\n' + dpaText;
+                    }
+                }
+            }
+        }
+
+        function calculateTglKembali() {
+            const tglBerangkat = document.getElementById('sptTglBerangkat').value;
+            const lamaHari = parseInt(document.getElementById('sptLama').value);
+            
+            if (tglBerangkat && !isNaN(lamaHari) && lamaHari > 0) {
+                const date = new Date(tglBerangkat);
+                // Rumus: Tgl Kembali = Tgl Berangkat + (Lama Hari - 1)
+                date.setDate(date.getDate() + (lamaHari - 1));
+                
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                
+                document.getElementById('sptTglKembali').value = `${y}-${m}-${d}`;
+            } else {
+                document.getElementById('sptTglKembali').value = '';
+            }
+        }
+
+        async function saveSpt() {
+            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
+            
+            // Validasi Pegawai Sama
+            const p1 = document.getElementById('sptPegawai1').value;
+            const p2 = document.getElementById('sptPegawai2').value;
+            const p3 = document.getElementById('sptPegawai3').value;
+            
+            if(!p1) return Swal.fire('Peringatan', 'Pegawai 1 (Ketua) Wajib diisi!', 'warning');
+            if((p1 === p2 && p2 !== '') || (p1 === p3 && p3 !== '') || (p2 === p3 && p2 !== '')) {
+                return Swal.fire('Peringatan', 'Pegawai yang dipilih tidak boleh sama (Duplikat)!', 'warning');
+            }
+
+            const id = document.getElementById('sptId').value || generateId();
             const payload = {
                 id: id,
-                nama_kepala: document.getElementById('pejNama').value,
-                nip: document.getElementById('pejNip').value,
-                pangkat_golongan: document.getElementById('pejPangkat').value,
-                jabatan: document.getElementById('pejJabatan').value,
-                nama_instansi: document.getElementById('pejInstansi').value,
-                is_aktif: cachedPejabat.length === 0 ? true : false, // Default true jika ini data pertama
+                nomor_surat: document.getElementById('sptNomor').value,
+                tanggal_surat: document.getElementById('sptTglSurat').value,
+                dpa_id: document.getElementById('sptDpa').value,
+                dasar: document.getElementById('sptDasar').value,
+                maksud: document.getElementById('sptMaksud').value,
+                tempat_berangkat: document.getElementById('sptBerangkat').value,
+                tempat_tujuan: document.getElementById('sptTujuan').value,
+                lama_hari: parseInt(document.getElementById('sptLama').value),
+                tanggal_berangkat: document.getElementById('sptTglBerangkat').value,
+                tanggal_kembali: document.getElementById('sptTglKembali').value,
+                alat_angkutan: document.getElementById('sptAngkutan').value,
+                pegawai_1_id: p1,
+                pegawai_2_id: p2 || null,
+                pegawai_3_id: p3 || null,
                 updated_at: new Date().toISOString()
             };
 
             try {
-                const { error } = await supabaseClient.from('penandatangan').upsert(payload);
+                const { error } = await supabaseClient.from('surat_tugas').upsert(payload);
                 if (error) throw error;
                 
-                const index = cachedPejabat.findIndex(p => p.id === id);
-                if (index > -1) {
-                    payload.is_aktif = cachedPejabat[index].is_aktif;
-                    cachedPejabat[index] = payload;
-                } else {
-                    cachedPejabat.unshift(payload);
-                }
+                const index = cachedSpt.findIndex(s => s.id === id);
+                if (index > -1) cachedSpt[index] = payload;
+                else cachedSpt.unshift(payload);
 
-                renderTabelPejabat();
-                bootstrap.Modal.getInstance(document.getElementById('modalPejabat')).hide();
-                Swal.fire('Sukses', 'Data Pejabat berhasil disimpan', 'success');
+                renderTabelSpt();
+                document.getElementById('dashSptCount').innerText = cachedSpt.length;
+                
+                bootstrap.Modal.getInstance(document.getElementById('modalSpt')).hide();
+                Swal.fire('Sukses', 'Surat Tugas & SPPD Berhasil Dibuat!', 'success');
             } catch (error) {
-                Swal.fire('Gagal Menyimpan', error.message, 'error');
+                Swal.fire('Gagal Menyimpan', 'Pastikan tabel surat_tugas sudah dibuat di Supabase. Detail: ' + error.message, 'error');
             }
         }
 
-        function editPejabat(id) {
-            const pej = cachedPejabat.find(p => p.id === id);
-            if(pej) {
-                document.getElementById('pejabatId').value = pej.id;
-                document.getElementById('pejNama').value = pej.nama_kepala;
-                document.getElementById('pejNip').value = pej.nip;
-                document.getElementById('pejPangkat').value = pej.pangkat_golongan;
-                document.getElementById('pejJabatan').value = pej.jabatan;
-                document.getElementById('pejInstansi').value = pej.nama_instansi;
-                new bootstrap.Modal(document.getElementById('modalPejabat')).show();
+        function editSpt(id) {
+            const spt = cachedSpt.find(s => s.id === id);
+            if(spt) {
+                populateSelectsSpt(); // Load combo box options first
+                
+                document.getElementById('sptId').value = spt.id;
+                document.getElementById('sptNomor').value = spt.nomor_surat;
+                document.getElementById('sptTglSurat').value = spt.tanggal_surat;
+                document.getElementById('sptDpa').value = spt.dpa_id;
+                document.getElementById('sptDasar').value = spt.dasar;
+                document.getElementById('sptMaksud').value = spt.maksud;
+                document.getElementById('sptBerangkat').value = spt.tempat_berangkat;
+                document.getElementById('sptTujuan').value = spt.tempat_tujuan;
+                document.getElementById('sptLama').value = spt.lama_hari;
+                document.getElementById('sptTglBerangkat').value = spt.tanggal_berangkat;
+                document.getElementById('sptTglKembali').value = spt.tanggal_kembali;
+                document.getElementById('sptAngkutan').value = spt.alat_angkutan;
+                document.getElementById('sptPegawai1').value = spt.pegawai_1_id;
+                document.getElementById('sptPegawai2').value = spt.pegawai_2_id || '';
+                document.getElementById('sptPegawai3').value = spt.pegawai_3_id || '';
+                
+                new bootstrap.Modal(document.getElementById('modalSpt')).show();
             }
         }
 
-        async function deletePejabat(id) {
+        async function deleteSpt(id) {
             if (!supabaseClient) return;
-            const pej = cachedPejabat.find(p => p.id === id);
-            
-            if(pej && pej.is_aktif) {
-                return Swal.fire('Ditolak', 'Pejabat ini sedang aktif untuk tanda tangan. Set aktif pejabat lain terlebih dahulu sebelum menghapus.', 'warning');
-            }
-
-            if(confirm('Yakin menghapus pejabat ini?')) {
+            if(confirm('Yakin menghapus Surat Tugas ini? SPPD terkait juga akan terhapus.')) {
                 try {
-                    const { error } = await supabaseClient.from('penandatangan').delete().eq('id', id);
+                    const { error } = await supabaseClient.from('surat_tugas').delete().eq('id', id);
                     if (error) throw error;
                     
-                    cachedPejabat = cachedPejabat.filter(p => p.id !== id);
-                    renderTabelPejabat();
+                    cachedSpt = cachedSpt.filter(s => s.id !== id);
+                    renderTabelSpt();
+                    document.getElementById('dashSptCount').innerText = cachedSpt.length;
+                    
                     Swal.fire('Terhapus!', '', 'success');
                 } catch (error) {
                     Swal.fire('Gagal', error.message, 'error');
                 }
-            }
-        }
-
-        async function setPejabatAktif(id) {
-            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
-            
-            try {
-                // 1. Matikan pejabat yang aktif saat ini
-                const currentActive = cachedPejabat.find(p => p.is_aktif);
-                if (currentActive) {
-                    await supabaseClient.from('penandatangan').update({ is_aktif: false }).eq('id', currentActive.id);
-                    currentActive.is_aktif = false;
-                }
-
-                // 2. Aktifkan pejabat yang baru dipilih
-                await supabaseClient.from('penandatangan').update({ is_aktif: true }).eq('id', id);
-                
-                // 3. Update cache memory
-                const newActive = cachedPejabat.find(p => p.id === id);
-                if (newActive) newActive.is_aktif = true;
-
-                renderTabelPejabat();
-                Swal.fire({
-                    title: 'Berhasil!',
-                    text: 'Pejabat Penandatangan diubah dan siap digunakan untuk cetak dokumen.',
-                    icon: 'success',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-            } catch (error) {
-                Swal.fire('Gagal', 'Terjadi kesalahan DB: ' + error.message, 'error');
             }
         }
 
