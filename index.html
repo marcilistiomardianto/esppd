@@ -316,12 +316,11 @@
                                         <th>Tahun</th>
                                         <th>Program / Kegiatan</th>
                                         <th>Sub Kegiatan</th>
-                                        <th>Pagu Anggaran</th>
                                         <th class="text-end">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tableBodyDpa">
-                                    <tr><td colspan="5" class="text-center py-4 text-muted">Belum ada data DPA.</td></tr>
+                                    <tr><td colspan="4" class="text-center py-4 text-muted">Belum ada data DPA.</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -547,13 +546,9 @@
                 <div class="modal-body">
                     <input type="hidden" id="dpaId">
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label class="form-label">Tahun Anggaran</label>
                             <input type="number" id="dpaTahun" class="form-control" required min="2020" max="2100">
-                        </div>
-                        <div class="col-md-8 mb-3">
-                            <label class="form-label">Pagu Anggaran (Rp)</label>
-                            <input type="number" id="dpaPagu" class="form-control" required placeholder="Contoh: 50000000">
                         </div>
                         <div class="col-md-12 mb-3">
                             <label class="form-label">Nama Program / Kegiatan</label>
@@ -831,20 +826,16 @@
         tbody.innerHTML = '';
         
         if (cachedDpa.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Belum ada data DPA di Cloud.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Belum ada data DPA di Cloud.</td></tr>';
             return;
         }
         
         cachedDpa.forEach(d => {
-            // Format Rupiah
-            let paguFmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(d.pagu || 0);
-            
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><span class="badge bg-primary">${d.tahun_anggaran || '-'}</span></td>
                 <td class="fw-bold">${d.kegiatan || '-'}</td>
                 <td>${d.sub_kegiatan || '-'}</td>
-                <td class="text-success fw-bold">${paguFmt}</td>
                 <td class="text-end">
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteDpa('${d.id}')" title="Hapus"><i class="fas fa-trash"></i></button>
                 </td>
@@ -862,8 +853,7 @@
             id: id || generateId(),
             tahun_anggaran: parseInt(document.getElementById('dpaTahun').value) || 0,
             kegiatan: document.getElementById('dpaKegiatan').value,
-            sub_kegiatan: document.getElementById('dpaSubKegiatan').value,
-            pagu: parseFloat(document.getElementById('dpaPagu').value) || 0
+            sub_kegiatan: document.getElementById('dpaSubKegiatan').value
         };
         
         Swal.fire({ title: 'Menyimpan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
