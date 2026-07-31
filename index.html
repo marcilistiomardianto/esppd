@@ -1312,11 +1312,36 @@
                         </td>
                         <td>${namaPegawai}</td>
                         <td class="text-end">
-                            <button class="btn btn-sm btn-outline-warning" onclick="editSpt('${spt.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteSpt('${spt.id}')"><i class="fas fa-trash"></i></button>
+                            <div class="d-flex flex-column align-items-end gap-1">
+                                <div>
+                                    <button class="btn btn-sm btn-primary" onclick="printSpt('${spt.id}')" title="Print SPT"><i class="fas fa-print"></i> SPT</button>
+                                    <button class="btn btn-sm btn-warning text-white" onclick="editSpt('${spt.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-success" onclick="printSppd('${spt.id}')" title="Print SPPD"><i class="fas fa-print"></i> SPPD</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteSpt('${spt.id}')" title="Hapus"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 `;
+            });
+        }
+
+        // FUNGSI PRINT (PLACEHOLDER)
+        function printSpt(id) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Cetak SPT',
+                text: 'Fitur cetak dokumen Template HTML/PDF untuk SPT (Surat Perintah Tugas) sedang dalam tahap pengembangan.'
+            });
+        }
+
+        function printSppd(id) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Cetak SPPD',
+                text: 'Fitur cetak dokumen Template HTML/PDF untuk SPPD (Surat Perjalanan Dinas) sedang dalam tahap pengembangan.'
             });
         }
 
