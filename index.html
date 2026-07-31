@@ -1272,6 +1272,126 @@
             }
         }
 
+        // --- MODULE: PEJABAT PENANDATANGAN (CRUD) ---
+        async function loadPejabat(isInit = false) {
+            if (!supabaseClient || !isInit) return;
+            try {
+                const { data, error } = await supabaseClient.from('penandatangan').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                
+                cachedPejabat = data || [];
+                renderTabelPejabat();
+            } catch(e) { console.error("Error loading Pejabat:", e); }
+        }
+
+        function renderTabelPejabat() {
+            const tbody = document.getElementById('tabelPejabat');
+            tbody.innerHTML = '';
+            
+            if (cachedPejabat.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Belum ada data Pejabat.</td></tr>';
+                return;
+            }
+
+            cachedPejabat.forEach(pej => {
+                const btnStatus = pej.is_aktif 
+                    ? `<span class="badge bg-success"><i class="fas fa-check-circle"></i> Aktif</span>` 
+                    : `<button class="btn btn-sm btn-outline-success" onclick="setPejabatAktif('${pej.id}')"><i class="fas fa-check"></i> Set Aktif</button>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${pej.nama_kepala}</td>
+                        <td>${pej.nip}</td>
+                        <td>${pej.jabatan}</td>
+                        <td>${pej.nama_instansi}</td>
+                        <td>${btnStatus}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-warning" onclick="editPejabat('${pej.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deletePejabat('${pej.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function savePejabat() {
+            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
+
+            const id = document.getElementById('pejabatId').value || generateId();
+            const payload = {
+                id: id,
+                nama_kepala: document.getElementById('pejNama').value,
+                nip: document.getElementById('pejNip').value,
+                pangkat_golongan: document.getElementById('pejPangkat').value,
+                jabatan: document.getElementById('pejJabatan').value,
+                nama_instansi: document.getElementById('pejInstansi').value,
+                is_aktif: cachedPejabat.length === 0 ? true : false,
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                const { error } = await supabaseClient.from('penandatangan').upsert(payload);
+                if (error) throw error;
+                
+                await loadPejabat(true); // Memaksa tarik ulang (reload) dari server Supabase
+                
+                bootstrap.Modal.getInstance(document.getElementById('modalPejabat')).show();
+                bootstrap.Modal.getInstance(document.getElementById('modalPejabat')).hide();
+                Swal.fire('Sukses', 'Data Pejabat berhasil disimpan', 'success');
+            } catch (error) {
+                Swal.fire('Gagal Menyimpan', error.message, 'error');
+            }
+        }
+
+        function editPejabat(id) {
+            const pej = cachedPejabat.find(p => p.id === id);
+            if(pej) {
+                document.getElementById('pejabatId').value = pej.id;
+                document.getElementById('pejNama').value = pej.nama_kepala;
+                document.getElementById('pejNip').value = pej.nip;
+                document.getElementById('pejPangkat').value = pej.pangkat_golongan;
+                document.getElementById('pejJabatan').value = pej.jabatan;
+                document.getElementById('pejInstansi').value = pej.nama_instansi;
+                new bootstrap.Modal(document.getElementById('modalPejabat')).show();
+            }
+        }
+
+        async function deletePejabat(id) {
+            if (!supabaseClient) return;
+            const pej = cachedPejabat.find(p => p.id === id);
+            if(pej && pej.is_aktif) {
+                return Swal.fire('Ditolak', 'Pejabat ini sedang aktif. Set aktif pejabat lain terlebih dahulu.', 'warning');
+            }
+
+            if(confirm('Yakin menghapus Pejabat ini?')) {
+                try {
+                    const { error } = await supabaseClient.from('penandatangan').delete().eq('id', id);
+                    if (error) throw error;
+                    
+                    await loadPejabat(true); // Memaksa tarik ulang (reload) dari server Supabase
+                    Swal.fire('Terhapus!', '', 'success');
+                } catch (error) {
+                    Swal.fire('Gagal', error.message, 'error');
+                }
+            }
+        }
+
+        async function setPejabatAktif(id) {
+            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
+            try {
+                const currentActive = cachedPejabat.find(p => p.is_aktif);
+                if (currentActive) {
+                    await supabaseClient.from('penandatangan').update({ is_aktif: false }).eq('id', currentActive.id);
+                }
+                await supabaseClient.from('penandatangan').update({ is_aktif: true }).eq('id', id);
+                
+                await loadPejabat(true); // Memaksa tarik ulang (reload) dari server Supabase
+                Swal.fire({ title: 'Berhasil!', text: 'Pejabat Penandatangan Aktif telah diubah.', icon: 'success', timer: 1500, showConfirmButton: false });
+            } catch (error) {
+                Swal.fire('Gagal', error.message, 'error');
+            }
+        }
+
         // --- MODULE: SURAT TUGAS (SPT) ---
         async function loadSpt(isInit = false) {
             if (!supabaseClient || !isInit) return;
@@ -1451,12 +1571,8 @@
                 const { error } = await supabaseClient.from('surat_tugas').upsert(payload);
                 if (error) throw error;
                 
-                const index = cachedSpt.findIndex(s => s.id === id);
-                if (index > -1) cachedSpt[index] = payload;
-                else cachedSpt.unshift(payload);
-
-                renderTabelSpt();
-                document.getElementById('dashSptCount').innerText = cachedSpt.length;
+                // Menarik data (reload) langsung dari database untuk memastikan UI Sinkron dengan Server
+                await loadSpt(true); 
                 
                 bootstrap.Modal.getInstance(document.getElementById('modalSpt')).hide();
                 Swal.fire('Sukses', 'Surat Tugas & SPPD Berhasil Dibuat!', 'success');
@@ -1497,9 +1613,8 @@
                     const { error } = await supabaseClient.from('surat_tugas').delete().eq('id', id);
                     if (error) throw error;
                     
-                    cachedSpt = cachedSpt.filter(s => s.id !== id);
-                    renderTabelSpt();
-                    document.getElementById('dashSptCount').innerText = cachedSpt.length;
+                    // Menarik data (reload) langsung dari database
+                    await loadSpt(true);
                     
                     Swal.fire('Terhapus!', '', 'success');
                 } catch (error) {
