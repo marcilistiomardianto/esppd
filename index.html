@@ -806,6 +806,43 @@
         </div>
     </div>
 
+    <!-- Modal Pengaturan Cetak SPPD -->
+    <div class="modal fade" id="modalPrintSppd" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-print me-2"></i>Pengaturan Cetak SPPD</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-light">
+                    <input type="hidden" id="printSppdSptId">
+                    
+                    <div class="bg-white p-3 mb-3 border rounded shadow-sm">
+                        <label class="form-label fw-bold text-dark">1. Pilih Kop Surat</label>
+                        <select class="form-select border-success" id="printSppdKop"></select>
+                        <small class="text-muted d-block mt-1"><i class="fas fa-info-circle"></i> Kop Surat yang aktif akan terpilih otomatis.</small>
+                    </div>
+                    
+                    <div class="bg-white p-3 mb-3 border rounded shadow-sm">
+                        <label class="form-label fw-bold text-dark">2. Pejabat Pemberi Perintah (Hal 1)</label>
+                        <select class="form-select border-success" id="printSppdPejabat"></select>
+                        <small class="text-muted d-block mt-1"><i class="fas fa-info-circle"></i> Pejabat yang ditugaskan menerbitkan SPPD.</small>
+                    </div>
+
+                    <div class="bg-white p-3 border rounded shadow-sm">
+                        <label class="form-label fw-bold text-dark">3. Pejabat Pengesahan (Hal 2 Bawah)</label>
+                        <select class="form-select border-success" id="printSppdPengesah"></select>
+                        <small class="text-muted d-block mt-1"><i class="fas fa-info-circle"></i> Pejabat yang mengesahkan SPPD saat kembali.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-success" onclick="executePrintSppd()"><i class="fas fa-external-link-alt me-1"></i> Buka Layar Cetak</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT -->
     <script>
         // --- CORE & CONFIG ---
