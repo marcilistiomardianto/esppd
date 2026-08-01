@@ -1655,27 +1655,126 @@
         }
 
         function printSppd(id) {
+            const spt = cachedSpt.find(s => s.id === id);
+            if (!spt) return Swal.fire('Error', 'Data SPT tidak ditemukan.', 'error');
+            
+            // Siapkan Pilihan Kop Surat
+            const selKop = document.getElementById('printSppdKop');
+            selKop.innerHTML = cachedKopSurat.map(k => `<option value="${k.id}" ${k.is_aktif ? 'selected' : ''}>${k.nama_instansi}</option>`).join('');
+            
+            // Siapkan Pilihan Pejabat
+            const pejabatOptions = cachedPejabat.map(p => `<option value="${p.id}" ${p.is_aktif ? 'selected' : ''}>${p.nama_kepala} - ${p.jabatan}</option>`).join('');
+            document.getElementById('printSppdPejabat').innerHTML = pejabatOptions;
+            document.getElementById('printSppdPengesah').innerHTML = pejabatOptions;
+            
+            // Simpan ID SPT ke hidden input dan buka modal
+            document.getElementById('printSppdSptId').value = id;
+            new bootstrap.Modal(document.getElementById('modalPrintSppd')).show();
+        }
+
+        function executePrintSppd() {
             try {
+                const id = document.getElementById('printSppdSptId').value;
                 const spt = cachedSpt.find(s => s.id === id);
-                if (!spt) return Swal.fire('Error', 'Data SPT tidak ditemukan.', 'error');
+                
+                // Ambil Pilihan dari Modal
+                const kopId = document.getElementById('printSppdKop').value;
+                const pejabatId = document.getElementById('printSppdPejabat').value;
+                const pengesahId = document.getElementById('printSppdPengesah').value;
+                
+                const kop = cachedKopSurat.find(k => k.id === kopId);
+                const pejabat = cachedPejabat.find(p => p.id === pejabatId);
+                const pengesah = cachedPejabat.find(p => p.id === pengesahId);
 
-                const kop = cachedKopSurat.find(k => k.is_aktif === true);
-                if (!kop) return Swal.fire('Peringatan', 'Belum ada Kop Surat yang aktif. Silakan atur di menu Kop Surat.', 'warning');
+                if (!kop || !pejabat || !pengesah) {
+                    return Swal.fire('Peringatan', 'Kop Surat atau Pejabat belum dipilih / tersedia!', 'warning');
+                }
 
-                const pejabat = cachedPejabat.find(p => p.is_aktif === true);
-                if (!pejabat) return Swal.fire('Peringatan', 'Belum ada Pejabat Penandatangan yang aktif. Silakan atur di menu Pejabat.', 'warning');
-
-                // Fallback (Nilai Aman) Jika Pegawai Dihapus
-                const defaultPegawai = { nama: '-', nip: '-', pangkat_golongan: '-', jabatan: '-' };
-                const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id) || defaultPegawai;
+                // Ambil Data Pegawai dan Filter yang Kosong
+                const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
                 const p2 = cachedPegawai.find(p => p.id === spt.pegawai_2_id);
                 const p3 = cachedPegawai.find(p => p.id === spt.pegawai_3_id);
+                const employees = [p1, p2, p3].filter(p => p !== undefined);
+
+                if (employees.length === 0) throw new Error("Pegawai utama tidak ditemukan/telah dihapus dari database.");
+
+                // Logika Poin 2 (Dinamis berdasarkan jumlah pegawai)
+                let point2Html = '';
+                let point7Html = '-';
+
+                if (employees.length === 1) {
+                    point2Html = `
+                        <tr>
+                            <td align="center" rowspan="2">2.</td>
+                            <td>Nama Pegawai yang diperintahkan</td>
+                            <td><b>${employees[0].nama}</b></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                a. NIP<br>
+                                b. Pangkat dan Golongan<br>
+                                c. Jabatan<br>
+                                d. Tingkat menurut Peraturan Perjalanan
+                            </td>
+                            <td>
+                                a. ${employees[0].nip}<br>
+                                b. ${employees[0].pangkat_golongan}<br>
+                                c. ${employees[0].jabatan}<br>
+                                d. ${employees[0].tingkat_perjadin || '-'}
+                            </td>
+                        </tr>
+                    `;
+                } else if (employees.length >= 2) {
+                    point2Html = `
+                        <tr>
+                            <td align="center" rowspan="2">2.</td>
+                            <td>a. Nama Pegawai yang diperintahkan</td>
+                            <td><b>a. ${employees[0].nama}</b></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                &nbsp;&nbsp;&nbsp; NIP<br>
+                                &nbsp;&nbsp;&nbsp; Pangkat dan Golongan<br>
+                                &nbsp;&nbsp;&nbsp; Jabatan<br>
+                                &nbsp;&nbsp;&nbsp; Tingkat menurut Peraturan Perjalanan
+                            </td>
+                            <td>
+                                - ${employees[0].nip}<br>
+                                - ${employees[0].pangkat_golongan}<br>
+                                - ${employees[0].jabatan}<br>
+                                - ${employees[0].tingkat_perjadin || '-'}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center" rowspan="2"></td>
+                            <td>b. Nama Pegawai yang diperintahkan</td>
+                            <td><b>b. ${employees[1].nama}</b></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                &nbsp;&nbsp;&nbsp; NIP<br>
+                                &nbsp;&nbsp;&nbsp; Pangkat dan Golongan<br>
+                                &nbsp;&nbsp;&nbsp; Jabatan<br>
+                                &nbsp;&nbsp;&nbsp; Tingkat menurut Peraturan Perjalanan
+                            </td>
+                            <td>
+                                - ${employees[1].nip}<br>
+                                - ${employees[1].pangkat_golongan}<br>
+                                - ${employees[1].jabatan}<br>
+                                - ${employees[1].tingkat_perjadin || '-'}
+                            </td>
+                        </tr>
+                    `;
+                    // Jika ada 3 pegawai, pegawai ke-3 masuk poin 7
+                    if (employees.length === 3) {
+                        point7Html = `1. ${employees[2].nama}`;
+                    }
+                }
 
                 // Fallback DPA
                 const dpa = cachedDpa.find(d => d.id === spt.dpa_id);
                 const namaDpa = dpa ? `DPA Tahun ${dpa.tahun_anggaran} Kegiatan: ${dpa.kegiatan} - ${dpa.sub_kegiatan}` : '-';
 
-                // Fungsi Format Tanggal
                 const formatTgl = (tglStr) => {
                     if (!tglStr) return '-';
                     const bln = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -1684,7 +1783,6 @@
                     return `${parseInt(parts[2])} ${bln[parseInt(parts[1])]} ${parts[0]}`;
                 };
 
-                // Fungsi Terbilang
                 const terbilang = (angka) => {
                     if (!angka) return '';
                     const huruf = ['nol', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
@@ -1694,11 +1792,8 @@
                     return angka;
                 };
 
-                // Susun Teks Pengikut
-                let pengikutHtml = '';
-                if(p2) pengikutHtml += `1. ${p2.nama}<br>`;
-                if(p3) pengikutHtml += `${p2 ? '2' : '1'}. ${p3.nama}`;
-                if(!p2 && !p3) pengikutHtml = '-';
+                // Tutup Modal Pengaturan Cetak
+                bootstrap.Modal.getInstance(document.getElementById('modalPrintSppd')).hide();
 
                 // HTML TEMPLATE SPPD
                 const htmlContent = `
@@ -1710,8 +1805,6 @@
                     <style>
                         @page { size: A4; margin: 1.5cm 2cm; }
                         body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.3; color: #000; margin: 0; padding: 0; }
-                        
-                        /* Kop Surat */
                         .kop-surat { display: flex; align-items: center; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
                         .kop-logo { width: 80px; text-align: center; }
                         .kop-logo img { width: 100%; height: auto; object-fit: contain; }
@@ -1719,33 +1812,19 @@
                         .kop-teks h4 { margin: 0; font-size: 14pt; font-weight: normal; text-transform: uppercase; }
                         .kop-teks h2 { margin: 0; font-size: 16pt; font-weight: bold; text-transform: uppercase; }
                         .kop-teks p { margin: 5px 0 0; font-size: 10pt; }
-                        
-                        /* Info Lembar Kanan */
                         .info-kanan { float: right; width: 350px; margin-bottom: 15px; }
                         .info-kanan table { width: 100%; border-collapse: collapse; }
                         .info-kanan td { padding: 2px; }
-                        
-                        /* Clearfix */
                         .clearfix::after { content: ""; clear: both; display: table; }
-
-                        /* Judul */
                         .judul-sppd { text-align: center; margin-bottom: 15px; clear: both; }
                         .judul-sppd h3 { margin: 0; font-size: 14pt; font-weight: bold; text-decoration: underline; }
-                        
-                        /* Tabel Utama SPPD */
                         .tabel-sppd { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                         .tabel-sppd td { border: 1px solid #000; padding: 5px 8px; vertical-align: top; }
-                        
-                        /* TTD Area */
                         .ttd-area { width: 350px; float: right; margin-top: 10px; text-align: left; }
                         .ttd-area p { margin: 0; }
                         .ttd-area .jabatan { font-weight: bold; min-height: 70px; }
                         .ttd-area .nama { font-weight: bold; text-decoration: underline; margin-top: 70px; }
-
-                        /* Page Break untuk Halaman 2 */
                         .page-break { page-break-before: always; margin-top: 2cm; }
-
-                        /* Tabel Halaman 2 */
                         .tabel-hal2 { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                         .tabel-hal2 td { border: 1px solid #000; padding: 10px; vertical-align: top; width: 50%; }
                     </style>
@@ -1784,58 +1863,39 @@
                             <td width="45%">Pejabat Yang Memberi Perintah</td>
                             <td width="50%">${pejabat.jabatan}</td>
                         </tr>
-                        <tr>
-                            <td align="center">2.</td>
-                            <td>Nama Pegawai yang diperintahkan</td>
-                            <td><b>${p1.nama}</b></td>
-                        </tr>
+                        ${point2Html}
                         <tr>
                             <td align="center">3.</td>
-                            <td>
-                                a. NIP<br>
-                                b. Pangkat dan Golongan<br>
-                                c. Jabatan<br>
-                                d. Tingkat menurut Peraturan Perjalanan
-                            </td>
-                            <td>
-                                a. ${p1.nip}<br>
-                                b. ${p1.pangkat_golongan}<br>
-                                c. ${p1.jabatan}<br>
-                                d. B
-                            </td>
-                        </tr>
-                        <tr>
-                            <td align="center">4.</td>
                             <td>Maksud Perjalanan Dinas</td>
                             <td>${spt.maksud}</td>
                         </tr>
                         <tr>
-                            <td align="center">5.</td>
+                            <td align="center">4.</td>
                             <td>Alat angkutan yang dipergunakan</td>
                             <td>${spt.alat_angkutan}</td>
                         </tr>
                         <tr>
-                            <td align="center">6.</td>
+                            <td align="center">5.</td>
                             <td>a. Tempat Berangkat<br>b. Tempat Tujuan</td>
                             <td>a. ${spt.tempat_berangkat}<br>b. ${spt.tempat_tujuan}</td>
                         </tr>
                         <tr>
-                            <td align="center">7.</td>
+                            <td align="center">6.</td>
                             <td>a. Lamanya Perjalanan Dinas<br>b. Tanggal Berangkat<br>c. Tanggal harus kembali</td>
                             <td>a. ${spt.lama_hari} (${terbilang(spt.lama_hari)}) hari<br>b. ${formatTgl(spt.tanggal_berangkat)}<br>c. ${formatTgl(spt.tanggal_kembali)}</td>
                         </tr>
                         <tr>
-                            <td align="center">8.</td>
+                            <td align="center">7.</td>
                             <td>Pengikut: Nama</td>
-                            <td>${pengikutHtml}</td>
+                            <td>${point7Html}</td>
                         </tr>
                         <tr>
-                            <td align="center">9.</td>
+                            <td align="center">8.</td>
                             <td>Pembebanan Anggaran<br>a. Instansi<br>b. Mata Anggaran/Rekening</td>
                             <td><br>a. ${pejabat.nama_instansi}<br>b. ${namaDpa}</td>
                         </tr>
                         <tr>
-                            <td align="center">10.</td>
+                            <td align="center">9.</td>
                             <td>Keterangan Lain-lain</td>
                             <td></td>
                         </tr>
@@ -1855,7 +1915,6 @@
                         </div>
                     </div>
 
-                    <!-- PEMBATAS HALAMAN 2 -->
                     <div class="page-break"></div>
 
                     <!-- Halaman 2 -->
@@ -1916,16 +1975,14 @@
                         </tr>
                         <tr>
                             <td>
-                                <table>
-                                    <tr><td width="35%">Tiba di</td><td width="5%">:</td><td>${spt.tempat_berangkat || '-'}</td></tr>
-                                    <tr><td>Pada Tanggal</td><td>:</td><td>${formatTgl(spt.tanggal_kembali)}</td></tr>
-                                </table>
-                                <br>
+                                V. Tiba Kembali di: ${spt.tempat_berangkat || '-'} <br>
+                                Pada Tanggal: ${formatTgl(spt.tanggal_kembali)}
+                                <br><br>
                                 <p style="font-size: 10pt; text-align: justify; margin-bottom: 5px;">Telah diperiksa, dengan keterangan bahwa perjalanan tersebut di atas benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan dalam waktu yang sesingkat-singkatnya.</p>
                                 <div style="text-align: center; margin-top: 10px;">
-                                    <b>${pejabat.jabatan}</b><br><br><br><br>
-                                    <u><b>${pejabat.nama_kepala}</b></u><br>
-                                    NIP. ${pejabat.nip}
+                                    <b>${pengesah.jabatan}</b><br><br><br><br>
+                                    <u><b>${pengesah.nama_kepala}</b></u><br>
+                                    NIP. ${pengesah.nip}
                                 </div>
                             </td>
                             <td></td>
