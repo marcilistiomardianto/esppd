@@ -1709,12 +1709,11 @@
             new bootstrap.Modal(document.getElementById('modalPrintSppd')).show();
         }
 
-        function executePrintSppd() {
+        async function executePrintSppd() {
             try {
                 const id = document.getElementById('printSppdSptId').value;
                 const spt = cachedSpt.find(s => s.id === id);
                 
-                // Ambil Pilihan dari Modal
                 const kopId = document.getElementById('printSppdKop').value;
                 const pejabatId = document.getElementById('printSppdPejabat').value;
                 const pengesahId = document.getElementById('printSppdPengesah').value;
@@ -1727,15 +1726,13 @@
                     return Swal.fire('Peringatan', 'Kop Surat atau Pejabat belum dipilih / tersedia!', 'warning');
                 }
 
-                // Ambil Data Pegawai dan Filter yang Kosong
                 const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
                 const p2 = cachedPegawai.find(p => p.id === spt.pegawai_2_id);
                 const p3 = cachedPegawai.find(p => p.id === spt.pegawai_3_id);
                 const employees = [p1, p2, p3].filter(p => p !== undefined);
 
-                if (employees.length === 0) throw new Error("Pegawai utama tidak ditemukan/telah dihapus dari database.");
+                if (employees.length === 0) throw new Error("Pegawai utama tidak ditemukan/telah dihapus.");
 
-                // Logika Poin 2 (Dinamis berdasarkan jumlah pegawai)
                 let point2Html = '';
                 let point7Html = '-';
 
@@ -1802,13 +1799,11 @@
                             </td>
                         </tr>
                     `;
-                    // Jika ada 3 pegawai, pegawai ke-3 masuk poin 7
                     if (employees.length === 3) {
                         point7Html = `1. ${employees[2].nama}`;
                     }
                 }
 
-                // Fallback DPA
                 const dpa = cachedDpa.find(d => d.id === spt.dpa_id);
                 const namaDpa = dpa ? `DPA Tahun ${dpa.tahun_anggaran} Kegiatan: ${dpa.kegiatan} - ${dpa.sub_kegiatan}` : '-';
 
@@ -1829,10 +1824,8 @@
                     return angka;
                 };
 
-                // Tutup Modal Pengaturan Cetak
                 bootstrap.Modal.getInstance(document.getElementById('modalPrintSppd')).hide();
 
-                // HTML TEMPLATE SPPD
                 const htmlContent = `
                 <!DOCTYPE html>
                 <html lang="id">
@@ -1857,13 +1850,17 @@
                         .judul-sppd h3 { margin: 0; font-size: 14pt; font-weight: bold; text-decoration: underline; }
                         .tabel-sppd { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
                         .tabel-sppd td { border: 1px solid #000; padding: 5px 8px; vertical-align: top; }
+                        
                         .ttd-area { width: 350px; float: right; margin-top: 10px; text-align: left; }
                         .ttd-area p { margin: 0; }
                         .ttd-area .jabatan { font-weight: bold; min-height: 70px; }
                         .ttd-area .nama { font-weight: bold; text-decoration: underline; margin-top: 70px; }
+                        
                         .page-break { page-break-before: always; margin-top: 2cm; }
-                        .tabel-hal2 { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                        .tabel-hal2 td { border: 1px solid #000; padding: 10px; vertical-align: top; width: 50%; }
+                        
+                        /* Modifikasi Halaman 2: Menghilangkan garis tepi / border */
+                        .tabel-hal2 { width: 100%; border-collapse: collapse; margin-bottom: 20px; border: none; }
+                        .tabel-hal2 td { border: none; padding: 10px 15px; vertical-align: top; width: 50%; }
                     </style>
                 </head>
                 <body>
@@ -1954,21 +1951,20 @@
 
                     <div class="page-break"></div>
 
-                    <!-- Halaman 2 -->
+                    <!-- Halaman 2: Tanpa Garis Tabel, Lebih Rapi -->
                     <table class="tabel-hal2">
+                        <!-- Baris 1 -->
                         <tr>
                             <td>
-                                <table>
+                                <table style="width:100%; border:none;">
                                     <tr><td width="35%">Tiba di</td><td width="5%">:</td><td>${spt.tempat_tujuan}</td></tr>
                                     <tr><td>Pada Tanggal</td><td>:</td><td>${formatTgl(spt.tanggal_berangkat)}</td></tr>
                                 </table>
                                 <br><br><br><br><br><br>
-                                <div style="text-align: center;">
-                                    (...................................................)
-                                </div>
+                                <div style="text-align: center;">(...................................................)</div>
                             </td>
                             <td>
-                                <table>
+                                <table style="width:100%; border:none;">
                                     <tr><td width="40%">SPPD No</td><td width="5%">:</td><td>${spt.nomor_surat}</td></tr>
                                     <tr><td>Berangkat dari<br><small>(tempat kedudukan)</small></td><td>:</td><td>${spt.tempat_berangkat || '-'}</td></tr>
                                     <tr><td>Ke</td><td>:</td><td>${spt.tempat_tujuan}</td></tr>
@@ -1982,93 +1978,86 @@
                                 </div>
                             </td>
                         </tr>
+                        <!-- Baris 2 -->
                         <tr>
                             <td>
-                                <table>
+                                <table style="width:100%; border:none;">
                                     <tr><td width="35%">Tiba di</td><td width="5%">:</td><td></td></tr>
                                     <tr><td>Pada Tanggal</td><td>:</td><td></td></tr>
                                 </table>
                                 <br><br><br><br><br><br>
-                                <div style="text-align: center;">
-                                    (...................................................)
-                                </div>
+                                <div style="text-align: center;">(...................................................)</div>
                             </td>
                             <td>
-                                <table>
+                                <table style="width:100%; border:none;">
                                     <tr><td width="40%">Berangkat dari</td><td width="5%">:</td><td>${spt.tempat_tujuan}</td></tr>
                                     <tr><td>Ke</td><td>:</td><td>${spt.tempat_berangkat || '-'}</td></tr>
                                     <tr><td>Pada Tanggal</td><td>:</td><td>${formatTgl(spt.tanggal_kembali)}</td></tr>
                                 </table>
                                 <br><br><br><br><br><br>
-                                <div style="text-align: center;">
-                                    (...................................................)
-                                </div>
+                                <div style="text-align: center;">(...................................................)</div>
                             </td>
                         </tr>
+                        <!-- Baris 3 -->
                         <tr>
                             <td>
-                                <table>
+                                <table style="width:100%; border:none;">
                                     <tr><td width="35%">Tiba di</td><td width="5%">:</td><td></td></tr>
                                     <tr><td>Pada Tanggal</td><td>:</td><td></td></tr>
                                 </table>
                                 <br><br><br><br><br><br>
-                                <div style="text-align: center;">
-                                    (...................................................)
-                                </div>
+                                <div style="text-align: center;">(...................................................)</div>
                             </td>
                             <td>
-                                <table>
+                                <table style="width:100%; border:none;">
                                     <tr><td width="40%">Berangkat dari</td><td width="5%">:</td><td></td></tr>
                                     <tr><td>Ke</td><td>:</td><td></td></tr>
                                     <tr><td>Pada Tanggal</td><td>:</td><td></td></tr>
                                 </table>
                                 <br><br><br><br><br><br>
-                                <div style="text-align: center;">
-                                    (...................................................)
-                                </div>
+                                <div style="text-align: center;">(...................................................)</div>
                             </td>
                         </tr>
+                        <!-- Baris 4: Pengesahan -->
                         <tr>
-                            <td colspan="2" style="width: 100%; padding: 0;">
-                                <table style="width: 100%; border-collapse: collapse; border: none;">
+                            <td>
+                                <table style="width:100%; border:none;">
                                     <tr>
-                                        <td style="width: 50%; border: none; padding: 10px; vertical-align: top;">
-                                            <table style="width:100%; border:none;">
-                                                <tr>
-                                                    <td width="10%" style="border:none; padding:2px;">V.</td>
-                                                    <td width="40%" style="border:none; padding:2px;">Tiba Kembali di</td>
-                                                    <td width="5%" style="border:none; padding:2px;">:</td>
-                                                    <td style="border:none; padding:2px;">${spt.tempat_berangkat || '-'}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="border:none; padding:2px;"></td>
-                                                    <td style="border:none; padding:2px;">Pada Tanggal</td>
-                                                    <td style="border:none; padding:2px;">:</td>
-                                                    <td style="border:none; padding:2px;">${formatTgl(spt.tanggal_kembali)}</td>
-                                                </tr>
-                                            </table>
-                                        </td>
-                                        <td style="width: 50%; border: none; padding: 10px; vertical-align: top;">
-                                            <p style="font-size: 10pt; text-align: justify; margin-top: 0; margin-bottom: 5px;">Telah diperiksa, dengan keterangan bahwa perjalanan tersebut di atas benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan dalam waktu yang sesingkat-singkatnya.</p>
-                                            <div style="text-align: center; margin-top: 15px;">
-                                                <b>${pengesah.jabatan}</b><br><br><br><br>
-                                                <u><b>${pengesah.nama_kepala}</b></u><br>
-                                                NIP. ${pengesah.nip}
-                                            </div>
-                                        </td>
+                                        <td width="10%" valign="top">V.</td>
+                                        <td width="35%" valign="top">Tiba Kembali di</td>
+                                        <td width="5%" valign="top">:</td>
+                                        <td valign="top">${spt.tempat_berangkat || '-'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td valign="top">Pada Tanggal</td>
+                                        <td valign="top">:</td>
+                                        <td valign="top">${formatTgl(spt.tanggal_kembali)}</td>
                                     </tr>
                                 </table>
+                            </td>
+                            <td>
+                                <p style="font-size: 11pt; text-align: justify; margin-top: 0; margin-bottom: 15px;">
+                                    Telah diperiksa, dengan keterangan bahwa perjalanan tersebut di atas benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan dalam waktu yang sesingkat-singkatnya.
+                                </p>
+                                <div style="text-align: center;">
+                                    <b>${pengesah.jabatan}</b><br><br><br><br>
+                                    <u><b>${pengesah.nama_kepala}</b></u><br>
+                                    NIP. ${pengesah.nip}
+                                </div>
                             </td>
                         </tr>
                     </table>
 
-                    <h4 style="margin: 0;">CATATAN LAIN-LAIN</h4>
-                    <p style="font-size: 10pt; font-weight: bold; margin-top: 5px;">PERHATIAN</p>
-                    <p style="font-size: 9pt; text-align: justify; margin-top: 0;">
-                        Pejabat yang berwenang menerbitkan SPPD, pegawai yang melakukan perjalanan dinas, para pejabat yang mengesahkan tanggal
-                        berangkat/tiba serta Bendaharawan bertanggung jawab berdasarkan peraturan-peraturan Keuangan Negara apabila Negara mendapat rugi
-                        akibat kesalahan, kealpaannya.
-                    </p>
+                    <div style="border-top: 2px solid #000; margin-top: 10px; padding-top: 10px;">
+                        <h4 style="margin: 0; font-size: 11pt;">CATATAN LAIN-LAIN</h4>
+                        <p style="font-size: 10pt; font-weight: bold; margin-top: 5px; margin-bottom: 5px;">PERHATIAN</p>
+                        <p style="font-size: 10pt; text-align: justify; margin-top: 0;">
+                            Pejabat yang berwenang menerbitkan SPPD, pegawai yang melakukan perjalanan dinas, para pejabat yang mengesahkan tanggal
+                            berangkat/tiba serta Bendaharawan bertanggung jawab berdasarkan peraturan-peraturan Keuangan Negara apabila Negara mendapat rugi
+                            akibat kesalahan, kealpaannya.
+                        </p>
+                    </div>
 
                     <script>
                         window.onload = function() {
