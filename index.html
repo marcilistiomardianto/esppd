@@ -2038,6 +2038,45 @@
             }
         }
 
+        function populateSelectsSpt() {
+            // Mengisi Dropdown DPA
+            const sptDpa = document.getElementById('sptDpa');
+            sptDpa.innerHTML = '<option value="">-- Pilih DPA / Kode Rekening --</option>' + 
+                cachedDpa.map(d => `<option value="${d.id}">Kegiatan: ${d.kegiatan} - ${d.sub_kegiatan}</option>`).join('');
+                
+            // Mengisi Dropdown Pegawai
+            const optionsPegawai = '<option value="">-- Pilih Pegawai --</option>' + 
+                cachedPegawai.map(p => `<option value="${p.id}">${p.nama} - ${p.jabatan}</option>`).join('');
+            
+            document.getElementById('sptPegawai1').innerHTML = optionsPegawai;
+            document.getElementById('sptPegawai2').innerHTML = optionsPegawai;
+            document.getElementById('sptPegawai3').innerHTML = optionsPegawai;
+        }
+
+        function openModalSpt() {
+            document.getElementById('formSpt').reset();
+            document.getElementById('sptId').value = '';
+            populateSelectsSpt();
+            new bootstrap.Modal(document.getElementById('modalSpt')).show();
+        }
+
+        function autoFillDasarDpa() {
+            const dpaId = document.getElementById('sptDpa').value;
+            const sptDasar = document.getElementById('sptDasar');
+            
+            if (dpaId) {
+                const dpa = cachedDpa.find(d => d.id === dpaId);
+                if (dpa) {
+                    const currentVal = sptDasar.value;
+                    const dpaText = `DPA Tahun ${dpa.tahun_anggaran} (${dpa.kegiatan} - ${dpa.sub_kegiatan})`;
+                    // Cek agar teks dasar pelaksanaan tidak ganda
+                    if(!currentVal.includes(dpa.kegiatan)) {
+                         sptDasar.value = currentVal ? currentVal + '\n' + dpaText : dpaText;
+                    }
+                }
+            }
+        }
+
         async function saveSpt() {
             if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
             
