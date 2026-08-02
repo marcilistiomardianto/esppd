@@ -1959,7 +1959,6 @@
                         <tr>
                             <td class="no">I</td>
                             <td>
-                                <!-- Diubah: Semua elemen rata kanan sejajar Tanda Tangan -->
                                 <div style="float: right; width: 350px; text-align: left;">
                                     <table style="width:100%; border:none;">
                                         <tr><td width="100" style="border:none; padding:2px;">SPPD No</td><td style="border:none; padding:2px;">: ${spt.nomor_surat}</td></tr>
@@ -1969,7 +1968,7 @@
                                     </table>
                                     <br>
                                     <div style="text-align:center;">
-                                        <b>${pejabat.jabatan}</b><br><br><br><br><br>
+                                        <b>${pejabat.jabatan}</b><br><br><br><br>
                                         <b><u>${pejabat.nama_kepala}</u></b><br>
                                         ${pejabat.pangkat_golongan}<br>
                                         NIP. ${pejabat.nip}
@@ -1984,16 +1983,16 @@
                                 <table style="width:100%; border:none;">
                                     <tr>
                                         <td width="50%" style="border:none; padding:2px;">
-                                            <b>Tiba di :</b> ${spt.tempat_tujuan}<br><br>
+                                            <b>Tiba di :</b> ${spt.tempat_tujuan}<br>
                                             Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}
-                                            <!-- Penambahan jarak ttd -->
-                                            <br><br><br><br><br><br>
+                                            <!-- Ruang TTD/Stempel dirapatkan -->
+                                            <br><br><br><br>
                                         </td>
                                         <td style="border:none; padding:2px;">
-                                            <b>Berangkat dari :</b> ${spt.tempat_tujuan}<br><br>
+                                            <b>Berangkat dari :</b> ${spt.tempat_tujuan}<br>
                                             Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
-                                            <!-- Penambahan jarak ttd -->
-                                            <br><br><br><br><br><br>
+                                            <!-- Ruang TTD/Stempel dirapatkan -->
+                                            <br><br><br><br>
                                         </td>
                                     </tr>
                                 </table>
@@ -2005,15 +2004,15 @@
                                 <table style="width:100%; border:none;">
                                     <tr>
                                         <td width="50%" style="border:none; padding:2px;">
-                                            <b>Tiba di :</b><br><br>
+                                            <b>Tiba di :</b><br>
                                             Pada tanggal : <span class="line"></span>
-                                            <br><br><br><br><br><br>
+                                            <br><br><br><br>
                                         </td>
                                         <td style="border:none; padding:2px;">
-                                            <b>Berangkat dari :</b><br><br>
-                                            Ke : <span class="line"></span><br><br>
+                                            <b>Berangkat dari :</b><br>
+                                            Ke : <span class="line"></span><br>
                                             Pada tanggal : <span class="line"></span>
-                                            <br><br><br><br><br><br>
+                                            <br><br><br>
                                         </td>
                                     </tr>
                                 </table>
@@ -2025,15 +2024,15 @@
                                 <table style="width:100%; border:none;">
                                     <tr>
                                         <td width="50%" style="border:none; padding:2px;">
-                                            <b>Tiba di :</b><br><br>
+                                            <b>Tiba di :</b><br>
                                             Pada tanggal : <span class="line"></span>
-                                            <br><br><br><br><br><br>
+                                            <br><br><br><br>
                                         </td>
                                         <td style="border:none; padding:2px;">
-                                            <b>Berangkat dari :</b><br><br>
-                                            Ke : <span class="line"></span><br><br>
+                                            <b>Berangkat dari :</b><br>
+                                            Ke : <span class="line"></span><br>
                                             Pada tanggal : <span class="line"></span>
-                                            <br><br><br><br><br><br>
+                                            <br><br><br>
                                         </td>
                                     </tr>
                                 </table>
@@ -2042,19 +2041,17 @@
                         <tr>
                             <td class="no">V</td>
                             <td>
-                                <!-- Diubah: Tiba kembali di atas teks Telah diperiksa -->
-                                <div style="margin-bottom: 15px;">
-                                    Tiba kembali di : <b>${spt.tempat_berangkat || '-'}</b><br>
-                                    Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
-                                </div>
+                                Tiba kembali di : <b>${spt.tempat_berangkat || '-'}</b><br>
+                                Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
+                                <br><br>
                                 
                                 <div style="text-align: justify;">
                                     Telah diperiksa, dengan keterangan bahwa perjalanan tersebut benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan.
                                 </div>
-                                <br><br>
+                                <br>
                                 
                                 <div style="text-align:center; float:right; width:350px;">
-                                    <b>${pengesah.jabatan}</b><br><br><br><br><br>
+                                    <b>${pengesah.jabatan}</b><br><br><br><br>
                                     <b><u>${pengesah.nama_kepala}</u></b><br>
                                     ${pengesah.pangkat_golongan}<br>
                                     NIP. ${pengesah.nip}
@@ -2064,7 +2061,7 @@
                         </tr>
                         <tr>
                             <td class="no">VI</td>
-                            <td><b>CATATAN LAIN-LAIN</b><br><br><br><br></td>
+                            <td><b>CATATAN LAIN-LAIN</b><br><br><br></td>
                         </tr>
                         <tr>
                             <td class="no">VII</td>
