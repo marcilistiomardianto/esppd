@@ -562,7 +562,7 @@
                                 <input type="text" class="form-control" id="pegJabatan" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Tingkat Perjadin</label>
+                                <label class="form-label">Tingkat Perjalanan (Perjadin)</label>
                                 <input type="text" class="form-control" id="pegTingkat" placeholder="Contoh: B atau C" required>
                             </div>
                             <div class="col-md-6 mb-3">
@@ -971,7 +971,7 @@
         async function loadPegawai(isInit = false) {
             if (!supabaseClient || !isInit) return;
             try {
-                const { data, error } = await supabaseClient.from('pegawai').select('*'); // DIHAPUS: order created_at
+                const { data, error } = await supabaseClient.from('pegawai').select('*'); 
                 if (error) throw error;
                 cachedPegawai = data || [];
                 document.getElementById('dashPegawaiCount').innerText = cachedPegawai.length;
@@ -1289,32 +1289,49 @@
         }
 
         function autoFillDasarDpa() {
-            const dpa = cachedDpa.find(d => d.id === document.getElementById('sptDpa').value);
-            if (dpa) document.getElementById('sptDasar').value = `DPA Tahun ${dpa.tahun_anggaran} (${dpa.kegiatan})`;
+            const dpaVal = document.getElementById('sptDpa').value;
+            const dpa = cachedDpa.find(d => d.id === dpaVal);
+            if (dpa) {
+                document.getElementById('sptDasar').value = `DPA Tahun ${dpa.tahun_anggaran} Kegiatan: ${dpa.kegiatan} - ${dpa.sub_kegiatan}`;
+            } else {
+                document.getElementById('sptDasar').value = '';
+            }
         }
 
         async function saveSpt() {
+            if (!supabaseClient) return Swal.fire('Error', 'Sistem offline. Konfigurasi DB terlebih dahulu.', 'error');
             const id = document.getElementById('sptId').value || generateId();
+            
+            const p1 = document.getElementById('sptPegawai1').value || null;
+            if (!p1) return Swal.fire('Peringatan', 'Pegawai 1 (Ketua/Pelaksana Utama) wajib diisi!', 'warning');
+
             const payload = {
                 id: id,
                 nomor_surat: document.getElementById('sptNomor').value,
-                tanggal_surat: document.getElementById('sptTglSurat').value,
-                dpa_id: document.getElementById('sptDpa').value,
+                tanggal_surat: document.getElementById('sptTglSurat').value || null,
+                dpa_id: document.getElementById('sptDpa').value || null,
                 dasar: document.getElementById('sptDasar').value,
                 maksud: document.getElementById('sptMaksud').value,
                 tempat_berangkat: document.getElementById('sptBerangkat').value,
                 tempat_tujuan: document.getElementById('sptTujuan').value,
-                lama_hari: parseInt(document.getElementById('sptLama').value),
-                tanggal_berangkat: document.getElementById('sptTglBerangkat').value,
-                tanggal_kembali: document.getElementById('sptTglKembali').value,
+                lama_hari: parseInt(document.getElementById('sptLama').value) || 0,
+                tanggal_berangkat: document.getElementById('sptTglBerangkat').value || null,
+                tanggal_kembali: document.getElementById('sptTglKembali').value || null,
                 alat_angkutan: document.getElementById('sptAngkutan').value,
-                pegawai_1_id: document.getElementById('sptPegawai1').value,
+                pegawai_1_id: p1,
                 pegawai_2_id: document.getElementById('sptPegawai2').value || null,
                 pegawai_3_id: document.getElementById('sptPegawai3').value || null
             };
-            await supabaseClient.from('surat_tugas').upsert(payload);
-            await loadSpt(true);
-            bootstrap.Modal.getInstance(document.getElementById('modalSpt')).hide();
+            
+            try {
+                const { error } = await supabaseClient.from('surat_tugas').upsert(payload);
+                if (error) throw error;
+                await loadSpt(true);
+                bootstrap.Modal.getInstance(document.getElementById('modalSpt')).hide();
+                Swal.fire('Sukses', 'Surat Tugas (SPT) berhasil disimpan!', 'success');
+            } catch (err) {
+                Swal.fire('Gagal Menyimpan', err.message, 'error');
+            }
         }
 
         function editSpt(id) {
@@ -1539,12 +1556,12 @@
                     .ttd-area .nama { font-weight: bold; text-decoration: underline; margin-top: 70px; }
                     .page-break { page-break-before: always; margin-top: 2cm; }
                     
-                    /* CSS SPPD Halaman 2 Baru */
-                    .tabel-hal2 { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                    .tabel-hal2 td { border: none; vertical-align: top; padding: 6px; }
-                    .tabel-hal2 .no { width: 40px; text-align: center; font-weight: bold; }
+                    /* CSS SPPD Halaman 2 Romawi */
+                    .hal2-table { width: 100%; border-collapse: collapse; font-size: 11pt; }
+                    .hal2-table > tbody > tr > td { border: none; vertical-align: top; padding: 6px; }
+                    .no { width: 40px; text-align: center; font-weight: bold; }
                     .line { display: inline-block; border-bottom: 1px dotted #000; width: 220px; }
-                    .note { margin-top: 15px; font-size: 10pt; text-align: justify; }
+                    .note { margin-top: 10px; font-size: 10pt; text-align: justify; }
                 </style></head>
                 <body>
                     <!-- HALAMAN 1 -->
@@ -1576,28 +1593,28 @@
                     <div class="page-break"></div>
 
                     <!-- HALAMAN 2 -->
-                    <table class="tabel-hal2">
+                    <table class="hal2-table">
                         <tr>
                             <td class="no">I</td>
                             <td>
-                                <div style="float: right; width: 350px; text-align: left;">
-                                    <table style="width:100%; border:none;">
-                                        <tr><td width="100" style="padding:2px;">SPPD No</td><td style="padding:2px;">: ${spt.nomor_surat}</td></tr>
-                                        <tr><td style="padding:2px;">Berangkat dari</td><td style="padding:2px;">: ${spt.tempat_berangkat || '-'}</td></tr>
-                                        <tr><td style="padding:2px;">Pada tanggal</td><td style="padding:2px;">: ${formatTgl(spt.tanggal_berangkat)}</td></tr>
-                                        <tr><td style="padding:2px;">Ke</td><td style="padding:2px;">: ${spt.tempat_tujuan}</td></tr>
+                                <div style="float: right; width: 350px;">
+                                    <table style="width:100%; border:none; margin-bottom: 20px;">
+                                        <tr><td width="100">SPPD No</td><td>: ${spt.nomor_surat}</td></tr>
+                                        <tr><td>Berangkat dari</td><td>: ${spt.tempat_berangkat || '-'}</td></tr>
+                                        <tr><td>Pada tanggal</td><td>: ${formatTgl(spt.tanggal_berangkat)}</td></tr>
+                                        <tr><td valign="top">Ke</td><td valign="top">: ${spt.tempat_tujuan}</td></tr>
                                     </table>
-                                    <br>
-                                    <div style="text-align:center;">
+                                    <div style="text-align: center;">
                                         <b>${pejabat.jabatan}</b><br><br><br><br>
                                         <b><u>${pejabat.nama_kepala}</u></b><br>
                                         ${pejabat.pangkat_golongan}<br>
                                         NIP. ${pejabat.nip}
                                     </div>
                                 </div>
-                                <div style="clear:both;"></div>
+                                <div style="clear: both;"></div>
                             </td>
                         </tr>
+                        
                         <tr>
                             <td class="no">II</td>
                             <td>
@@ -1606,17 +1623,18 @@
                                         <td width="50%">
                                             <b>Tiba di :</b> ${spt.tempat_tujuan}<br>
                                             Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}
-                                            <br><br><br><br>
+                                            <br><br><br>
                                         </td>
                                         <td>
                                             <b>Berangkat dari :</b> ${spt.tempat_tujuan}<br>
                                             Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
-                                            <br><br><br><br>
+                                            <br><br><br>
                                         </td>
                                     </tr>
                                 </table>
                             </td>
                         </tr>
+
                         <tr>
                             <td class="no">III</td>
                             <td>
@@ -1625,18 +1643,19 @@
                                         <td width="50%">
                                             <b>Tiba di :</b><br>
                                             Pada tanggal : <span class="line"></span>
-                                            <br><br><br><br>
+                                            <br><br><br>
                                         </td>
                                         <td>
                                             <b>Berangkat dari :</b><br>
                                             Ke : <span class="line"></span><br>
                                             Pada tanggal : <span class="line"></span>
-                                            <br><br><br><br>
+                                            <br><br><br>
                                         </td>
                                     </tr>
                                 </table>
                             </td>
                         </tr>
+
                         <tr>
                             <td class="no">IV</td>
                             <td>
@@ -1645,43 +1664,42 @@
                                         <td width="50%">
                                             <b>Tiba di :</b><br>
                                             Pada tanggal : <span class="line"></span>
-                                            <br><br><br><br>
+                                            <br><br><br>
                                         </td>
                                         <td>
                                             <b>Berangkat dari :</b><br>
                                             Ke : <span class="line"></span><br>
                                             Pada tanggal : <span class="line"></span>
-                                            <br><br><br><br>
+                                            <br><br><br>
                                         </td>
                                     </tr>
                                 </table>
                             </td>
                         </tr>
+
                         <tr>
                             <td class="no">V</td>
                             <td>
                                 Tiba kembali di : <b>${spt.tempat_berangkat || '-'}</b><br>
                                 Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
                                 <br><br>
-                                
-                                <div style="text-align: justify;">
-                                    Telah diperiksa, dengan keterangan bahwa perjalanan tersebut benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan.
-                                </div>
-                                <br>
-                                
-                                <div style="text-align:center; float:right; width:350px;">
-                                    <b>${pengesah.jabatan}</b><br><br><br><br>
+                                <div style="text-align: center;">
+                                    Telah diperiksa,<br>
+                                    dengan keterangan bahwa perjalanan tersebut benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan.
+                                    <br><br><br>
+                                    <b>${pengesah.jabatan}</b><br><br><br><br><br>
                                     <b><u>${pengesah.nama_kepala}</u></b><br>
                                     ${pengesah.pangkat_golongan}<br>
                                     NIP. ${pengesah.nip}
                                 </div>
-                                <div style="clear:both;"></div>
                             </td>
                         </tr>
+
                         <tr>
                             <td class="no">VI</td>
                             <td><b>CATATAN LAIN-LAIN</b></td>
                         </tr>
+                        
                         <tr>
                             <td class="no">VII</td>
                             <td>
@@ -1692,6 +1710,7 @@
                             </td>
                         </tr>
                     </table>
+
                     <script>window.onload = function() { window.print(); }<\/script>
                 </body></html>`;
 
