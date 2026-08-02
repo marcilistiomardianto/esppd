@@ -1959,18 +1959,21 @@
                         <tr>
                             <td class="no">I</td>
                             <td>
-                                <table style="width:100%; border:none;">
-                                    <tr><td width="150" style="border:none; padding:2px;">SPPD No</td><td style="border:none; padding:2px;">: ${spt.nomor_surat}</td></tr>
-                                    <tr><td style="border:none; padding:2px;">Berangkat dari</td><td style="border:none; padding:2px;">: ${spt.tempat_berangkat || '-'}</td></tr>
-                                    <tr><td style="border:none; padding:2px;">Pada tanggal</td><td style="border:none; padding:2px;">: ${formatTgl(spt.tanggal_berangkat)}</td></tr>
-                                    <tr><td style="border:none; padding:2px;">Ke</td><td style="border:none; padding:2px;">: ${spt.tempat_tujuan}</td></tr>
-                                </table>
-                                <br>
-                                <div style="text-align:center; float:right; width:300px;">
-                                    <b>${pejabat.jabatan}</b><br><br><br><br>
-                                    <b><u>${pejabat.nama_kepala}</u></b><br>
-                                    ${pejabat.pangkat_golongan}<br>
-                                    NIP. ${pejabat.nip}
+                                <!-- Diubah: Semua elemen rata kanan sejajar Tanda Tangan -->
+                                <div style="float: right; width: 350px; text-align: left;">
+                                    <table style="width:100%; border:none;">
+                                        <tr><td width="100" style="border:none; padding:2px;">SPPD No</td><td style="border:none; padding:2px;">: ${spt.nomor_surat}</td></tr>
+                                        <tr><td style="border:none; padding:2px;">Berangkat dari</td><td style="border:none; padding:2px;">: ${spt.tempat_berangkat || '-'}</td></tr>
+                                        <tr><td style="border:none; padding:2px;">Pada tanggal</td><td style="border:none; padding:2px;">: ${formatTgl(spt.tanggal_berangkat)}</td></tr>
+                                        <tr><td style="border:none; padding:2px;">Ke</td><td style="border:none; padding:2px;">: ${spt.tempat_tujuan}</td></tr>
+                                    </table>
+                                    <br>
+                                    <div style="text-align:center;">
+                                        <b>${pejabat.jabatan}</b><br><br><br><br><br>
+                                        <b><u>${pejabat.nama_kepala}</u></b><br>
+                                        ${pejabat.pangkat_golongan}<br>
+                                        NIP. ${pejabat.nip}
+                                    </div>
                                 </div>
                                 <div style="clear:both;"></div>
                             </td>
@@ -1983,10 +1986,14 @@
                                         <td width="50%" style="border:none; padding:2px;">
                                             <b>Tiba di :</b> ${spt.tempat_tujuan}<br><br>
                                             Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}
+                                            <!-- Penambahan jarak ttd -->
+                                            <br><br><br><br><br><br>
                                         </td>
                                         <td style="border:none; padding:2px;">
                                             <b>Berangkat dari :</b> ${spt.tempat_tujuan}<br><br>
                                             Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
+                                            <!-- Penambahan jarak ttd -->
+                                            <br><br><br><br><br><br>
                                         </td>
                                     </tr>
                                 </table>
@@ -2000,11 +2007,13 @@
                                         <td width="50%" style="border:none; padding:2px;">
                                             <b>Tiba di :</b><br><br>
                                             Pada tanggal : <span class="line"></span>
+                                            <br><br><br><br><br><br>
                                         </td>
                                         <td style="border:none; padding:2px;">
                                             <b>Berangkat dari :</b><br><br>
                                             Ke : <span class="line"></span><br><br>
                                             Pada tanggal : <span class="line"></span>
+                                            <br><br><br><br><br><br>
                                         </td>
                                     </tr>
                                 </table>
@@ -2018,11 +2027,13 @@
                                         <td width="50%" style="border:none; padding:2px;">
                                             <b>Tiba di :</b><br><br>
                                             Pada tanggal : <span class="line"></span>
+                                            <br><br><br><br><br><br>
                                         </td>
                                         <td style="border:none; padding:2px;">
                                             <b>Berangkat dari :</b><br><br>
                                             Ke : <span class="line"></span><br><br>
                                             Pada tanggal : <span class="line"></span>
+                                            <br><br><br><br><br><br>
                                         </td>
                                     </tr>
                                 </table>
@@ -2031,22 +2042,24 @@
                         <tr>
                             <td class="no">V</td>
                             <td>
-                                <table style="width:100%; border:none;">
-                                    <tr>
-                                        <td width="50%" style="border:none; padding:2px;">
-                                            Tiba kembali di : <b>${spt.tempat_berangkat || '-'}</b><br><br>
-                                            Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
-                                        </td>
-                                        <td style="border:none; padding:2px; text-align:center;">
-                                            Telah diperiksa,<br>
-                                            dengan keterangan bahwa perjalanan tersebut benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan.<br><br><br>
-                                            <b>${pengesah.jabatan}</b><br><br><br><br><br>
-                                            <b><u>${pengesah.nama_kepala}</u></b><br>
-                                            ${pengesah.pangkat_golongan}<br>
-                                            NIP. ${pengesah.nip}
-                                        </td>
-                                    </tr>
-                                </table>
+                                <!-- Diubah: Tiba kembali di atas teks Telah diperiksa -->
+                                <div style="margin-bottom: 15px;">
+                                    Tiba kembali di : <b>${spt.tempat_berangkat || '-'}</b><br>
+                                    Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
+                                </div>
+                                
+                                <div style="text-align: justify;">
+                                    Telah diperiksa, dengan keterangan bahwa perjalanan tersebut benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan.
+                                </div>
+                                <br><br>
+                                
+                                <div style="text-align:center; float:right; width:350px;">
+                                    <b>${pengesah.jabatan}</b><br><br><br><br><br>
+                                    <b><u>${pengesah.nama_kepala}</u></b><br>
+                                    ${pengesah.pangkat_golongan}<br>
+                                    NIP. ${pengesah.nip}
+                                </div>
+                                <div style="clear:both;"></div>
                             </td>
                         </tr>
                         <tr>
