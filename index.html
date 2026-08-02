@@ -978,6 +978,7 @@
                 nip: document.getElementById('pegNip').value,
                 pangkat_golongan: document.getElementById('pegPangkat').value,
                 jabatan: document.getElementById('pegJabatan').value,
+                tingkat_perjadin: document.getElementById('pegTingkat').value,
                 unit_kerja: document.getElementById('pegUnit').value,
                 updated_at: new Date().toISOString()
             };
@@ -1009,6 +1010,7 @@
                 document.getElementById('pegNip').value = peg.nip;
                 document.getElementById('pegPangkat').value = peg.pangkat_golongan;
                 document.getElementById('pegJabatan').value = peg.jabatan;
+                document.getElementById('pegTingkat').value = peg.tingkat_perjadin || '';
                 document.getElementById('pegUnit').value = peg.unit_kerja;
                 new bootstrap.Modal(document.getElementById('modalPegawai')).show();
             }
