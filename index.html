@@ -1033,6 +1033,69 @@
             }
         }
 
+        // --- FUNGSI IMPORT PEGAWAI (CSV) ---
+        function openImportPegawaiModal() {
+            document.getElementById('fileImportPegawai').value = ''; // Reset input file
+            new bootstrap.Modal(document.getElementById('modalImportPegawai')).show();
+        }
+
+        async function processImportPegawai() {
+            if (!supabaseClient) return Swal.fire('Error', 'Sistem offline. Harap hubungkan ke Supabase.', 'error');
+            
+            const fileInput = document.getElementById('fileImportPegawai');
+            if (!fileInput.files.length) return Swal.fire('Peringatan', 'Pilih file CSV terlebih dahulu!', 'warning');
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').filter(row => row.trim().length > 0);
+                
+                if (rows.length === 0) return Swal.fire('Error', 'File CSV kosong.', 'error');
+
+                const dataToInsert = [];
+                // Cek baris pertama, jika mengandung kata 'nama' atau 'nip', abaikan (dianggap header)
+                let startIdx = (rows[0].toLowerCase().includes('nama') || rows[0].toLowerCase().includes('nip')) ? 1 : 0;
+
+                for (let i = startIdx; i < rows.length; i++) {
+                    // Deteksi separator pintar (koma atau titik koma sesuai standar Excel Indonesia)
+                    const separator = rows[i].includes(';') ? ';' : ',';
+                    const cols = rows[i].split(separator);
+                    
+                    if (cols.length >= 4) { 
+                        dataToInsert.push({
+                            id: generateId(),
+                            nama: cols[0] ? cols[0].replace(/['"]/g,'').trim() : '',
+                            nip: cols[1] ? cols[1].replace(/['"]/g,'').trim() : '',
+                            pangkat_golongan: cols[2] ? cols[2].replace(/['"]/g,'').trim() : '',
+                            jabatan: cols[3] ? cols[3].replace(/['"]/g,'').trim() : '',
+                            tingkat_perjadin: cols[4] ? cols[4].replace(/['"]/g,'').trim() : '',
+                            unit_kerja: cols[5] ? cols[5].replace(/['"]/g,'').trim() : 'Pemkab Manggarai Barat',
+                            updated_at: new Date().toISOString()
+                        });
+                    }
+                }
+
+                if (dataToInsert.length === 0) return Swal.fire('Error', 'Gagal membaca format CSV. Pastikan ada isi datanya.', 'error');
+
+                try {
+                    Swal.fire({ title: 'Memproses Import...', text: 'Tunggu sebentar, sedang menyimpan ke database.', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    
+                    const { error } = await supabaseClient.from('pegawai').insert(dataToInsert);
+                    if (error) throw error;
+                    
+                    await loadPegawai(true); // Tarik ulang data ke tabel
+                    bootstrap.Modal.getInstance(document.getElementById('modalImportPegawai')).hide();
+                    Swal.fire('Sukses!', `Berhasil mengimport ${dataToInsert.length} Pegawai.`, 'success');
+                } catch (err) {
+                    Swal.fire('Gagal Import', 'Pastikan struktur DB sesuai. Detail: ' + err.message, 'error');
+                }
+            };
+            
+            reader.readAsText(file); // Mulai baca file
+        }
+
         // --- MODULE: DPA (CRUD) ---
         async function loadDpa(isInit = false) {
             if (!supabaseClient || !isInit) return;
