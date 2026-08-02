@@ -32,7 +32,7 @@
         #sidebar {
             width: 260px;
             height: 100vh;
-            background-color: #2C3E50; /* Dark Slate Blue */
+            background-color: #2C3E50;
             color: #ecf0f1;
             position: fixed;
             top: 0;
@@ -44,7 +44,7 @@
 
         #sidebar .sidebar-header {
             padding: 20px;
-            background-color: #1a252f; /* Darker Slate */
+            background-color: #1a252f;
             text-align: center;
             border-bottom: 1px solid #34495e;
         }
@@ -99,7 +99,7 @@
 
         /* --- CONTENT AREA --- */
         #content {
-            width: calc(100% - 260px); /* Kunci agar konten membentang penuh 100% - lebar sidebar */
+            width: calc(100% - 260px);
             min-height: 100vh;
             margin-left: 260px;
             transition: all 0.3s;
@@ -128,14 +128,13 @@
             transition: transform 0.2s;
         }
         
-        /* Dashboard Solid Color Cards (Reference: Screenshot_8.jpg) */
         .dash-card {
             color: white;
             padding: 20px;
             border-radius: 4px;
             position: relative;
             overflow: hidden;
-            display: block !important; /* Menimpa d-flex bawaan agar turun ke bawah */
+            display: block !important;
             text-align: left;
         }
         
@@ -154,9 +153,9 @@
         .dash-card i {
             position: absolute;
             right: 20px;
-            bottom: -5px; /* Sedikit terpotong di bawah */
+            bottom: -5px;
             font-size: 5rem;
-            color: rgba(255, 255, 255, 0.25); /* Putih transparan */
+            color: rgba(255, 255, 255, 0.25);
             transition: transform 0.3s;
         }
         
@@ -164,7 +163,6 @@
             transform: scale(1.1);
         }
 
-        /* Card Colors */
         .bg-blue { background-color: #2184ff; }
         .bg-green { background-color: #2da15f; }
         .bg-yellow { background-color: #f7b924; }
@@ -356,7 +354,10 @@
             <div id="pegawaiView" class="view-section d-none">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="text-secondary m-0">Master Pegawai</h3>
-                    <button class="btn btn-primary" onclick="document.getElementById('formPegawai').reset(); document.getElementById('pegawaiId').value=''; new bootstrap.Modal(document.getElementById('modalPegawai')).show();"><i class="fas fa-plus"></i> Tambah Pegawai</button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success" onclick="openImportPegawaiModal()"><i class="fas fa-file-excel"></i> Import CSV</button>
+                        <button class="btn btn-primary" onclick="document.getElementById('formPegawai').reset(); document.getElementById('pegawaiId').value=''; new bootstrap.Modal(document.getElementById('modalPegawai')).show();"><i class="fas fa-plus"></i> Tambah Pegawai</button>
+                    </div>
                 </div>
                 <div class="card shadow-sm border-0">
                     <div class="card-body table-responsive p-0">
@@ -367,12 +368,13 @@
                                     <th>NIP</th>
                                     <th>Jabatan</th>
                                     <th>Gol.</th>
+                                    <th>Tingkat</th>
                                     <th>Unit Kerja</th>
                                     <th class="text-end">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelPegawai">
-                                <tr><td colspan="6" class="text-center py-4">Memuat data...</td></tr>
+                                <tr><td colspan="7" class="text-center py-4">Memuat data...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -441,7 +443,7 @@
                 </div>
             </div>
 
-            <!-- 5. PLACEHOLDER VIEWS -->
+            <!-- 5. PEJABAT VIEW -->
             <div id="pejabatView" class="view-section d-none">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="text-secondary m-0">Pejabat Penandatangan</h3>
@@ -496,7 +498,7 @@
             
             <div id="sppdView" class="view-section d-none">
                 <h3 class="text-secondary mb-4">Dokumen SPPD</h3>
-                <div class="alert alert-info">Modul SPPD otomatis dibuat berdasarkan SPT. Sedang dalam pengembangan.</div>
+                <div class="alert alert-info">Semua proses cetak SPPD kini terintegrasi langsung di menu <b>Surat Tugas (SPT)</b> melalui tombol Hijau.</div>
             </div>
             
             <div id="laporanView" class="view-section d-none">
@@ -568,7 +570,11 @@
                                 <label class="form-label">Jabatan</label>
                                 <input type="text" class="form-control" id="pegJabatan" required>
                             </div>
-                            <div class="col-md-12 mb-3">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tingkat Perjadin</label>
+                                <input type="text" class="form-control" id="pegTingkat" placeholder="Contoh: B atau C" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Unit Kerja</label>
                                 <input type="text" class="form-control" id="pegUnit" required>
                             </div>
@@ -578,6 +584,29 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
                     <button type="button" class="btn btn-primary" onclick="savePegawai()"><i class="fas fa-save me-1"></i> Simpan Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Import Pegawai -->
+    <div class="modal fade" id="modalImportPegawai" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-file-excel me-2"></i>Import Data Pegawai</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small">
+                        <b>Format CSV yang diterima (Gunakan titik koma/koma):</b><br>
+                        Nama Lengkap | NIP | Pangkat/Golongan | Jabatan | Tingkat Perjadin | Unit Kerja
+                    </div>
+                    <input type="file" class="form-control" id="fileImportPegawai" accept=".csv">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-success" onclick="processImportPegawai()"><i class="fas fa-upload me-1"></i> Mulai Import</button>
                 </div>
             </div>
         </div>
@@ -729,7 +758,6 @@
                                 <label class="form-label fw-bold">Pilih Anggaran / DPA</label>
                                 <select class="form-select" id="sptDpa" onchange="autoFillDasarDpa()" required>
                                     <option value="">-- Pilih DPA / Kode Rekening --</option>
-                                    <!-- Diisi oleh JS -->
                                 </select>
                             </div>
                             
@@ -779,28 +807,22 @@
                             <h6 class="fw-bold mb-3 border-bottom pb-2">Pelaksana Tugas (Maksimal 3 Orang)</h6>
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Pegawai 1 (Ketua / Pelaksana Utama) <span class="text-danger">*Wajib</span></label>
-                                <select class="form-select" id="sptPegawai1" required>
-                                    <option value="">-- Pilih Pegawai --</option>
-                                </select>
+                                <select class="form-select" id="sptPegawai1" required></select>
                             </div>
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Pegawai 2 (Pengikut / Anggota) <span class="text-muted">*Opsional</span></label>
-                                <select class="form-select" id="sptPegawai2">
-                                    <option value="">-- Pilih Pegawai --</option>
-                                </select>
+                                <select class="form-select" id="sptPegawai2"></select>
                             </div>
                             <div class="col-md-12 mb-1">
                                 <label class="form-label">Pegawai 3 (Pengikut / Anggota) <span class="text-muted">*Opsional</span></label>
-                                <select class="form-select" id="sptPegawai3">
-                                    <option value="">-- Pilih Pegawai --</option>
-                                </select>
+                                <select class="form-select" id="sptPegawai3"></select>
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-primary" onclick="saveSpt()"><i class="fas fa-save me-1"></i> Simpan & Buat SPPD</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSpt()"><i class="fas fa-save me-1"></i> Simpan Data</button>
                 </div>
             </div>
         </div>
@@ -845,38 +867,30 @@
 
     <!-- JAVASCRIPT -->
     <script>
-        // --- CORE & CONFIG ---
         let supabaseClient = null;
-        
-        // Cache Variables
         let cachedPegawai = [];
         let cachedDpa = [];
         let cachedKopSurat = [];
         let cachedPejabat = [];
         let cachedSpt = [];
 
-        // Valid UUID v4 Generator
         function generateId() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) {
                 return crypto.randomUUID();
             }
-            // Fallback for browsers that don't support randomUUID in HTTP
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
         }
 
-        // --- INIT ---
         document.addEventListener("DOMContentLoaded", function() {
-            // Check if config exists
             const sUrl = localStorage.getItem('supaUrl');
             const sKey = localStorage.getItem('supaKey');
             
             if (sUrl && sKey) {
                 try {
                     supabaseClient = supabase.createClient(sUrl, sKey);
-                    // Initial load data dari cloud
                     loadPegawai(true);
                     loadDpa(true);
                     loadKopSurat(true);
@@ -889,27 +903,34 @@
                 new bootstrap.Modal(document.getElementById('modalConfig')).show();
             }
 
-            // Init Chart
+            // Mobile Menu Toggle Fix
+            const sidebarBtn = document.getElementById('sidebarCollapse');
+            if (sidebarBtn) {
+                sidebarBtn.addEventListener('click', function() {
+                    document.getElementById('sidebar').classList.toggle('active');
+                    document.getElementById('content').classList.toggle('active');
+                });
+            }
+
             initChart();
         });
 
         // --- NAVIGATION ---
         function switchView(viewId, element) {
-            // Hide all views
-            document.querySelectorAll('.view-section').forEach(el => {
-                el.classList.add('d-none');
-            });
-            // Show target view
-            document.getElementById(viewId).classList.remove('d-none');
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none'));
+            const targetView = document.getElementById(viewId);
+            if (targetView) targetView.classList.remove('d-none');
             
-            // Update active menu
-            document.querySelectorAll('#sidebar ul li').forEach(el => {
-                el.classList.remove('active');
-            });
+            document.querySelectorAll('#sidebar ul li').forEach(el => el.classList.remove('active'));
             if(element) element.classList.add('active');
+            
+            // Auto-close sidebar on mobile
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('active');
+                document.getElementById('content').classList.remove('active');
+            }
         }
 
-        // --- CONFIG MODAL ---
         function showConfigModal() {
             document.getElementById('supaUrl').value = localStorage.getItem('supaUrl') || '';
             document.getElementById('supaKey').value = localStorage.getItem('supaKey') || '';
@@ -926,28 +947,25 @@
             }
         }
 
-        // --- MODULE: PEGAWAI (CRUD) ---
+        // --- PEGAWAI ---
         async function loadPegawai(isInit = false) {
             if (!supabaseClient || !isInit) return;
             try {
                 const { data, error } = await supabaseClient.from('pegawai').select('*').order('created_at', { ascending: false });
                 if (error) throw error;
-                
                 cachedPegawai = data || [];
                 document.getElementById('dashPegawaiCount').innerText = cachedPegawai.length;
                 renderTabelPegawai();
-            } catch(e) { console.error("Error loading pegawai:", e); }
+            } catch(e) { console.error("Error pegawai:", e); }
         }
 
         function renderTabelPegawai() {
             const tbody = document.getElementById('tabelPegawai');
             tbody.innerHTML = '';
-            
             if (cachedPegawai.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Belum ada data pegawai.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Belum ada data pegawai.</td></tr>';
                 return;
             }
-
             cachedPegawai.forEach(peg => {
                 tbody.innerHTML += `
                     <tr>
@@ -955,6 +973,7 @@
                         <td>${peg.nip}</td>
                         <td>${peg.jabatan}</td>
                         <td>${peg.pangkat_golongan}</td>
+                        <td>${peg.tingkat_perjadin || '-'}</td>
                         <td>${peg.unit_kerja}</td>
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-warning" onclick="editPegawai('${peg.id}')"><i class="fas fa-edit"></i></button>
@@ -966,11 +985,7 @@
         }
 
         async function savePegawai() {
-            if (!supabaseClient) {
-                Swal.fire('Error', 'Sistem berjalan dalam mode online wajib. Harap konfigurasi Supabase.', 'error');
-                return;
-            }
-
+            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
             const id = document.getElementById('pegawaiId').value || generateId();
             const payload = {
                 id: id,
@@ -984,21 +999,13 @@
             };
 
             try {
-                const { data, error } = await supabaseClient.from('pegawai').upsert(payload).select();
+                const { error } = await supabaseClient.from('pegawai').upsert(payload);
                 if (error) throw error;
-                
-                // Update Cache and re-render without full fetch
-                const index = cachedPegawai.findIndex(p => p.id === id);
-                if (index > -1) cachedPegawai[index] = payload;
-                else cachedPegawai.unshift(payload);
-
-                renderTabelPegawai();
-                document.getElementById('dashPegawaiCount').innerText = cachedPegawai.length;
-                
+                await loadPegawai(true);
                 bootstrap.Modal.getInstance(document.getElementById('modalPegawai')).hide();
                 Swal.fire('Sukses', 'Data pegawai berhasil disimpan', 'success');
             } catch (error) {
-                Swal.fire('Gagal Menyimpan', 'Terjadi kesalahan DB: pastikan tabel "pegawai" ada di Supabase dan RLS diizinkan. Detail: ' + error.message, 'error');
+                Swal.fire('Gagal Menyimpan', error.message, 'error');
             }
         }
         
@@ -1017,54 +1024,40 @@
         }
 
         async function deletePegawai(id) {
-            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
-            
+            if (!supabaseClient) return;
             if(confirm('Yakin ingin menghapus pegawai ini?')) {
                 try {
                     const { error } = await supabaseClient.from('pegawai').delete().eq('id', id);
                     if (error) throw error;
-                    
-                    cachedPegawai = cachedPegawai.filter(p => p.id !== id);
-                    renderTabelPegawai();
-                    document.getElementById('dashPegawaiCount').innerText = cachedPegawai.length;
-                    
+                    await loadPegawai(true);
                     Swal.fire('Terhapus!', '', 'success');
                 } catch (error) {
-                    Swal.fire('Gagal', 'Error menghapus data: ' + error.message, 'error');
+                    Swal.fire('Gagal', error.message, 'error');
                 }
             }
         }
 
-        // --- FUNGSI IMPORT PEGAWAI (CSV) ---
         function openImportPegawaiModal() {
-            document.getElementById('fileImportPegawai').value = ''; // Reset input file
+            document.getElementById('fileImportPegawai').value = '';
             new bootstrap.Modal(document.getElementById('modalImportPegawai')).show();
         }
 
         async function processImportPegawai() {
-            if (!supabaseClient) return Swal.fire('Error', 'Sistem offline. Harap hubungkan ke Supabase.', 'error');
-            
+            if (!supabaseClient) return Swal.fire('Error', 'Sistem offline.', 'error');
             const fileInput = document.getElementById('fileImportPegawai');
-            if (!fileInput.files.length) return Swal.fire('Peringatan', 'Pilih file CSV terlebih dahulu!', 'warning');
+            if (!fileInput.files.length) return Swal.fire('Peringatan', 'Pilih file CSV!', 'warning');
 
-            const file = fileInput.files[0];
             const reader = new FileReader();
-            
             reader.onload = async function(e) {
-                const text = e.target.result;
-                const rows = text.split('\n').filter(row => row.trim().length > 0);
-                
-                if (rows.length === 0) return Swal.fire('Error', 'File CSV kosong.', 'error');
+                const rows = e.target.result.split('\n').filter(row => row.trim().length > 0);
+                if (rows.length === 0) return Swal.fire('Error', 'File kosong.', 'error');
 
                 const dataToInsert = [];
-                // Cek baris pertama, jika mengandung kata 'nama' atau 'nip', abaikan (dianggap header)
                 let startIdx = (rows[0].toLowerCase().includes('nama') || rows[0].toLowerCase().includes('nip')) ? 1 : 0;
 
                 for (let i = startIdx; i < rows.length; i++) {
-                    // Deteksi separator pintar (koma atau titik koma sesuai standar Excel Indonesia)
                     const separator = rows[i].includes(';') ? ';' : ',';
                     const cols = rows[i].split(separator);
-                    
                     if (cols.length >= 4) { 
                         dataToInsert.push({
                             id: generateId(),
@@ -1078,478 +1071,172 @@
                         });
                     }
                 }
-
-                if (dataToInsert.length === 0) return Swal.fire('Error', 'Gagal membaca format CSV. Pastikan ada isi datanya.', 'error');
+                if (dataToInsert.length === 0) return Swal.fire('Error', 'Format salah.', 'error');
 
                 try {
-                    Swal.fire({ title: 'Memproses Import...', text: 'Tunggu sebentar, sedang menyimpan ke database.', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                    
+                    Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                     const { error } = await supabaseClient.from('pegawai').insert(dataToInsert);
                     if (error) throw error;
-                    
-                    await loadPegawai(true); // Tarik ulang data ke tabel
+                    await loadPegawai(true);
                     bootstrap.Modal.getInstance(document.getElementById('modalImportPegawai')).hide();
                     Swal.fire('Sukses!', `Berhasil mengimport ${dataToInsert.length} Pegawai.`, 'success');
                 } catch (err) {
-                    Swal.fire('Gagal Import', 'Pastikan struktur DB sesuai. Detail: ' + err.message, 'error');
+                    Swal.fire('Gagal Import', err.message, 'error');
                 }
             };
-            
-            reader.readAsText(file); // Mulai baca file
+            reader.readAsText(fileInput.files[0]);
         }
 
-        // --- MODULE: DPA (CRUD) ---
+        // --- DPA ---
         async function loadDpa(isInit = false) {
             if (!supabaseClient || !isInit) return;
             try {
                 const { data, error } = await supabaseClient.from('dpa').select('*').order('created_at', { ascending: false });
                 if (error) throw error;
-                
                 cachedDpa = data || [];
                 renderTabelDpa();
-            } catch(e) { console.error("Error loading DPA:", e); }
+            } catch(e) {}
         }
-
         function renderTabelDpa() {
             const tbody = document.getElementById('tabelDpa');
             tbody.innerHTML = '';
-            
-            if (cachedDpa.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Belum ada data DPA.</td></tr>';
-                return;
-            }
-
+            if (cachedDpa.length === 0) return tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Belum ada data DPA.</td></tr>';
             cachedDpa.forEach(dpa => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="fw-bold">${dpa.kegiatan}</td>
-                        <td>${dpa.sub_kegiatan}</td>
-                        <td>${dpa.tahun_anggaran}</td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-warning" onclick="editDpa('${dpa.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteDpa('${dpa.id}')"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML += `<tr><td class="fw-bold">${dpa.kegiatan}</td><td>${dpa.sub_kegiatan}</td><td>${dpa.tahun_anggaran}</td><td class="text-end"><button class="btn btn-sm btn-outline-warning" onclick="editDpa('${dpa.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteDpa('${dpa.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
             });
         }
-
         async function saveDpa() {
-            if (!supabaseClient) {
-                Swal.fire('Error', 'Sistem berjalan dalam mode online wajib.', 'error');
-                return;
-            }
-
-            const id = document.getElementById('dpaId').value || generateId();
-            const tahun = document.getElementById('dpaTahun').value || new Date().getFullYear(); // Tahun Dinamis
-            
-            const payload = {
-                id: id,
-                kegiatan: document.getElementById('dpaKegiatan').value,
-                sub_kegiatan: document.getElementById('dpaSubKegiatan').value,
-                tahun_anggaran: parseInt(tahun),
-                updated_at: new Date().toISOString()
-            };
-
-            try {
-                const { data, error } = await supabaseClient.from('dpa').upsert(payload).select();
-                if (error) throw error;
-                
-                const index = cachedDpa.findIndex(d => d.id === id);
-                if (index > -1) cachedDpa[index] = payload;
-                else cachedDpa.unshift(payload);
-
-                renderTabelDpa();
-                bootstrap.Modal.getInstance(document.getElementById('modalDpa')).hide();
-                Swal.fire('Sukses', 'Data DPA berhasil disimpan', 'success');
-            } catch (error) {
-                Swal.fire('Gagal Menyimpan', 'Terjadi kesalahan DB: ' + error.message, 'error');
-            }
-        }
-        
-        function editDpa(id) {
-            const dpa = cachedDpa.find(d => d.id === id);
-            if(dpa) {
-                document.getElementById('dpaId').value = dpa.id;
-                document.getElementById('dpaKegiatan').value = dpa.kegiatan;
-                document.getElementById('dpaSubKegiatan').value = dpa.sub_kegiatan;
-                document.getElementById('dpaTahun').value = dpa.tahun_anggaran;
-                new bootstrap.Modal(document.getElementById('modalDpa')).show();
-            }
-        }
-
-        async function deleteDpa(id) {
             if (!supabaseClient) return;
-            if(confirm('Yakin ingin menghapus DPA ini?')) {
-                try {
-                    const { error } = await supabaseClient.from('dpa').delete().eq('id', id);
-                    if (error) throw error;
-                    
-                    cachedDpa = cachedDpa.filter(d => d.id !== id);
-                    renderTabelDpa();
-                    Swal.fire('Terhapus!', '', 'success');
-                } catch (error) {
-                    Swal.fire('Gagal', 'Error menghapus data: ' + error.message, 'error');
-                }
-            }
+            const id = document.getElementById('dpaId').value || generateId();
+            const payload = { id: id, kegiatan: document.getElementById('dpaKegiatan').value, sub_kegiatan: document.getElementById('dpaSubKegiatan').value, tahun_anggaran: parseInt(document.getElementById('dpaTahun').value || new Date().getFullYear()) };
+            try { await supabaseClient.from('dpa').upsert(payload); await loadDpa(true); bootstrap.Modal.getInstance(document.getElementById('modalDpa')).hide(); Swal.fire('Sukses', '', 'success'); } catch (e) { Swal.fire('Error', e.message, 'error'); }
         }
+        function editDpa(id) { const d = cachedDpa.find(x => x.id === id); if(d) { document.getElementById('dpaId').value = d.id; document.getElementById('dpaKegiatan').value = d.kegiatan; document.getElementById('dpaSubKegiatan').value = d.sub_kegiatan; document.getElementById('dpaTahun').value = d.tahun_anggaran; new bootstrap.Modal(document.getElementById('modalDpa')).show(); } }
+        async function deleteDpa(id) { if(confirm('Hapus?')) { await supabaseClient.from('dpa').delete().eq('id', id); await loadDpa(true); } }
 
-        // --- MODULE: KOP SURAT (CRUD & LIVE PREVIEW) ---
+        // --- KOP SURAT ---
         async function loadKopSurat(isInit = false) {
             if (!supabaseClient || !isInit) return;
-            try {
-                const { data, error } = await supabaseClient.from('kop_surat').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
-                
-                cachedKopSurat = data || [];
-                renderTabelKopSurat();
-            } catch(e) { console.error("Error loading Kop Surat:", e); }
+            const { data } = await supabaseClient.from('kop_surat').select('*');
+            cachedKopSurat = data || [];
+            renderTabelKopSurat();
         }
-
         function renderKopSuratPreview() {
             const container = document.getElementById('kopPreviewContainer');
             const activeKop = cachedKopSurat.find(k => k.is_aktif === true);
-
             if (activeKop) {
-                container.innerHTML = `
-                    <div class="p-4 bg-white" style="border: 1px solid #e0e0e0; border-radius: 4px;">
-                        <div class="d-flex align-items-center">
-                            <!-- Logo Kiri -->
-                            <div style="width: 120px; text-align: center;">
-                                <img src="${activeKop.logo_url || 'https://placehold.co/100x100?text=LOGO'}" alt="Logo" style="max-width: 100px; max-height: 100px; object-fit: contain;">
-                            </div>
-                            
-                            <!-- Teks Tengah (Times New Roman) -->
-                            <div class="flex-grow-1 text-center px-3" style="font-family: 'Times New Roman', Times, serif; color: #000;">
-                                <h4 class="m-0 text-uppercase" style="font-size: 1.3rem; letter-spacing: 0.5px;">${activeKop.nama_pemda}</h4>
-                                <h2 class="m-0 fw-bold text-uppercase" style="font-size: 1.6rem; letter-spacing: 0.5px;">${activeKop.nama_instansi}</h2>
-                                <p class="m-0 mt-1" style="font-size: 1rem;">${activeKop.alamat}</p>
-                            </div>
-                            
-                            <!-- Spacer Kanan (Agar teks benar-benar di tengah) -->
-                            <div style="width: 120px;"></div>
-                        </div>
-                        <!-- Garis Hitam Tebal -->
-                        <div style="border-bottom: 3px solid #000; margin-top: 15px;"></div>
-                    </div>
-                `;
+                container.innerHTML = `<div class="p-4 bg-white" style="border: 1px solid #e0e0e0;"><div class="d-flex align-items-center"><div style="width: 120px; text-align: center;"><img src="${activeKop.logo_url || 'https://placehold.co/100'}" style="max-width:100px;max-height:100px;"></div><div class="flex-grow-1 text-center px-3" style="font-family:'Times New Roman',serif;color:#000;"><h4 class="m-0 text-uppercase" style="font-size:1.3rem;">${activeKop.nama_pemda}</h4><h2 class="m-0 fw-bold text-uppercase" style="font-size:1.6rem;">${activeKop.nama_instansi}</h2><p class="m-0 mt-1">${activeKop.alamat}</p></div><div style="width: 120px;"></div></div><div style="border-bottom: 3px solid #000; margin-top: 15px;"></div></div>`;
             } else {
-                container.innerHTML = `
-                    <div class="alert alert-warning m-0 text-center text-dark border-0">
-                        <i class="fas fa-exclamation-circle fa-2x mb-2 d-block text-warning"></i>
-                        <strong>Belum ada Kop Surat yang Aktif.</strong><br>
-                        Silakan buat baru atau klik tombol "Set Aktif" (centang hijau) pada tabel di bawah.
-                    </div>
-                `;
+                container.innerHTML = `<div class="alert alert-warning m-0 text-center">Belum ada Kop Surat yang Aktif.</div>`;
             }
         }
-
         function renderTabelKopSurat() {
             const tbody = document.getElementById('tabelKopSurat');
             tbody.innerHTML = '';
-            
-            renderKopSuratPreview(); // Render live preview
-            
-            if (cachedKopSurat.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data Kop Surat.</td></tr>';
-                return;
-            }
-
+            renderKopSuratPreview();
+            if (cachedKopSurat.length === 0) return tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data.</td></tr>';
             cachedKopSurat.forEach(kop => {
-                const btnStatus = kop.is_aktif 
-                    ? `<span class="badge bg-success"><i class="fas fa-check-circle"></i> Aktif Digunakan</span>` 
-                    : `<button class="btn btn-sm btn-outline-success" onclick="setKopSuratAktif('${kop.id}')"><i class="fas fa-check"></i> Set Aktif</button>`;
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><img src="${kop.logo_url || 'https://placehold.co/100'}" style="width:40px; height:40px; object-fit:contain;"></td>
-                        <td class="fw-bold">${kop.nama_pemda}</td>
-                        <td>${kop.nama_instansi}</td>
-                        <td>${btnStatus}</td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-warning" onclick="editKopSurat('${kop.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteKopSurat('${kop.id}')"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
+                const btn = kop.is_aktif ? `<span class="badge bg-success">Aktif</span>` : `<button class="btn btn-sm btn-outline-success" onclick="setKopSuratAktif('${kop.id}')">Set Aktif</button>`;
+                tbody.innerHTML += `<tr><td><img src="${kop.logo_url || 'https://placehold.co/100'}" style="width:40px;"></td><td class="fw-bold">${kop.nama_pemda}</td><td>${kop.nama_instansi}</td><td>${btn}</td><td class="text-end"><button class="btn btn-sm btn-outline-warning" onclick="editKopSurat('${kop.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteKopSurat('${kop.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
             });
         }
-
         async function saveKopSurat() {
-            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
-
             const id = document.getElementById('kopId').value || generateId();
-            const payload = {
-                id: id,
-                logo_url: document.getElementById('kopLogoUrl').value,
-                nama_pemda: document.getElementById('kopNamaPemda').value,
-                nama_instansi: document.getElementById('kopNamaInstansi').value,
-                alamat: document.getElementById('kopAlamat').value,
-                is_aktif: cachedKopSurat.length === 0 ? true : false, // Default true jika baru pertama
-                updated_at: new Date().toISOString()
-            };
-
-            try {
-                const { error } = await supabaseClient.from('kop_surat').upsert(payload);
-                if (error) throw error;
-                
-                const index = cachedKopSurat.findIndex(k => k.id === id);
-                if (index > -1) {
-                    payload.is_aktif = cachedKopSurat[index].is_aktif; // keep existing status on edit
-                    cachedKopSurat[index] = payload;
-                } else {
-                    cachedKopSurat.unshift(payload);
-                }
-
-                renderTabelKopSurat();
-                bootstrap.Modal.getInstance(document.getElementById('modalKopSurat')).hide();
-                Swal.fire('Sukses', 'Data Kop Surat disimpan', 'success');
-            } catch (error) {
-                Swal.fire('Gagal Menyimpan', error.message, 'error');
-            }
+            const payload = { id: id, logo_url: document.getElementById('kopLogoUrl').value, nama_pemda: document.getElementById('kopNamaPemda').value, nama_instansi: document.getElementById('kopNamaInstansi').value, alamat: document.getElementById('kopAlamat').value, is_aktif: cachedKopSurat.length === 0 ? true : false };
+            await supabaseClient.from('kop_surat').upsert(payload); await loadKopSurat(true); bootstrap.Modal.getInstance(document.getElementById('modalKopSurat')).hide();
         }
-
-        function editKopSurat(id) {
-            const kop = cachedKopSurat.find(k => k.id === id);
-            if(kop) {
-                document.getElementById('kopId').value = kop.id;
-                document.getElementById('kopLogoUrl').value = kop.logo_url;
-                document.getElementById('kopLogoPreview').src = kop.logo_url || 'https://placehold.co/100x100/e2e8f0/94a3b8?text=Logo';
-                document.getElementById('kopNamaPemda').value = kop.nama_pemda;
-                document.getElementById('kopNamaInstansi').value = kop.nama_instansi;
-                document.getElementById('kopAlamat').value = kop.alamat;
-                new bootstrap.Modal(document.getElementById('modalKopSurat')).show();
-            }
-        }
-
-        async function deleteKopSurat(id) {
-            if (!supabaseClient) return;
-            const kop = cachedKopSurat.find(k => k.id === id);
-            if(kop && kop.is_aktif) {
-                return Swal.fire('Ditolak', 'Kop Surat ini sedang aktif. Set aktif kop surat lain terlebih dahulu.', 'warning');
-            }
-
-            if(confirm('Yakin menghapus kop surat ini?')) {
-                try {
-                    const { error } = await supabaseClient.from('kop_surat').delete().eq('id', id);
-                    if (error) throw error;
-                    
-                    cachedKopSurat = cachedKopSurat.filter(k => k.id !== id);
-                    renderTabelKopSurat();
-                    Swal.fire('Terhapus!', '', 'success');
-                } catch (error) {
-                    Swal.fire('Gagal', error.message, 'error');
-                }
-            }
-        }
-
+        function editKopSurat(id) { const k = cachedKopSurat.find(x => x.id === id); if(k) { document.getElementById('kopId').value = k.id; document.getElementById('kopLogoUrl').value = k.logo_url; document.getElementById('kopNamaPemda').value = k.nama_pemda; document.getElementById('kopNamaInstansi').value = k.nama_instansi; document.getElementById('kopAlamat').value = k.alamat; new bootstrap.Modal(document.getElementById('modalKopSurat')).show(); } }
+        async function deleteKopSurat(id) { if(confirm('Hapus?')) { await supabaseClient.from('kop_surat').delete().eq('id', id); await loadKopSurat(true); } }
         async function setKopSuratAktif(id) {
-            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
-            
-            try {
-                // 1. Matikan semua kop surat yang aktif saat ini
-                const currentActive = cachedKopSurat.find(k => k.is_aktif);
-                if (currentActive) {
-                    await supabaseClient.from('kop_surat').update({ is_aktif: false }).eq('id', currentActive.id);
-                    currentActive.is_aktif = false;
-                }
-
-                // 2. Aktifkan kop surat yang dipilih
-                await supabaseClient.from('kop_surat').update({ is_aktif: true }).eq('id', id);
-                
-                // 3. Update memory/cache
-                const newActive = cachedKopSurat.find(k => k.id === id);
-                if (newActive) newActive.is_aktif = true;
-
-                renderTabelKopSurat();
-                Swal.fire({
-                    title: 'Berhasil!',
-                    text: 'Kop Surat telah diubah dan siap digunakan untuk cetak dokumen.',
-                    icon: 'success',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-            } catch (error) {
-                Swal.fire('Gagal', 'Terjadi kesalahan DB: ' + error.message, 'error');
-            }
+            const curr = cachedKopSurat.find(k => k.is_aktif);
+            if (curr) await supabaseClient.from('kop_surat').update({ is_aktif: false }).eq('id', curr.id);
+            await supabaseClient.from('kop_surat').update({ is_aktif: true }).eq('id', id);
+            await loadKopSurat(true);
         }
 
-        // --- MODULE: PEJABAT PENANDATANGAN (CRUD) ---
+        // --- PEJABAT PENANDATANGAN ---
         async function loadPejabat(isInit = false) {
             if (!supabaseClient || !isInit) return;
             try {
-                // Perbaikan: Hapus .order('created_at') karena mencegah error jika kolom tidak ada
                 const { data, error } = await supabaseClient.from('penandatangan').select('*');
                 if (error) throw error;
-                
                 cachedPejabat = data || [];
                 renderTabelPejabat();
             } catch(e) { 
-                console.error("Error loading Pejabat:", e); 
-                document.getElementById('tabelPejabat').innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Gagal Memuat Data: ${e.message}</td></tr>`;
+                document.getElementById('tabelPejabat').innerHTML = `<tr><td colspan="6" class="text-center text-danger">Error: ${e.message}</td></tr>`;
             }
         }
-
         function renderTabelPejabat() {
             const tbody = document.getElementById('tabelPejabat');
             tbody.innerHTML = '';
-            
-            if (cachedPejabat.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Belum ada data Pejabat.</td></tr>';
-                return;
-            }
-
+            if (cachedPejabat.length === 0) return tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Belum ada data Pejabat.</td></tr>';
             cachedPejabat.forEach(pej => {
-                const btnStatus = pej.is_aktif 
-                    ? `<span class="badge bg-success"><i class="fas fa-check-circle"></i> Aktif</span>` 
-                    : `<button class="btn btn-sm btn-outline-success" onclick="setPejabatAktif('${pej.id}')"><i class="fas fa-check"></i> Set Aktif</button>`;
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="fw-bold">${pej.nama_kepala}</td>
-                        <td>${pej.nip}</td>
-                        <td>${pej.jabatan}</td>
-                        <td>${pej.nama_instansi}</td>
-                        <td>${btnStatus}</td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-warning" onclick="editPejabat('${pej.id}')"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deletePejabat('${pej.id}')"><i class="fas fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
+                const btnStatus = pej.is_aktif ? `<span class="badge bg-success">Aktif</span>` : `<button class="btn btn-sm btn-outline-success" onclick="setPejabatAktif('${pej.id}')">Set Aktif</button>`;
+                tbody.innerHTML += `<tr><td class="fw-bold">${pej.nama_kepala}</td><td>${pej.nip}</td><td>${pej.jabatan}</td><td>${pej.nama_instansi}</td><td>${btnStatus}</td><td class="text-end"><button class="btn btn-sm btn-outline-warning" onclick="editPejabat('${pej.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deletePejabat('${pej.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
             });
         }
-
         async function savePejabat() {
-            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
-
-            const id = document.getElementById('pejabatId').value || generateId();
+            if (!supabaseClient) return;
             const payload = {
-                id: id,
+                id: document.getElementById('pejabatId').value || generateId(),
                 nama_kepala: document.getElementById('pejNama').value,
                 nip: document.getElementById('pejNip').value,
                 pangkat_golongan: document.getElementById('pejPangkat').value,
                 jabatan: document.getElementById('pejJabatan').value,
                 nama_instansi: document.getElementById('pejInstansi').value,
-                is_aktif: cachedPejabat.length === 0 ? true : false,
-                updated_at: new Date().toISOString()
+                is_aktif: cachedPejabat.length === 0 ? true : false
             };
-
             try {
-                const { error } = await supabaseClient.from('penandatangan').upsert(payload);
-                if (error) throw error;
-                
-                await loadPejabat(true); // Memaksa tarik ulang (reload) dari server Supabase
-                
-                bootstrap.Modal.getInstance(document.getElementById('modalPejabat')).show();
+                await supabaseClient.from('penandatangan').upsert(payload);
+                await loadPejabat(true);
                 bootstrap.Modal.getInstance(document.getElementById('modalPejabat')).hide();
-                Swal.fire('Sukses', 'Data Pejabat berhasil disimpan', 'success');
-            } catch (error) {
-                Swal.fire('Gagal Menyimpan', error.message, 'error');
-            }
+                Swal.fire('Sukses', 'Disimpan', 'success');
+            } catch (e) { Swal.fire('Gagal', e.message, 'error'); }
         }
-
-        function editPejabat(id) {
-            const pej = cachedPejabat.find(p => p.id === id);
-            if(pej) {
-                document.getElementById('pejabatId').value = pej.id;
-                document.getElementById('pejNama').value = pej.nama_kepala;
-                document.getElementById('pejNip').value = pej.nip;
-                document.getElementById('pejPangkat').value = pej.pangkat_golongan;
-                document.getElementById('pejJabatan').value = pej.jabatan;
-                document.getElementById('pejInstansi').value = pej.nama_instansi;
-                new bootstrap.Modal(document.getElementById('modalPejabat')).show();
-            }
-        }
-
-        async function deletePejabat(id) {
-            if (!supabaseClient) return;
-            const pej = cachedPejabat.find(p => p.id === id);
-            if(pej && pej.is_aktif) {
-                return Swal.fire('Ditolak', 'Pejabat ini sedang aktif. Set aktif pejabat lain terlebih dahulu.', 'warning');
-            }
-
-            if(confirm('Yakin menghapus Pejabat ini?')) {
-                try {
-                    const { error } = await supabaseClient.from('penandatangan').delete().eq('id', id);
-                    if (error) throw error;
-                    
-                    await loadPejabat(true); // Memaksa tarik ulang (reload) dari server Supabase
-                    Swal.fire('Terhapus!', '', 'success');
-                } catch (error) {
-                    Swal.fire('Gagal', error.message, 'error');
-                }
-            }
-        }
-
+        function editPejabat(id) { const p = cachedPejabat.find(x => x.id === id); if(p) { document.getElementById('pejabatId').value = p.id; document.getElementById('pejNama').value = p.nama_kepala; document.getElementById('pejNip').value = p.nip; document.getElementById('pejPangkat').value = p.pangkat_golongan; document.getElementById('pejJabatan').value = p.jabatan; document.getElementById('pejInstansi').value = p.nama_instansi; new bootstrap.Modal(document.getElementById('modalPejabat')).show(); } }
+        async function deletePejabat(id) { if(confirm('Hapus?')) { await supabaseClient.from('penandatangan').delete().eq('id', id); await loadPejabat(true); } }
         async function setPejabatAktif(id) {
-            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
-            try {
-                const currentActive = cachedPejabat.find(p => p.is_aktif);
-                if (currentActive) {
-                    await supabaseClient.from('penandatangan').update({ is_aktif: false }).eq('id', currentActive.id);
-                }
-                await supabaseClient.from('penandatangan').update({ is_aktif: true }).eq('id', id);
-                
-                await loadPejabat(true); // Memaksa tarik ulang (reload) dari server Supabase
-                Swal.fire({ title: 'Berhasil!', text: 'Pejabat Penandatangan Aktif telah diubah.', icon: 'success', timer: 1500, showConfirmButton: false });
-            } catch (error) {
-                Swal.fire('Gagal', error.message, 'error');
-            }
+            const curr = cachedPejabat.find(p => p.is_aktif);
+            if (curr) await supabaseClient.from('penandatangan').update({ is_aktif: false }).eq('id', curr.id);
+            await supabaseClient.from('penandatangan').update({ is_aktif: true }).eq('id', id);
+            await loadPejabat(true);
         }
 
-        // --- MODULE: SURAT TUGAS (SPT) ---
+        // --- SURAT TUGAS (SPT) ---
         async function loadSpt(isInit = false) {
             if (!supabaseClient || !isInit) return;
             try {
-                // Perbaikan: Hapus .order('created_at') karena mencegah error jika kolom tidak ada
                 const { data, error } = await supabaseClient.from('surat_tugas').select('*');
                 if (error) throw error;
-                
                 cachedSpt = data || [];
                 document.getElementById('dashSptCount').innerText = cachedSpt.length;
                 renderTabelSpt();
-            } catch(e) { 
-                console.error("Error loading SPT:", e); 
-                document.getElementById('tabelSpt').innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Gagal Memuat Data: ${e.message}</td></tr>`;
-            }
+            } catch(e) { document.getElementById('tabelSpt').innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${e.message}</td></tr>`; }
         }
 
         function renderTabelSpt() {
             const tbody = document.getElementById('tabelSpt');
             tbody.innerHTML = '';
-            
-            if (cachedSpt.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data Surat Tugas.</td></tr>';
-                return;
-            }
+            if (cachedSpt.length === 0) return tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data.</td></tr>';
 
             cachedSpt.forEach(spt => {
-                // Cari nama pegawai dari ID
                 const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
-                const namaPegawai = peg ? peg.nama : '<i>Pegawai Dihapus</i>';
-
+                const nama = peg ? peg.nama : '<i>Dihapus</i>';
                 tbody.innerHTML += `
                     <tr>
-                        <td>
-                            <span class="fw-bold text-primary">${spt.nomor_surat}</span><br>
-                            <small class="text-muted"><i class="fas fa-calendar-alt me-1"></i>${spt.tanggal_surat}</small>
-                        </td>
+                        <td><span class="fw-bold text-primary">${spt.nomor_surat}</span><br><small class="text-muted">${spt.tanggal_surat}</small></td>
                         <td>${spt.maksud}</td>
-                        <td>
-                            <span class="fw-bold">${spt.tempat_tujuan}</span><br>
-                            <small class="text-muted">${spt.lama_hari} Hari (${spt.tanggal_berangkat})</small>
-                        </td>
-                        <td>${namaPegawai}</td>
+                        <td><span class="fw-bold">${spt.tempat_tujuan}</span><br><small class="text-muted">${spt.lama_hari} Hari</small></td>
+                        <td>${nama}</td>
                         <td class="text-end">
                             <div class="d-flex flex-column align-items-end gap-1">
                                 <div>
                                     <button class="btn btn-sm btn-primary" onclick="printSpt('${spt.id}')" title="Print SPT"><i class="fas fa-print"></i> SPT</button>
-                                    <button class="btn btn-sm btn-warning text-white" onclick="editSpt('${spt.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-warning text-white" onclick="editSpt('${spt.id}')"><i class="fas fa-edit"></i></button>
                                 </div>
                                 <div>
                                     <button class="btn btn-sm btn-success" onclick="printSppd('${spt.id}')" title="Print SPPD"><i class="fas fa-print"></i> SPPD</button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteSpt('${spt.id}')" title="Hapus"><i class="fas fa-trash"></i></button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteSpt('${spt.id}')"><i class="fas fa-trash"></i></button>
                                 </div>
                             </div>
                         </td>
@@ -1558,238 +1245,195 @@
             });
         }
 
-        // --- FUNGSI PRINT SPT (SURAT TUGAS) ---
+        function calculateTglKembali() {
+            const tglBerangkat = document.getElementById('sptTglBerangkat').value;
+            const lamaHari = parseInt(document.getElementById('sptLama').value);
+            if (tglBerangkat && !isNaN(lamaHari) && lamaHari > 0) {
+                const date = new Date(tglBerangkat);
+                date.setDate(date.getDate() + (lamaHari - 1));
+                document.getElementById('sptTglKembali').value = date.toISOString().split('T')[0];
+            }
+        }
+
+        function populateSelectsSpt() {
+            document.getElementById('sptDpa').innerHTML = '<option value="">-- Pilih DPA --</option>' + cachedDpa.map(d => `<option value="${d.id}">${d.kegiatan}</option>`).join('');
+            const opts = '<option value="">-- Pilih Pegawai --</option>' + cachedPegawai.map(p => `<option value="${p.id}">${p.nama}</option>`).join('');
+            document.getElementById('sptPegawai1').innerHTML = opts;
+            document.getElementById('sptPegawai2').innerHTML = opts;
+            document.getElementById('sptPegawai3').innerHTML = opts;
+        }
+
+        function openModalSpt() {
+            document.getElementById('formSpt').reset();
+            document.getElementById('sptId').value = '';
+            populateSelectsSpt();
+            new bootstrap.Modal(document.getElementById('modalSpt')).show();
+        }
+
+        function autoFillDasarDpa() {
+            const dpa = cachedDpa.find(d => d.id === document.getElementById('sptDpa').value);
+            if (dpa) document.getElementById('sptDasar').value = `DPA Tahun ${dpa.tahun_anggaran} (${dpa.kegiatan})`;
+        }
+
+        async function saveSpt() {
+            const id = document.getElementById('sptId').value || generateId();
+            const payload = {
+                id: id,
+                nomor_surat: document.getElementById('sptNomor').value,
+                tanggal_surat: document.getElementById('sptTglSurat').value,
+                dpa_id: document.getElementById('sptDpa').value,
+                dasar: document.getElementById('sptDasar').value,
+                maksud: document.getElementById('sptMaksud').value,
+                tempat_berangkat: document.getElementById('sptBerangkat').value,
+                tempat_tujuan: document.getElementById('sptTujuan').value,
+                lama_hari: parseInt(document.getElementById('sptLama').value),
+                tanggal_berangkat: document.getElementById('sptTglBerangkat').value,
+                tanggal_kembali: document.getElementById('sptTglKembali').value,
+                alat_angkutan: document.getElementById('sptAngkutan').value,
+                pegawai_1_id: document.getElementById('sptPegawai1').value,
+                pegawai_2_id: document.getElementById('sptPegawai2').value || null,
+                pegawai_3_id: document.getElementById('sptPegawai3').value || null
+            };
+            await supabaseClient.from('surat_tugas').upsert(payload);
+            await loadSpt(true);
+            bootstrap.Modal.getInstance(document.getElementById('modalSpt')).hide();
+        }
+
+        function editSpt(id) {
+            const s = cachedSpt.find(x => x.id === id);
+            if(s) {
+                populateSelectsSpt();
+                document.getElementById('sptId').value = s.id;
+                document.getElementById('sptNomor').value = s.nomor_surat;
+                document.getElementById('sptTglSurat').value = s.tanggal_surat;
+                document.getElementById('sptDpa').value = s.dpa_id;
+                document.getElementById('sptDasar').value = s.dasar;
+                document.getElementById('sptMaksud').value = s.maksud;
+                document.getElementById('sptBerangkat').value = s.tempat_berangkat;
+                document.getElementById('sptTujuan').value = s.tempat_tujuan;
+                document.getElementById('sptLama').value = s.lama_hari;
+                document.getElementById('sptTglBerangkat').value = s.tanggal_berangkat;
+                document.getElementById('sptTglKembali').value = s.tanggal_kembali;
+                document.getElementById('sptAngkutan').value = s.alat_angkutan;
+                document.getElementById('sptPegawai1').value = s.pegawai_1_id;
+                document.getElementById('sptPegawai2').value = s.pegawai_2_id || '';
+                document.getElementById('sptPegawai3').value = s.pegawai_3_id || '';
+                new bootstrap.Modal(document.getElementById('modalSpt')).show();
+            }
+        }
+
+        async function deleteSpt(id) { if(confirm('Hapus SPT?')) { await supabaseClient.from('surat_tugas').delete().eq('id', id); await loadSpt(true); } }
+
+        // --- PRINTING UTILITIES ---
+        const formatTgl = (tglStr) => {
+            if (!tglStr) return '';
+            const bln = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+            const [y, m, d] = tglStr.split('-');
+            return `${parseInt(d)} ${bln[parseInt(m)]} ${y}`;
+        };
+
+        const terbilang = (angka) => {
+            const h = ['nol','satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan','sepuluh','sebelas'];
+            if (angka < 12) return h[angka];
+            if (angka < 20) return h[angka-10] + ' belas';
+            if (angka < 100) return h[Math.floor(angka/10)] + ' puluh ' + (angka%10!==0?h[angka%10]:'');
+            return angka;
+        };
+
         function printSpt(id) {
             const spt = cachedSpt.find(s => s.id === id);
-            if (!spt) return Swal.fire('Error', 'Data SPT tidak ditemukan.', 'error');
-
             const kop = cachedKopSurat.find(k => k.is_aktif === true);
-            if (!kop) return Swal.fire('Peringatan', 'Belum ada Kop Surat yang aktif. Silakan atur di menu Kop Surat.', 'warning');
-
             const pejabat = cachedPejabat.find(p => p.is_aktif === true);
-            if (!pejabat) return Swal.fire('Peringatan', 'Belum ada Pejabat Penandatangan yang aktif. Silakan atur di menu Pejabat.', 'warning');
 
-            // Ambil data pegawai yang ditugaskan
+            if (!spt || !kop || !pejabat) return Swal.fire('Error', 'Data SPT/Kop/Pejabat Aktif belum lengkap!', 'error');
+
             const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
             const p2 = cachedPegawai.find(p => p.id === spt.pegawai_2_id);
             const p3 = cachedPegawai.find(p => p.id === spt.pegawai_3_id);
-
             const pegawais = [p1, p2, p3].filter(p => p !== undefined);
 
-            // Fungsi Bantuan: Format Tanggal Indonesia
-            const formatTgl = (tglStr) => {
-                if (!tglStr) return '';
-                const bln = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                const [y, m, d] = tglStr.split('-');
-                return `${parseInt(d)} ${bln[parseInt(m)]} ${y}`;
-            };
-
-            // Fungsi Bantuan: Terbilang Sederhana (Untuk Lama Hari)
-            const terbilang = (angka) => {
-                const huruf = ['nol', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
-                if (angka < 12) return huruf[angka];
-                if (angka < 20) return huruf[angka - 10] + ' belas';
-                if (angka < 100) return huruf[Math.floor(angka / 10)] + ' puluh ' + (angka % 10 !== 0 ? huruf[angka % 10] : '');
-                return angka;
-            };
-
-            // Bangun deretan HTML untuk Pegawai yang ditugaskan
             let pegawaiHtml = '';
-            pegawais.forEach((p, index) => {
+            pegawais.forEach((p, i) => {
                 pegawaiHtml += `
-                    <tr>
-                        <td width="3%" valign="top">${index + 1}.</td>
-                        <td width="15%" valign="top">Nama</td>
-                        <td width="2%" valign="top">:</td>
-                        <td width="80%" valign="top"><b>${p.nama}</b></td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td valign="top">Pangkat/Gol</td>
-                        <td valign="top">:</td>
-                        <td valign="top">${p.pangkat_golongan}</td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td valign="top">NIP</td>
-                        <td valign="top">:</td>
-                        <td valign="top">${p.nip}</td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td valign="top">Jabatan</td>
-                        <td valign="top">:</td>
-                        <td valign="top">${p.jabatan}</td>
-                    </tr>
+                    <tr><td width="3%" valign="top">${i + 1}.</td><td width="15%" valign="top">Nama</td><td width="2%" valign="top">:</td><td width="80%" valign="top"><b>${p.nama}</b></td></tr>
+                    <tr><td></td><td valign="top">Pangkat/Gol</td><td valign="top">:</td><td valign="top">${p.pangkat_golongan}</td></tr>
+                    <tr><td></td><td valign="top">NIP</td><td valign="top">:</td><td valign="top">${p.nip}</td></tr>
+                    <tr><td></td><td valign="top">Jabatan</td><td valign="top">:</td><td valign="top">${p.jabatan}</td></tr>
                 `;
             });
 
-            // Susun dasar pelaksanaan (mengubah baris baru jadi enter HTML)
             const dasarHtml = (spt.dasar || '').split('\n').map(item => `<div>${item}</div>`).join('');
 
-            // --- TEMPLATE HTML A4 UNTUK CETAK ---
             const htmlContent = `
-            <!DOCTYPE html>
-            <html lang="id">
-            <head>
-                <meta charset="UTF-8">
-                <title>Cetak SPT - ${spt.nomor_surat}</title>
-                <style>
-                    @page { size: A4; margin: 2cm; }
-                    body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; color: #000; margin: 0; padding: 0; }
-                    
-                    /* Kop Surat */
-                    .kop-surat { display: flex; align-items: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px; }
-                    .kop-logo { width: 90px; text-align: center; }
-                    .kop-logo img { width: 100%; height: auto; object-fit: contain; }
-                    .kop-teks { flex-grow: 1; text-align: center; padding: 0 15px; }
-                    .kop-teks h4 { margin: 0; font-size: 14pt; font-weight: normal; text-transform: uppercase; }
-                    .kop-teks h2 { margin: 0; font-size: 16pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-                    .kop-teks p { margin: 5px 0 0; font-size: 10pt; }
-                    
-                    /* Judul Surat */
-                    .judul-surat { text-align: center; margin-bottom: 30px; }
-                    .judul-surat h3 { margin: 0; font-size: 14pt; font-weight: bold; text-decoration: underline; }
-                    .judul-surat p { margin: 0; font-size: 12pt; }
-                    
-                    /* Tabel Konten */
-                    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-                    td { vertical-align: top; padding: 2px 0; }
-                    
-                    /* Area Tanda Tangan */
-                    .ttd-area { width: 350px; float: right; margin-top: 30px; text-align: left; }
-                    .ttd-area p { margin: 0; }
-                    .ttd-area .jabatan { font-weight: bold; min-height: 80px; } /* Space for signature */
-                    .ttd-area .nama { font-weight: bold; text-decoration: underline; margin-top: 80px; }
-                    
-                    /* Footer e-Sign */
-                    .footer-esign { clear: both; margin-top: 50px; font-size: 9pt; text-align: center; color: #555; border-top: 1px solid #ccc; padding-top: 10px; font-style: italic; }
-                </style>
+            <!DOCTYPE html><html lang="id"><head><title>Cetak SPT</title>
+            <style>
+                @page { size: A4; margin: 2cm; }
+                body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; color: #000; margin: 0; padding: 0; }
+                .kop-surat { display: flex; align-items: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px; }
+                .kop-logo { width: 90px; text-align: center; }
+                .kop-logo img { width: 100%; height: auto; object-fit: contain; }
+                .kop-teks { flex-grow: 1; text-align: center; padding: 0 15px; }
+                .kop-teks h4 { margin: 0; font-size: 14pt; font-weight: normal; text-transform: uppercase; }
+                .kop-teks h2 { margin: 0; font-size: 16pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+                .kop-teks p { margin: 5px 0 0; font-size: 10pt; }
+                .judul-surat { text-align: center; margin-bottom: 30px; }
+                .judul-surat h3 { margin: 0; font-size: 14pt; font-weight: bold; text-decoration: underline; }
+                .judul-surat p { margin: 0; font-size: 12pt; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+                td { vertical-align: top; padding: 2px 0; }
+                .ttd-area { width: 350px; float: right; margin-top: 30px; text-align: left; }
+                .ttd-area p { margin: 0; }
+                .ttd-area .jabatan { font-weight: bold; min-height: 80px; }
+                .ttd-area .nama { font-weight: bold; text-decoration: underline; margin-top: 80px; }
+                .footer-esign { clear: both; margin-top: 50px; font-size: 9pt; text-align: center; color: #555; border-top: 1px solid #ccc; padding-top: 10px; font-style: italic; }
+            </style>
             </head>
             <body>
-                <!-- Kop Surat -->
                 <div class="kop-surat">
-                    <div class="kop-logo">
-                        <img src="${kop.logo_url || 'https://placehold.co/100'}" alt="Logo">
-                    </div>
-                    <div class="kop-teks">
-                        <h4>${kop.nama_pemda}</h4>
-                        <h2>${kop.nama_instansi}</h2>
-                        <p>${kop.alamat}</p>
-                    </div>
-                    <div style="width: 90px;"></div> <!-- Spacer -->
+                    <div class="kop-logo"><img src="${kop.logo_url}" alt="Logo"></div>
+                    <div class="kop-teks"><h4>${kop.nama_pemda}</h4><h2>${kop.nama_instansi}</h2><p>${kop.alamat}</p></div>
+                    <div style="width: 90px;"></div>
                 </div>
-
-                <!-- Judul -->
-                <div class="judul-surat">
-                    <h3>SURAT TUGAS</h3>
-                    <p>Nomor: ${spt.nomor_surat}</p>
-                </div>
-
-                <!-- Isi Surat -->
-                <table>
-                    <tr>
-                        <td width="15%"><b>Dasar</b></td>
-                        <td width="2%">:</td>
-                        <td width="83%">${dasarHtml}</td>
-                    </tr>
-                </table>
-
+                <div class="judul-surat"><h3>SURAT TUGAS</h3><p>Nomor: ${spt.nomor_surat}</p></div>
+                <table><tr><td width="15%"><b>Dasar</b></td><td width="2%">:</td><td width="83%">${dasarHtml}</td></tr></table>
                 <div style="text-align: center; font-weight: bold; margin: 20px 0;">Memerintahkan:</div>
-
-                <table>
-                    <tr>
-                        <td width="15%"><b>Kepada</b></td>
-                        <td width="2%">:</td>
-                        <td width="83%">
-                            <table style="margin-bottom: 0;">
-                                ${pegawaiHtml}
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-                <br>
-                <table>
-                    <tr>
-                        <td width="15%"><b>Untuk</b></td>
-                        <td width="2%">:</td>
-                        <td width="83%" style="text-align: justify;">
-                            Dalam rangka ${spt.maksud} di ${spt.tempat_tujuan} selama ${spt.lama_hari} (${terbilang(spt.lama_hari)}) hari dari tanggal ${formatTgl(spt.tanggal_berangkat)} s/d ${formatTgl(spt.tanggal_kembali)}.
-                        </td>
-                    </tr>
-                </table>
-
-                <!-- Bagian Tanda Tangan -->
+                <table><tr><td width="15%"><b>Kepada</b></td><td width="2%">:</td><td width="83%"><table style="margin-bottom: 0;">${pegawaiHtml}</table></td></tr></table><br>
+                <table><tr><td width="15%"><b>Untuk</b></td><td width="2%">:</td><td width="83%" style="text-align: justify;">Dalam rangka ${spt.maksud} di ${spt.tempat_tujuan} selama ${spt.lama_hari} (${terbilang(spt.lama_hari)}) hari dari tanggal ${formatTgl(spt.tanggal_berangkat)} s/d ${formatTgl(spt.tanggal_kembali)}.</td></tr></table>
                 <div class="ttd-area">
                     <table style="margin-bottom: 5px;">
-                        <tr>
-                            <td width="40%">Ditetapkan di</td>
-                            <td width="5%">:</td>
-                            <td width="55%">${spt.tempat_berangkat || 'Tempat Kedudukan'}</td>
-                        </tr>
-                        <tr>
-                            <td>Pada tanggal</td>
-                            <td>:</td>
-                            <td>${formatTgl(spt.tanggal_surat)}</td>
-                        </tr>
+                        <tr><td width="40%">Ditetapkan di</td><td width="5%">:</td><td width="55%">${spt.tempat_berangkat || 'Tempat Kedudukan'}</td></tr>
+                        <tr><td>Pada tanggal</td><td>:</td><td>${formatTgl(spt.tanggal_surat)}</td></tr>
                     </table>
-                    
-                    <p>${pejabat.jabatan},</p>
-                    <p class="nama">${pejabat.nama_kepala}</p>
-                    <p>${pejabat.pangkat_golongan}</p>
-                    <p>NIP. ${pejabat.nip}</p>
+                    <p>${pejabat.jabatan},</p><p class="nama">${pejabat.nama_kepala}</p><p>${pejabat.pangkat_golongan}</p><p>NIP. ${pejabat.nip}</p>
                 </div>
-
-                <!-- Script untuk Print Otomatis -->
-                <script>
-                    window.onload = function() {
-                        window.print();
-                    }
-                <\/script>
-            </body>
-            </html>
-            `;
-
-            // Buka Jendela Baru dan Tulis Dokumen
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(htmlContent);
-            printWindow.document.close();
+                <div class="footer-esign">Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik yang diterbitkan oleh Balai Besar Sertifikasi Elektronik (BSrE), Badan Siber dan Sandi Negara (BSSN).</div>
+                <script>window.onload = function() { window.print(); }<\/script>
+            </body></html>`;
+            const pw = window.open('', '_blank');
+            pw.document.write(htmlContent); pw.document.close();
         }
 
         function printSppd(id) {
-            const spt = cachedSpt.find(s => s.id === id);
-            if (!spt) return Swal.fire('Error', 'Data SPT tidak ditemukan.', 'error');
-            
-            // Siapkan Pilihan Kop Surat
             const selKop = document.getElementById('printSppdKop');
             selKop.innerHTML = cachedKopSurat.map(k => `<option value="${k.id}" ${k.is_aktif ? 'selected' : ''}>${k.nama_instansi}</option>`).join('');
             
-            // Siapkan Pilihan Pejabat
             const pejabatOptions = cachedPejabat.map(p => `<option value="${p.id}" ${p.is_aktif ? 'selected' : ''}>${p.nama_kepala} - ${p.jabatan}</option>`).join('');
             document.getElementById('printSppdPejabat').innerHTML = pejabatOptions;
             document.getElementById('printSppdPengesah').innerHTML = pejabatOptions;
             
-            // Simpan ID SPT ke hidden input dan buka modal
             document.getElementById('printSppdSptId').value = id;
             new bootstrap.Modal(document.getElementById('modalPrintSppd')).show();
         }
 
-        async function executePrintSppd() {
+        function executePrintSppd() {
             try {
                 const id = document.getElementById('printSppdSptId').value;
                 const spt = cachedSpt.find(s => s.id === id);
-                
-                const kopId = document.getElementById('printSppdKop').value;
-                const pejabatId = document.getElementById('printSppdPejabat').value;
-                const pengesahId = document.getElementById('printSppdPengesah').value;
-                
-                const kop = cachedKopSurat.find(k => k.id === kopId);
-                const pejabat = cachedPejabat.find(p => p.id === pejabatId);
-                const pengesah = cachedPejabat.find(p => p.id === pengesahId);
+                const kop = cachedKopSurat.find(k => k.id === document.getElementById('printSppdKop').value);
+                const pejabat = cachedPejabat.find(p => p.id === document.getElementById('printSppdPejabat').value);
+                const pengesah = cachedPejabat.find(p => p.id === document.getElementById('printSppdPengesah').value);
 
-                if (!kop || !pejabat || !pengesah) {
-                    return Swal.fire('Peringatan', 'Kop Surat atau Pejabat belum dipilih / tersedia!', 'warning');
-                }
+                if (!kop || !pejabat || !pengesah) throw new Error("Kop Surat atau Pejabat belum dipilih!");
 
                 const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
                 const p2 = cachedPegawai.find(p => p.id === spt.pegawai_2_id);
@@ -1798,238 +1442,91 @@
 
                 if (employees.length === 0) throw new Error("Pegawai utama tidak ditemukan/telah dihapus.");
 
-                let point2Html = '';
-                let point7Html = '-';
-
+                let point2Html = ''; let point7Html = '-';
                 if (employees.length === 1) {
-                    point2Html = `
-                        <tr>
-                            <td align="center" rowspan="2">2.</td>
-                            <td>Nama Pegawai yang diperintahkan</td>
-                            <td><b>${employees[0].nama}</b></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                a. NIP<br>
-                                b. Pangkat dan Golongan<br>
-                                c. Jabatan<br>
-                                d. Tingkat menurut Peraturan Perjalanan
-                            </td>
-                            <td>
-                                a. ${employees[0].nip}<br>
-                                b. ${employees[0].pangkat_golongan}<br>
-                                c. ${employees[0].jabatan}<br>
-                                d. ${employees[0].tingkat_perjadin || '-'}
-                            </td>
-                        </tr>
-                    `;
+                    point2Html = `<tr><td align="center" rowspan="2">2.</td><td>Nama Pegawai yang diperintahkan</td><td><b>${employees[0].nama}</b></td></tr><tr><td>a. NIP<br>b. Pangkat dan Golongan<br>c. Jabatan<br>d. Tingkat menurut Peraturan</td><td>a. ${employees[0].nip}<br>b. ${employees[0].pangkat_golongan}<br>c. ${employees[0].jabatan}<br>d. ${employees[0].tingkat_perjadin || '-'}</td></tr>`;
                 } else if (employees.length >= 2) {
-                    point2Html = `
-                        <tr>
-                            <td align="center" rowspan="2">2.</td>
-                            <td>a. Nama Pegawai yang diperintahkan</td>
-                            <td><b>a. ${employees[0].nama}</b></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                &nbsp;&nbsp;&nbsp; NIP<br>
-                                &nbsp;&nbsp;&nbsp; Pangkat dan Golongan<br>
-                                &nbsp;&nbsp;&nbsp; Jabatan<br>
-                                &nbsp;&nbsp;&nbsp; Tingkat menurut Peraturan Perjalanan
-                            </td>
-                            <td>
-                                - ${employees[0].nip}<br>
-                                - ${employees[0].pangkat_golongan}<br>
-                                - ${employees[0].jabatan}<br>
-                                - ${employees[0].tingkat_perjadin || '-'}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td align="center" rowspan="2"></td>
-                            <td>b. Nama Pegawai yang diperintahkan</td>
-                            <td><b>b. ${employees[1].nama}</b></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                &nbsp;&nbsp;&nbsp; NIP<br>
-                                &nbsp;&nbsp;&nbsp; Pangkat dan Golongan<br>
-                                &nbsp;&nbsp;&nbsp; Jabatan<br>
-                                &nbsp;&nbsp;&nbsp; Tingkat menurut Peraturan Perjalanan
-                            </td>
-                            <td>
-                                - ${employees[1].nip}<br>
-                                - ${employees[1].pangkat_golongan}<br>
-                                - ${employees[1].jabatan}<br>
-                                - ${employees[1].tingkat_perjadin || '-'}
-                            </td>
-                        </tr>
-                    `;
-                    if (employees.length === 3) {
-                        point7Html = `1. ${employees[2].nama}`;
-                    }
+                    point2Html = `<tr><td align="center" rowspan="2">2.</td><td>a. Nama Pegawai yang diperintahkan</td><td><b>a. ${employees[0].nama}</b></td></tr><tr><td>&nbsp;&nbsp;&nbsp; NIP<br>&nbsp;&nbsp;&nbsp; Pangkat dan Golongan<br>&nbsp;&nbsp;&nbsp; Jabatan<br>&nbsp;&nbsp;&nbsp; Tingkat menurut Peraturan</td><td>- ${employees[0].nip}<br>- ${employees[0].pangkat_golongan}<br>- ${employees[0].jabatan}<br>- ${employees[0].tingkat_perjadin || '-'}</td></tr><tr><td align="center" rowspan="2"></td><td>b. Nama Pegawai yang diperintahkan</td><td><b>b. ${employees[1].nama}</b></td></tr><tr><td>&nbsp;&nbsp;&nbsp; NIP<br>&nbsp;&nbsp;&nbsp; Pangkat dan Golongan<br>&nbsp;&nbsp;&nbsp; Jabatan<br>&nbsp;&nbsp;&nbsp; Tingkat menurut Peraturan</td><td>- ${employees[1].nip}<br>- ${employees[1].pangkat_golongan}<br>- ${employees[1].jabatan}<br>- ${employees[1].tingkat_perjadin || '-'}</td></tr>`;
+                    if (employees.length === 3) point7Html = `1. ${employees[2].nama}`;
                 }
 
                 const dpa = cachedDpa.find(d => d.id === spt.dpa_id);
                 const namaDpa = dpa ? `DPA Tahun ${dpa.tahun_anggaran} Kegiatan: ${dpa.kegiatan} - ${dpa.sub_kegiatan}` : '-';
 
-                const formatTgl = (tglStr) => {
-                    if (!tglStr) return '-';
-                    const bln = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                    const parts = tglStr.split('-');
-                    if(parts.length !== 3) return tglStr;
-                    return `${parseInt(parts[2])} ${bln[parseInt(parts[1])]} ${parts[0]}`;
-                };
-
-                const terbilang = (angka) => {
-                    if (!angka) return '';
-                    const huruf = ['nol', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
-                    if (angka < 12) return huruf[angka];
-                    if (angka < 20) return huruf[angka - 10] + ' belas';
-                    if (angka < 100) return huruf[Math.floor(angka / 10)] + ' puluh ' + (angka % 10 !== 0 ? huruf[angka % 10] : '');
-                    return angka;
-                };
-
                 bootstrap.Modal.getInstance(document.getElementById('modalPrintSppd')).hide();
 
                 const htmlContent = `
-                <!DOCTYPE html>
-                <html lang="id">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Cetak SPPD - ${spt.nomor_surat}</title>
-                    <style>
-                        @page { size: A4; margin: 1.5cm 2cm; }
-                        body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.3; color: #000; margin: 0; padding: 0; }
-                        .kop-surat { display: flex; align-items: center; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
-                        .kop-logo { width: 80px; text-align: center; }
-                        .kop-logo img { width: 100%; height: auto; object-fit: contain; }
-                        .kop-teks { flex-grow: 1; text-align: center; padding: 0 15px; }
-                        .kop-teks h4 { margin: 0; font-size: 14pt; font-weight: normal; text-transform: uppercase; }
-                        .kop-teks h2 { margin: 0; font-size: 16pt; font-weight: bold; text-transform: uppercase; }
-                        .kop-teks p { margin: 5px 0 0; font-size: 10pt; }
-                        .info-kanan { float: right; width: 350px; margin-bottom: 15px; }
-                        .info-kanan table { width: 100%; border-collapse: collapse; }
-                        .info-kanan td { padding: 2px; }
-                        .clearfix::after { content: ""; clear: both; display: table; }
-                        .judul-sppd { text-align: center; margin-bottom: 15px; clear: both; }
-                        .judul-sppd h3 { margin: 0; font-size: 14pt; font-weight: bold; text-decoration: underline; }
-                        .tabel-sppd { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                        .tabel-sppd td { border: 1px solid #000; padding: 5px 8px; vertical-align: top; }
-                        
-                        .ttd-area { width: 350px; float: right; margin-top: 10px; text-align: left; }
-                        .ttd-area p { margin: 0; }
-                        .ttd-area .jabatan { font-weight: bold; min-height: 70px; }
-                        .ttd-area .nama { font-weight: bold; text-decoration: underline; margin-top: 70px; }
-                        
-                        .page-break { page-break-before: always; margin-top: 2cm; }
-                        
-                        /* Modifikasi Halaman 2 (Format Baku Romawi) */
-                        .main-table { width: 100%; border-collapse: collapse; border: 1px solid #000; margin-top: 15px; }
-                        .main-table td { border: 1px solid #000; vertical-align: top; padding: 6px; }
-                        .main-table .no { width: 40px; text-align: center; font-weight: bold; }
-                        .line { display: inline-block; border-bottom: 1px dotted #000; width: 200px; }
-                        .note { margin-top: 5px; font-size: 10pt; text-align: justify; }
-                    </style>
-                </head>
+                <!DOCTYPE html><html lang="id"><head><title>Cetak SPPD</title>
+                <style>
+                    @page { size: A4; margin: 1.5cm 2cm; }
+                    body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.3; color: #000; margin: 0; padding: 0; }
+                    .kop-surat { display: flex; align-items: center; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+                    .kop-logo { width: 80px; text-align: center; }
+                    .kop-logo img { width: 100%; height: auto; object-fit: contain; }
+                    .kop-teks { flex-grow: 1; text-align: center; padding: 0 15px; }
+                    .kop-teks h4 { margin: 0; font-size: 14pt; font-weight: normal; text-transform: uppercase; }
+                    .kop-teks h2 { margin: 0; font-size: 16pt; font-weight: bold; text-transform: uppercase; }
+                    .kop-teks p { margin: 5px 0 0; font-size: 10pt; }
+                    .info-kanan { float: right; width: 350px; margin-bottom: 15px; }
+                    .info-kanan table { width: 100%; border-collapse: collapse; }
+                    .info-kanan td { padding: 2px; }
+                    .clearfix::after { content: ""; clear: both; display: table; }
+                    .judul-sppd { text-align: center; margin-bottom: 15px; clear: both; }
+                    .judul-sppd h3 { margin: 0; font-size: 14pt; font-weight: bold; text-decoration: underline; }
+                    .tabel-sppd { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    .tabel-sppd td { border: 1px solid #000; padding: 5px 8px; vertical-align: top; }
+                    .ttd-area { width: 350px; float: right; margin-top: 10px; text-align: left; }
+                    .ttd-area p { margin: 0; }
+                    .ttd-area .jabatan { font-weight: bold; min-height: 70px; }
+                    .ttd-area .nama { font-weight: bold; text-decoration: underline; margin-top: 70px; }
+                    .page-break { page-break-before: always; margin-top: 2cm; }
+                    
+                    /* SPPD Halaman 2 Baru */
+                    .tabel-hal2 { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    .tabel-hal2 td { border: none; vertical-align: top; padding: 4px; }
+                    .tabel-hal2 .no { width: 40px; text-align: center; font-weight: bold; }
+                    .line { display: inline-block; border-bottom: 1px dotted #000; width: 200px; }
+                    .note { margin-top: 5px; font-size: 10pt; text-align: justify; }
+                </style></head>
                 <body>
-                    <!-- Halaman 1 -->
+                    <!-- HALAMAN 1 -->
                     <div class="kop-surat">
-                        <div class="kop-logo">
-                            <img src="${kop.logo_url || 'https://placehold.co/100'}" alt="Logo">
-                        </div>
-                        <div class="kop-teks">
-                            <h4>${kop.nama_pemda}</h4>
-                            <h2>${kop.nama_instansi}</h2>
-                            <p>${kop.alamat}</p>
-                        </div>
+                        <div class="kop-logo"><img src="${kop.logo_url}" alt="Logo"></div>
+                        <div class="kop-teks"><h4>${kop.nama_pemda}</h4><h2>${kop.nama_instansi}</h2><p>${kop.alamat}</p></div>
                         <div style="width: 80px;"></div>
                     </div>
-
-                    <div class="clearfix">
-                        <div class="info-kanan">
-                            <table>
-                                <tr><td width="30%">Lembar ke</td><td width="5%">:</td><td></td></tr>
-                                <tr><td>Kode No</td><td>:</td><td></td></tr>
-                                <tr><td>Nomor</td><td>:</td><td>${spt.nomor_surat}</td></tr>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="judul-sppd">
-                        <h3>SURAT PERINTAH PERJALANAN DINAS<br>(SPPD)</h3>
-                    </div>
-
+                    <div class="clearfix"><div class="info-kanan"><table><tr><td width="30%">Lembar ke</td><td width="5%">:</td><td></td></tr><tr><td>Kode No</td><td>:</td><td></td></tr><tr><td>Nomor</td><td>:</td><td>${spt.nomor_surat}</td></tr></table></div></div>
+                    <div class="judul-sppd"><h3>SURAT PERINTAH PERJALANAN DINAS<br>(SPPD)</h3></div>
                     <table class="tabel-sppd">
-                        <tr>
-                            <td width="5%" align="center">1.</td>
-                            <td width="45%">Pejabat Yang Memberi Perintah</td>
-                            <td width="50%">${pejabat.jabatan}</td>
-                        </tr>
+                        <tr><td width="5%" align="center">1.</td><td width="45%">Pejabat Yang Memberi Perintah</td><td width="50%">${pejabat.jabatan}</td></tr>
                         ${point2Html}
-                        <tr>
-                            <td align="center">3.</td>
-                            <td>Maksud Perjalanan Dinas</td>
-                            <td>${spt.maksud}</td>
-                        </tr>
-                        <tr>
-                            <td align="center">4.</td>
-                            <td>Alat angkutan yang dipergunakan</td>
-                            <td>${spt.alat_angkutan}</td>
-                        </tr>
-                        <tr>
-                            <td align="center">5.</td>
-                            <td>a. Tempat Berangkat<br>b. Tempat Tujuan</td>
-                            <td>a. ${spt.tempat_berangkat}<br>b. ${spt.tempat_tujuan}</td>
-                        </tr>
-                        <tr>
-                            <td align="center">6.</td>
-                            <td>a. Lamanya Perjalanan Dinas<br>b. Tanggal Berangkat<br>c. Tanggal harus kembali</td>
-                            <td>a. ${spt.lama_hari} (${terbilang(spt.lama_hari)}) hari<br>b. ${formatTgl(spt.tanggal_berangkat)}<br>c. ${formatTgl(spt.tanggal_kembali)}</td>
-                        </tr>
-                        <tr>
-                            <td align="center">7.</td>
-                            <td>Pengikut: Nama</td>
-                            <td>${point7Html}</td>
-                        </tr>
-                        <tr>
-                            <td align="center">8.</td>
-                            <td>Pembebanan Anggaran<br>a. Instansi<br>b. Mata Anggaran/Rekening</td>
-                            <td><br>a. ${pejabat.nama_instansi}<br>b. ${namaDpa}</td>
-                        </tr>
-                        <tr>
-                            <td align="center">9.</td>
-                            <td>Keterangan Lain-lain</td>
-                            <td></td>
-                        </tr>
+                        <tr><td align="center">3.</td><td>Maksud Perjalanan Dinas</td><td>${spt.maksud}</td></tr>
+                        <tr><td align="center">4.</td><td>Alat angkutan yang dipergunakan</td><td>${spt.alat_angkutan}</td></tr>
+                        <tr><td align="center">5.</td><td>a. Tempat Berangkat<br>b. Tempat Tujuan</td><td>a. ${spt.tempat_berangkat}<br>b. ${spt.tempat_tujuan}</td></tr>
+                        <tr><td align="center">6.</td><td>a. Lamanya Perjalanan Dinas<br>b. Tanggal Berangkat<br>c. Tanggal harus kembali</td><td>a. ${spt.lama_hari} (${terbilang(spt.lama_hari)}) hari<br>b. ${formatTgl(spt.tanggal_berangkat)}<br>c. ${formatTgl(spt.tanggal_kembali)}</td></tr>
+                        <tr><td align="center">7.</td><td>Pengikut: Nama</td><td>${point7Html}</td></tr>
+                        <tr><td align="center">8.</td><td>Pembebanan Anggaran<br>a. Instansi<br>b. Mata Anggaran/Rekening</td><td><br>a. ${pejabat.nama_instansi}<br>b. ${namaDpa}</td></tr>
+                        <tr><td align="center">9.</td><td>Keterangan Lain-lain</td><td></td></tr>
                     </table>
-
                     <div class="clearfix">
                         <div class="ttd-area">
-                            <table>
-                                <tr><td width="30%">Dikeluarkan di</td><td width="5%">:</td><td>${spt.tempat_berangkat || 'Tempat Kedudukan'}</td></tr>
-                                <tr><td>Pada tanggal</td><td>:</td><td>${formatTgl(spt.tanggal_surat)}</td></tr>
-                            </table>
-                            <br>
-                            <p>${pejabat.jabatan},</p>
-                            <p class="nama">${pejabat.nama_kepala}</p>
-                            <p>${pejabat.pangkat_golongan}</p>
-                            <p>NIP. ${pejabat.nip}</p>
+                            <table><tr><td width="30%">Dikeluarkan di</td><td width="5%">:</td><td>${spt.tempat_berangkat || 'Tempat Kedudukan'}</td></tr><tr><td>Pada tanggal</td><td>:</td><td>${formatTgl(spt.tanggal_surat)}</td></tr></table><br>
+                            <p>${pejabat.jabatan},</p><p class="nama">${pejabat.nama_kepala}</p><p>${pejabat.pangkat_golongan}</p><p>NIP. ${pejabat.nip}</p>
                         </div>
                     </div>
-
                     <div class="page-break"></div>
 
-                    <!-- Halaman 2 -->
-                    <table class="main-table">
+                    <!-- HALAMAN 2 -->
+                    <table class="tabel-hal2">
                         <tr>
                             <td class="no">I</td>
                             <td>
                                 <div style="float: right; width: 350px; text-align: left;">
                                     <table style="width:100%; border:none;">
-                                        <tr><td width="100" style="border:none; padding:2px;">SPPD No</td><td style="border:none; padding:2px;">: ${spt.nomor_surat}</td></tr>
-                                        <tr><td style="border:none; padding:2px;">Berangkat dari</td><td style="border:none; padding:2px;">: ${spt.tempat_berangkat || '-'}</td></tr>
-                                        <tr><td style="border:none; padding:2px;">Pada tanggal</td><td style="border:none; padding:2px;">: ${formatTgl(spt.tanggal_berangkat)}</td></tr>
-                                        <tr><td style="border:none; padding:2px;">Ke</td><td style="border:none; padding:2px;">: ${spt.tempat_tujuan}</td></tr>
+                                        <tr><td width="100" style="padding:2px;">SPPD No</td><td style="padding:2px;">: ${spt.nomor_surat}</td></tr>
+                                        <tr><td style="padding:2px;">Berangkat dari</td><td style="padding:2px;">: ${spt.tempat_berangkat || '-'}</td></tr>
+                                        <tr><td style="padding:2px;">Pada tanggal</td><td style="padding:2px;">: ${formatTgl(spt.tanggal_berangkat)}</td></tr>
+                                        <tr><td style="padding:2px;">Ke</td><td style="padding:2px;">: ${spt.tempat_tujuan}</td></tr>
                                     </table>
                                     <br>
                                     <div style="text-align:center;">
@@ -2047,17 +1544,15 @@
                             <td>
                                 <table style="width:100%; border:none;">
                                     <tr>
-                                        <td width="50%" style="border:none; padding:2px;">
+                                        <td width="50%">
                                             <b>Tiba di :</b> ${spt.tempat_tujuan}<br>
                                             Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}
-                                            <!-- Ruang TTD/Stempel dirapatkan -->
-                                            <br><br><br><br>
+                                            <br><br><br>
                                         </td>
-                                        <td style="border:none; padding:2px;">
+                                        <td>
                                             <b>Berangkat dari :</b> ${spt.tempat_tujuan}<br>
                                             Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
-                                            <!-- Ruang TTD/Stempel dirapatkan -->
-                                            <br><br><br><br>
+                                            <br><br><br>
                                         </td>
                                     </tr>
                                 </table>
@@ -2068,12 +1563,12 @@
                             <td>
                                 <table style="width:100%; border:none;">
                                     <tr>
-                                        <td width="50%" style="border:none; padding:2px;">
+                                        <td width="50%">
                                             <b>Tiba di :</b><br>
                                             Pada tanggal : <span class="line"></span>
-                                            <br><br><br><br>
+                                            <br><br><br>
                                         </td>
-                                        <td style="border:none; padding:2px;">
+                                        <td>
                                             <b>Berangkat dari :</b><br>
                                             Ke : <span class="line"></span><br>
                                             Pada tanggal : <span class="line"></span>
@@ -2088,12 +1583,12 @@
                             <td>
                                 <table style="width:100%; border:none;">
                                     <tr>
-                                        <td width="50%" style="border:none; padding:2px;">
+                                        <td width="50%">
                                             <b>Tiba di :</b><br>
                                             Pada tanggal : <span class="line"></span>
-                                            <br><br><br><br>
+                                            <br><br><br>
                                         </td>
-                                        <td style="border:none; padding:2px;">
+                                        <td>
                                             <b>Berangkat dari :</b><br>
                                             Ke : <span class="line"></span><br>
                                             Pada tanggal : <span class="line"></span>
@@ -2126,7 +1621,7 @@
                         </tr>
                         <tr>
                             <td class="no">VI</td>
-                            <td><b>CATATAN LAIN-LAIN</b><br><br><br></td>
+                            <td><b>CATATAN LAIN-LAIN</b><br><br></td>
                         </tr>
                         <tr>
                             <td class="no">VII</td>
@@ -2138,200 +1633,30 @@
                             </td>
                         </tr>
                     </table>
-
-                    <script>
-                        window.onload = function() {
-                            window.print();
-                        }
-                    <\/script>
-                </body>
-                </html>
-                `;
+                    <script>window.onload = function() { window.print(); }<\/script>
+                </body></html>`;
 
                 const printWindow = window.open('', '_blank');
-                if (printWindow) {
-                    printWindow.document.write(htmlContent);
-                    printWindow.document.close();
-                } else {
-                    Swal.fire('Peringatan', 'Jendela cetak diblokir oleh browser. Izinkan pop-up untuk situs ini.', 'warning');
-                }
+                if (printWindow) { printWindow.document.write(htmlContent); printWindow.document.close(); } 
+                else { Swal.fire('Peringatan', 'Jendela cetak diblokir oleh browser. Izinkan pop-up.', 'warning'); }
             } catch (error) {
-                console.error("Print SPPD Error: ", error);
-                Swal.fire('Gagal Mencetak', 'Terjadi kesalahan sistem saat menyusun SPPD: ' + error.message, 'error');
+                Swal.fire('Gagal Mencetak', error.message, 'error');
             }
         }
 
-        function calculateTglKembali() {
-            const tglBerangkat = document.getElementById('sptTglBerangkat').value;
-            const lamaHari = parseInt(document.getElementById('sptLama').value);
-            
-            if (tglBerangkat && !isNaN(lamaHari) && lamaHari > 0) {
-                const date = new Date(tglBerangkat);
-                // Rumus: Tgl Kembali = Tgl Berangkat + (Lama Hari - 1)
-                date.setDate(date.getDate() + (lamaHari - 1));
-                
-                const y = date.getFullYear();
-                const m = String(date.getMonth() + 1).padStart(2, '0');
-                const d = String(date.getDate()).padStart(2, '0');
-                
-                document.getElementById('sptTglKembali').value = `${y}-${m}-${d}`;
-            } else {
-                document.getElementById('sptTglKembali').value = '';
-            }
-        }
-
-        function populateSelectsSpt() {
-            // Mengisi Dropdown DPA
-            const sptDpa = document.getElementById('sptDpa');
-            sptDpa.innerHTML = '<option value="">-- Pilih DPA / Kode Rekening --</option>' + 
-                cachedDpa.map(d => `<option value="${d.id}">Kegiatan: ${d.kegiatan} - ${d.sub_kegiatan}</option>`).join('');
-                
-            // Mengisi Dropdown Pegawai
-            const optionsPegawai = '<option value="">-- Pilih Pegawai --</option>' + 
-                cachedPegawai.map(p => `<option value="${p.id}">${p.nama} - ${p.jabatan}</option>`).join('');
-            
-            document.getElementById('sptPegawai1').innerHTML = optionsPegawai;
-            document.getElementById('sptPegawai2').innerHTML = optionsPegawai;
-            document.getElementById('sptPegawai3').innerHTML = optionsPegawai;
-        }
-
-        function openModalSpt() {
-            document.getElementById('formSpt').reset();
-            document.getElementById('sptId').value = '';
-            populateSelectsSpt();
-            new bootstrap.Modal(document.getElementById('modalSpt')).show();
-        }
-
-        function autoFillDasarDpa() {
-            const dpaId = document.getElementById('sptDpa').value;
-            const sptDasar = document.getElementById('sptDasar');
-            
-            if (dpaId) {
-                const dpa = cachedDpa.find(d => d.id === dpaId);
-                if (dpa) {
-                    const currentVal = sptDasar.value;
-                    const dpaText = `DPA Tahun ${dpa.tahun_anggaran} (${dpa.kegiatan} - ${dpa.sub_kegiatan})`;
-                    // Cek agar teks dasar pelaksanaan tidak ganda
-                    if(!currentVal.includes(dpa.kegiatan)) {
-                         sptDasar.value = currentVal ? currentVal + '\n' + dpaText : dpaText;
-                    }
-                }
-            }
-        }
-
-        async function saveSpt() {
-            if (!supabaseClient) return Swal.fire('Error', 'Mode online wajib aktif.', 'error');
-            
-            // Validasi Pegawai Sama
-            const p1 = document.getElementById('sptPegawai1').value;
-            const p2 = document.getElementById('sptPegawai2').value;
-            const p3 = document.getElementById('sptPegawai3').value;
-            
-            if(!p1) return Swal.fire('Peringatan', 'Pegawai 1 (Ketua) Wajib diisi!', 'warning');
-            if((p1 === p2 && p2 !== '') || (p1 === p3 && p3 !== '') || (p2 === p3 && p2 !== '')) {
-                return Swal.fire('Peringatan', 'Pegawai yang dipilih tidak boleh sama (Duplikat)!', 'warning');
-            }
-
-            const id = document.getElementById('sptId').value || generateId();
-            const payload = {
-                id: id,
-                nomor_surat: document.getElementById('sptNomor').value,
-                tanggal_surat: document.getElementById('sptTglSurat').value,
-                dpa_id: document.getElementById('sptDpa').value,
-                dasar: document.getElementById('sptDasar').value,
-                maksud: document.getElementById('sptMaksud').value,
-                tempat_berangkat: document.getElementById('sptBerangkat').value,
-                tempat_tujuan: document.getElementById('sptTujuan').value,
-                lama_hari: parseInt(document.getElementById('sptLama').value),
-                tanggal_berangkat: document.getElementById('sptTglBerangkat').value,
-                tanggal_kembali: document.getElementById('sptTglKembali').value,
-                alat_angkutan: document.getElementById('sptAngkutan').value,
-                pegawai_1_id: p1,
-                pegawai_2_id: p2 || null,
-                pegawai_3_id: p3 || null,
-                updated_at: new Date().toISOString()
-            };
-
-            try {
-                const { error } = await supabaseClient.from('surat_tugas').upsert(payload);
-                if (error) throw error;
-                
-                // Menarik data (reload) langsung dari database untuk memastikan UI Sinkron dengan Server
-                await loadSpt(true); 
-                
-                bootstrap.Modal.getInstance(document.getElementById('modalSpt')).hide();
-                Swal.fire('Sukses', 'Surat Tugas & SPPD Berhasil Dibuat!', 'success');
-            } catch (error) {
-                Swal.fire('Gagal Menyimpan', 'Pastikan tabel surat_tugas sudah dibuat di Supabase. Detail: ' + error.message, 'error');
-            }
-        }
-
-        function editSpt(id) {
-            const spt = cachedSpt.find(s => s.id === id);
-            if(spt) {
-                populateSelectsSpt(); // Load combo box options first
-                
-                document.getElementById('sptId').value = spt.id;
-                document.getElementById('sptNomor').value = spt.nomor_surat;
-                document.getElementById('sptTglSurat').value = spt.tanggal_surat;
-                document.getElementById('sptDpa').value = spt.dpa_id;
-                document.getElementById('sptDasar').value = spt.dasar;
-                document.getElementById('sptMaksud').value = spt.maksud;
-                document.getElementById('sptBerangkat').value = spt.tempat_berangkat;
-                document.getElementById('sptTujuan').value = spt.tempat_tujuan;
-                document.getElementById('sptLama').value = spt.lama_hari;
-                document.getElementById('sptTglBerangkat').value = spt.tanggal_berangkat;
-                document.getElementById('sptTglKembali').value = spt.tanggal_kembali;
-                document.getElementById('sptAngkutan').value = spt.alat_angkutan;
-                document.getElementById('sptPegawai1').value = spt.pegawai_1_id;
-                document.getElementById('sptPegawai2').value = spt.pegawai_2_id || '';
-                document.getElementById('sptPegawai3').value = spt.pegawai_3_id || '';
-                
-                new bootstrap.Modal(document.getElementById('modalSpt')).show();
-            }
-        }
-
-        async function deleteSpt(id) {
-            if (!supabaseClient) return;
-            if(confirm('Yakin menghapus Surat Tugas ini? SPPD terkait juga akan terhapus.')) {
-                try {
-                    const { error } = await supabaseClient.from('surat_tugas').delete().eq('id', id);
-                    if (error) throw error;
-                    
-                    // Menarik data (reload) langsung dari database
-                    await loadSpt(true);
-                    
-                    Swal.fire('Terhapus!', '', 'success');
-                } catch (error) {
-                    Swal.fire('Gagal', error.message, 'error');
-                }
-            }
-        }
-
-        // --- CHART JS INIT ---
+        // --- INIT CHART JS ---
         function initChart() {
-            const ctx = document.getElementById('perjadinChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'],
-                    datasets: [{
-                        label: 'Jumlah SPPD',
-                        data: [2, 5, 3, 8, 4, 1, 0, 0, 0, 0, 0, 0], // Dummy Data
-                        backgroundColor: '#3498db',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' }
+            const ctx = document.getElementById('perjadinChart');
+            if(ctx) {
+                new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'],
+                        datasets: [{ label: 'Jumlah SPPD', data: [2, 5, 3, 8, 4, 1, 0, 0, 0, 0, 0, 0], backgroundColor: '#3498db', borderRadius: 4 }]
                     },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
+                    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+                });
+            }
         }
     </script>
 
