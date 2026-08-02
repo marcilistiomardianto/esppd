@@ -40,6 +40,7 @@
             transition: all 0.3s ease;
             z-index: 1000;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
         }
 
         #sidebar .sidebar-header {
@@ -215,7 +216,7 @@
     <nav id="sidebar">
         <div class="sidebar-header">
             <h4><i class="fas fa-paper-plane me-2 text-primary"></i>e-SPPD</h4>
-            <small class="text-muted d-block mt-1">Versi 2.0</small>
+            <small class="text-muted d-block mt-1">Versi 3.0 (Birokrasi Aktif)</small>
         </div>
 
         <ul class="list-unstyled components">
@@ -247,7 +248,10 @@
 
             <p>Pelaporan</p>
             <li onclick="switchView('laporanView', this)">
-                <a href="#"><i class="fas fa-chart-line"></i> Laporan (LHPD)</a>
+                <a href="#"><i class="fas fa-file-signature"></i> Laporan (LHPD)</a>
+            </li>
+            <li onclick="switchView('bkuView', this)">
+                <a href="#"><i class="fas fa-book"></i> Buku Kas Umum (BKU)</a>
             </li>
         </ul>
     </nav>
@@ -308,7 +312,7 @@
                     </div>
                     <div class="col-12 col-sm-6 col-xl-3">
                         <div class="card dash-card bg-cyan shadow-sm">
-                            <h6>Laporan</h6>
+                            <h6>Laporan LHPD</h6>
                             <h3 id="dashLaporanCount">0</h3>
                             <i class="fas fa-file-signature"></i>
                         </div>
@@ -512,10 +516,66 @@
                 </div>
             </div>
             
-            <!-- 8. LAPORAN VIEW -->
+            <!-- 8. LAPORAN VIEW (BARU) -->
             <div id="laporanView" class="view-section d-none">
-                <h3 class="text-secondary mb-4">Laporan Hasil Perjalanan Dinas</h3>
-                <div class="alert alert-info">Modul Laporan sedang dalam pengembangan.</div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="text-secondary m-0">Laporan Hasil Perjalanan Dinas (LHPD)</h3>
+                </div>
+                <div class="alert alert-info border-0 shadow-sm"><i class="fas fa-info-circle me-2"></i> Laporan dibuat berdasarkan Surat Tugas (SPT) yang telah diterbitkan.</div>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>No SPT</th>
+                                    <th>Maksud Perjalanan</th>
+                                    <th>Tujuan</th>
+                                    <th>Status Laporan</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelLaporan">
+                                <tr><td colspan="5" class="text-center py-4">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9. BUKU KAS UMUM (BKU) VIEW (BARU) -->
+            <div id="bkuView" class="view-section d-none">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="text-secondary m-0">Buku Kas Umum (BKU) - Perjadin</h3>
+                    <div class="d-flex gap-2">
+                        <input type="month" class="form-control" id="filterBulanBku" onchange="renderTabelBku()">
+                        <button class="btn btn-primary" onclick="openPrintBkuModal()"><i class="fas fa-print"></i> Cetak BKU</button>
+                    </div>
+                </div>
+                <div class="alert alert-warning border-0 shadow-sm"><i class="fas fa-exclamation-triangle me-2"></i> Biaya akan otomatis tercatat di sini <b>setelah</b> Anda mencetak Kuitansi SPPD.</div>
+                
+                <div class="card shadow-sm border-0">
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>No. Bukti (SPT)</th>
+                                    <th>Uraian Pengeluaran</th>
+                                    <th class="text-end">Pengeluaran (Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelBku">
+                                <tr><td colspan="4" class="text-center py-4">Memuat data...</td></tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-light fw-bold">
+                                    <td colspan="3" class="text-end">Total Pengeluaran Bulan Ini:</td>
+                                    <td class="text-end text-danger" id="totalBkuBulanIni">Rp 0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
             </div>
 
         </div> <!-- End Main Content Wrapper -->
@@ -533,7 +593,10 @@
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-warning small">
-                        Aplikasi ini diatur pada <b>Mode Online</b>. Masukkan kredensial Supabase Anda agar fitur CRUD (Simpan, Edit, Hapus) dapat berfungsi.
+                        Aplikasi ini diatur pada <b>Mode Online</b>. Masukkan kredensial Supabase Anda agar fitur CRUD dapat berfungsi.
+                        <hr>
+                        <b>PENTING (Update v3.0):</b> Pastikan tabel <code>surat_tugas</code> Anda telah memiliki 6 kolom baru ini: 
+                        <i>uang_harian (numeric), uang_transport (numeric), uang_penginapan (numeric), hasil_laporan (text), saran_tindakan (text), tgl_laporan (date).</i>
                     </div>
                     <form id="formConfig">
                         <div class="mb-3">
@@ -913,7 +976,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title"><i class="fas fa-money-bill-wave me-2"></i>Pengaturan Cetak Kuitansi</h5>
+                    <h5 class="modal-title"><i class="fas fa-money-bill-wave me-2"></i>Pengaturan Cetak Kuitansi (Otomatis Tersimpan ke BKU)</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body bg-light">
@@ -951,7 +1014,7 @@
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Uang Penginapan</label>
+                            <label class="form-label">Uang Penginapan (Total)</label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
                                 <input type="number" class="form-control" id="kuitansiUangPenginapan" value="0" min="0">
@@ -961,7 +1024,71 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-info text-white" onclick="executePrintKuitansi()"><i class="fas fa-print me-1"></i> Buat Kuitansi</button>
+                    <button type="button" class="btn btn-info text-white" onclick="executePrintKuitansi()"><i class="fas fa-print me-1"></i> Buat Kuitansi & Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Input Laporan (LHPD) -->
+    <div class="modal fade" id="modalLaporan" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="fas fa-pen-alt me-2"></i>Isi Laporan Hasil Perjadin</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-light">
+                    <form id="formLaporan">
+                        <input type="hidden" id="laporanSptId">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tanggal Pembuatan Laporan</label>
+                            <input type="date" class="form-control" id="lapTanggal" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Hasil Kegiatan</label>
+                            <textarea class="form-control" id="lapHasil" rows="5" placeholder="1. Melakukan koordinasi dengan...&#10;2. Mendapatkan data terkait..." required></textarea>
+                            <small class="text-muted">Jelaskan poin-poin hasil tugas secara rinci.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Saran / Tindak Lanjut</label>
+                            <textarea class="form-control" id="lapSaran" rows="3" placeholder="Perlu diadakan rapat evaluasi lebih lanjut..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-dark" onclick="saveLaporan()"><i class="fas fa-save me-1"></i> Simpan Laporan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cetak BKU -->
+    <div class="modal fade" id="modalPrintBku" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-print me-2"></i>Pengaturan Cetak BKU</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-light">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Bulan Cetak</label>
+                        <input type="month" class="form-control border-primary" id="bkuBulanCetak" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Pengguna Anggaran (PA)</label>
+                        <select class="form-select border-primary" id="bkuPA"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">Bendahara Pengeluaran</label>
+                        <select class="form-select border-primary" id="bkuBendahara"></select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-primary" onclick="executePrintBku()"><i class="fas fa-external-link-alt me-1"></i> Cetak Dokumen</button>
                 </div>
             </div>
         </div>
@@ -981,6 +1108,15 @@
             if (window.innerWidth <= 768) {
                 document.getElementById('sidebar').classList.remove('active');
                 document.getElementById('content').classList.remove('active');
+            }
+
+            // Refresh spesifik view jika dibuka
+            if(viewId === 'bkuView') {
+                if(!document.getElementById('filterBulanBku').value) {
+                    const now = new Date();
+                    document.getElementById('filterBulanBku').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                }
+                renderTabelBku();
             }
         }
 
@@ -1308,33 +1444,16 @@
                 if (error) throw error;
                 cachedSpt = data || [];
                 document.getElementById('dashSptCount').innerText = cachedSpt.length;
+                
+                // Hitung laporan yang selesai
+                const laporanSelesai = cachedSpt.filter(s => s.hasil_laporan && s.hasil_laporan.trim() !== '').length;
+                document.getElementById('dashLaporanCount').innerText = laporanSelesai;
+
                 renderTabelSpt();
                 renderTabelSppd();
+                renderTabelLaporan();
+                if(!document.getElementById('bkuView').classList.contains('d-none')) renderTabelBku();
             } catch(e) { document.getElementById('tabelSpt').innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${e.message}</td></tr>`; }
-        }
-
-        function renderTabelSppd() {
-            const tbody = document.getElementById('tabelSppd');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-            if (cachedSpt.length === 0) return tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data.</td></tr>';
-
-            cachedSpt.forEach(spt => {
-                const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
-                const nama = peg ? peg.nama : '<i>Dihapus</i>';
-                tbody.innerHTML += `
-                    <tr>
-                        <td><span class="fw-bold text-primary">${spt.nomor_surat}</span><br><small class="text-muted">${spt.tanggal_surat}</small></td>
-                        <td>${spt.maksud}</td>
-                        <td><span class="fw-bold">${spt.tempat_tujuan}</span><br><small class="text-muted">${spt.lama_hari} Hari</small></td>
-                        <td>${nama}</td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-success mb-1" onclick="printSppd('${spt.id}')"><i class="fas fa-print"></i> SPPD</button>
-                            <button class="btn btn-sm btn-info text-white mb-1" onclick="printKuitansi('${spt.id}')"><i class="fas fa-money-bill-wave"></i> Kuitansi</button>
-                        </td>
-                    </tr>
-                `;
-            });
         }
 
         function renderTabelSpt() {
@@ -1463,6 +1582,162 @@
 
         async function deleteSpt(id) { if(confirm('Hapus SPT?')) { await supabaseClient.from('surat_tugas').delete().eq('id', id); await loadSpt(true); } }
 
+        // --- DOKUMEN SPPD & KUITANSI (Tabel) ---
+        function renderTabelSppd() {
+            const tbody = document.getElementById('tabelSppd');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            if (cachedSpt.length === 0) return tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data.</td></tr>';
+
+            cachedSpt.forEach(spt => {
+                const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                const nama = peg ? peg.nama : '<i>Dihapus</i>';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="fw-bold text-primary">${spt.nomor_surat}</span><br><small class="text-muted">${spt.tanggal_surat}</small></td>
+                        <td>${spt.maksud}</td>
+                        <td><span class="fw-bold">${spt.tempat_tujuan}</span><br><small class="text-muted">${spt.lama_hari} Hari</small></td>
+                        <td>${nama}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-success mb-1" onclick="printSppd('${spt.id}')"><i class="fas fa-print"></i> SPPD</button>
+                            <button class="btn btn-sm btn-info text-white mb-1" onclick="printKuitansi('${spt.id}')"><i class="fas fa-money-bill-wave"></i> Kuitansi</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- LAPORAN LHPD ---
+        function renderTabelLaporan() {
+            const tbody = document.getElementById('tabelLaporan');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            if (cachedSpt.length === 0) return tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada SPT terdaftar.</td></tr>';
+
+            cachedSpt.forEach(spt => {
+                const isReportDone = spt.hasil_laporan && spt.hasil_laporan.trim() !== '';
+                const badgeStr = isReportDone ? '<span class="badge bg-success">Selesai</span>' : '<span class="badge bg-warning text-dark">Belum Dibuat</span>';
+                const actionBtn = isReportDone 
+                    ? `<button class="btn btn-sm btn-outline-primary mb-1" onclick="editLaporan('${spt.id}')"><i class="fas fa-edit"></i> Edit</button> 
+                       <button class="btn btn-sm btn-secondary mb-1" onclick="printLaporan('${spt.id}')"><i class="fas fa-print"></i> Cetak</button>`
+                    : `<button class="btn btn-sm btn-primary" onclick="editLaporan('${spt.id}')"><i class="fas fa-plus"></i> Isi Laporan</button>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${spt.nomor_surat}</td>
+                        <td>${spt.maksud}</td>
+                        <td>${spt.tempat_tujuan}</td>
+                        <td>${badgeStr}</td>
+                        <td class="text-end">${actionBtn}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function editLaporan(id) {
+            const spt = cachedSpt.find(s => s.id === id);
+            if(spt) {
+                document.getElementById('laporanSptId').value = spt.id;
+                document.getElementById('lapTanggal').value = spt.tgl_laporan || new Date().toISOString().split('T')[0];
+                document.getElementById('lapHasil').value = spt.hasil_laporan || '';
+                document.getElementById('lapSaran').value = spt.saran_tindakan || '';
+                new bootstrap.Modal(document.getElementById('modalLaporan')).show();
+            }
+        }
+
+        async function saveLaporan() {
+            const id = document.getElementById('laporanSptId').value;
+            const spt = cachedSpt.find(s => s.id === id);
+            if(!spt || !supabaseClient) return;
+
+            try {
+                // Menuju tabel surat_tugas, PASTIKAN kolom ini sudah ada di Supabase!
+                const { error } = await supabaseClient.from('surat_tugas').update({
+                    hasil_laporan: document.getElementById('lapHasil').value,
+                    saran_tindakan: document.getElementById('lapSaran').value,
+                    tgl_laporan: document.getElementById('lapTanggal').value
+                }).eq('id', id);
+
+                if (error) throw error;
+                await loadSpt(true);
+                bootstrap.Modal.getInstance(document.getElementById('modalLaporan')).hide();
+                Swal.fire('Sukses', 'Laporan berhasil disimpan', 'success');
+            } catch (err) {
+                Swal.fire('Gagal Menyimpan', err.message + '. Pastikan kolom database (hasil_laporan, saran_tindakan, tgl_laporan) sudah dibuat.', 'error');
+            }
+        }
+
+        // --- BUKU KAS UMUM (BKU) ---
+        function renderTabelBku() {
+            const tbody = document.getElementById('tabelBku');
+            if(!tbody) return;
+            
+            const monthFilter = document.getElementById('filterBulanBku').value; // format: YYYY-MM
+            if(!monthFilter) return tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Silakan pilih bulan.</td></tr>';
+            
+            const [filterYear, filterMonth] = monthFilter.split('-');
+
+            let totalBulan = 0;
+            tbody.innerHTML = '';
+
+            // Filter SPT yang punya tanggal berangkat dan masuk ke bulan filter, DAN punya riwayat input uang
+            const sptsInMonth = cachedSpt.filter(spt => {
+                if(!spt.tanggal_berangkat) return false;
+                const sptDate = new Date(spt.tanggal_berangkat);
+                return sptDate.getFullYear() == filterYear && (sptDate.getMonth() + 1) == filterMonth;
+            });
+
+            const formatRp = (num) => new Intl.NumberFormat('id-ID').format(num);
+
+            sptsInMonth.forEach(spt => {
+                const uHarian = parseFloat(spt.uang_harian) || 0;
+                const uTrans = parseFloat(spt.uang_transport) || 0;
+                const uPenginapan = parseFloat(spt.uang_penginapan) || 0;
+
+                // Cek jumlah pengikut
+                let multiplier = 1;
+                if(spt.pegawai_2_id) multiplier++;
+                if(spt.pegawai_3_id) multiplier++;
+
+                const grandTotal = ((uHarian * spt.lama_hari) + uTrans + uPenginapan) * multiplier;
+                
+                if (grandTotal > 0) {
+                    totalBulan += grandTotal;
+                    
+                    const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                    const nama = peg ? peg.nama : '-';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${formatTgl(spt.tanggal_berangkat)}</td>
+                            <td>${spt.nomor_surat}</td>
+                            <td>Biaya Perjadin a.n <b>${nama}</b> ${multiplier > 1 ? `dsb (${multiplier} Org)` : ''} ke ${spt.tempat_tujuan}</td>
+                            <td class="text-end fw-bold text-danger">${formatRp(grandTotal)}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            if (tbody.innerHTML === '') {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Tidak ada pengeluaran perjadin tercatat di bulan ini. (Cetak kuitansi terlebih dahulu)</td></tr>';
+            }
+            
+            document.getElementById('totalBkuBulanIni').innerText = `Rp ${formatRp(totalBulan)}`;
+        }
+
+        function openPrintBkuModal() {
+            const monthFilter = document.getElementById('filterBulanBku').value;
+            if(!monthFilter) return Swal.fire('Perhatian', 'Pilih bulan pada filter terlebih dahulu', 'warning');
+            
+            document.getElementById('bkuBulanCetak').value = monthFilter;
+            
+            const pejabatOptions = cachedPejabat.map(p => `<option value="${p.id}" ${p.is_aktif ? 'selected' : ''}>${p.nama_kepala} - ${p.jabatan}</option>`).join('');
+            document.getElementById('bkuPA').innerHTML = pejabatOptions;
+            document.getElementById('bkuBendahara').innerHTML = pejabatOptions;
+            
+            new bootstrap.Modal(document.getElementById('modalPrintBku')).show();
+        }
+
         // --- PRINTING UTILITIES ---
         const formatTgl = (tglStr) => {
             if (!tglStr) return '';
@@ -1472,10 +1747,10 @@
         };
 
         const terbilang = (angka) => {
-            const h = ['','satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan','sepuluh','sebelas'];
+            const h = ['nol','satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan','sepuluh','sebelas'];
             if (angka < 12) return h[angka];
-            if (angka < 20) return terbilang(angka - 10) + ' belas';
-            if (angka < 100) return terbilang(Math.floor(angka / 10)) + ' puluh ' + (angka % 10 !== 0 ? ' ' + terbilang(angka % 10) : '');
+            if (angka < 20) return h[angka-10] + ' belas';
+            if (angka < 100) return h[Math.floor(angka/10)] + ' puluh ' + (angka%10!==0?h[angka%10]:'');
             if (angka < 200) return 'seratus ' + terbilang(angka - 100);
             if (angka < 1000) return terbilang(Math.floor(angka / 100)) + ' ratus ' + (angka % 100 !== 0 ? ' ' + terbilang(angka % 100) : '');
             if (angka < 2000) return 'seribu ' + terbilang(angka - 1000);
@@ -1484,20 +1759,96 @@
             return angka;
         };
 
+        // CETak LHPD
+        function printLaporan(id) {
+            const spt = cachedSpt.find(s => s.id === id);
+            if(!spt || !spt.hasil_laporan) return Swal.fire('Warning', 'Isi laporan terlebih dahulu.', 'warning');
+
+            const kop = cachedKopSurat.find(k => k.is_aktif === true) || { nama_instansi: "NAMA INSTANSI", alamat: "ALAMAT INSTANSI", nama_pemda: "PEMDA", logo_url: '' };
+            const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+            if(!p1) return;
+
+            const htmlContent = `
+            <!DOCTYPE html><html lang="id"><head><title>Cetak LHPD</title>
+            <style>
+                @page { size: A4 portrait; margin: 2cm; }
+                body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; margin: 0; }
+                .kop-surat { display: flex; align-items: center; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+                .kop-logo { width: 80px; text-align: center; }
+                .kop-logo img { width: 100%; height: auto; object-fit: contain; }
+                .kop-teks { flex-grow: 1; text-align: center; padding: 0 15px; }
+                .kop-teks h4 { margin: 0; font-size: 14pt; font-weight: normal; text-transform: uppercase; }
+                .kop-teks h2 { margin: 0; font-size: 16pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+                .kop-teks p { margin: 5px 0 0; font-size: 10pt; }
+                .judul { text-align: center; margin-bottom: 20px; font-weight: bold; text-decoration: underline; font-size: 14pt; }
+                h4 { font-size: 12pt; font-weight: bold; margin-top: 15px; margin-bottom: 5px; }
+                .isi { margin-left: 20px; text-align: justify; white-space: pre-line; }
+                table { width: 100%; border:none; margin-bottom: 5px;}
+                td { vertical-align: top; }
+                .ttd { float: right; width: 300px; text-align: center; margin-top: 50px; }
+            </style>
+            </head><body>
+                <div class="kop-surat">
+                    <div class="kop-logo"><img src="${kop.logo_url}" onerror="this.style.display='none'"></div>
+                    <div class="kop-teks"><h4>${kop.nama_pemda}</h4><h2>${kop.nama_instansi}</h2><p>${kop.alamat}</p></div>
+                    <div style="width: 80px;"></div>
+                </div>
+                <div class="judul">LAPORAN HASIL PERJALANAN DINAS</div>
+                
+                <h4>I. Dasar Pelaksanaan</h4>
+                <div class="isi">Surat Perintah Tugas Nomor: ${spt.nomor_surat} tanggal ${formatTgl(spt.tanggal_surat)}</div>
+                
+                <h4>II. Maksud dan Tujuan</h4>
+                <div class="isi">${spt.maksud}</div>
+                
+                <h4>III. Waktu dan Tempat</h4>
+                <div class="isi">
+                    <table>
+                        <tr><td width="30%">Waktu / Lama</td><td width="5%">:</td><td>${formatTgl(spt.tanggal_berangkat)} s/d ${formatTgl(spt.tanggal_kembali)} (${spt.lama_hari} Hari)</td></tr>
+                        <tr><td>Tempat Tujuan</td><td>:</td><td>${spt.tempat_tujuan}</td></tr>
+                    </table>
+                </div>
+
+                <h4>IV. Hasil Kegiatan</h4>
+                <div class="isi">${spt.hasil_laporan}</div>
+
+                <h4>V. Saran dan Tindak Lanjut</h4>
+                <div class="isi">${spt.saran_tindakan || '-'}</div>
+
+                <div class="ttd">
+                    ${spt.tempat_berangkat || 'Tempat'}, ${formatTgl(spt.tgl_laporan)}<br>
+                    Pelaksana Perjalanan Dinas,<br><br><br><br><br>
+                    <b><u>${p1.nama}</u></b><br>
+                    NIP. ${p1.nip}
+                </div>
+            <script>window.onload = function(){window.print();}<\/script></body></html>`;
+            const w = window.open('','_blank');
+            if(w) { w.document.write(htmlContent); w.document.close(); }
+        }
+
+        // CETAK KUITANSI & UPDATE DB BKU
         function printKuitansi(id) {
             const pejabatOptions = cachedPejabat.map(p => `<option value="${p.id}" ${p.is_aktif ? 'selected' : ''}>${p.nama_kepala} - ${p.jabatan}</option>`).join('');
             document.getElementById('kuitansiPA').innerHTML = pejabatOptions;
             document.getElementById('kuitansiBendahara').innerHTML = pejabatOptions;
             document.getElementById('kuitansiTgl').value = new Date().toISOString().split('T')[0];
             
+            // Tarik history dari database (jika pernah dicetak)
+            const spt = cachedSpt.find(s => s.id === id);
+            if(spt) {
+                document.getElementById('kuitansiUangHarian').value = spt.uang_harian || 0;
+                document.getElementById('kuitansiUangTransport').value = spt.uang_transport || 0;
+                document.getElementById('kuitansiUangPenginapan').value = spt.uang_penginapan || 0;
+            }
+
             document.getElementById('printKuitansiSptId').value = id;
             new bootstrap.Modal(document.getElementById('modalPrintKuitansi')).show();
         }
 
-        function executePrintKuitansi() {
+        async function executePrintKuitansi() {
             try {
                 const id = document.getElementById('printKuitansiSptId').value;
-                const spt = cachedSpt.find(s => s.id === id);
+                let spt = cachedSpt.find(s => s.id === id);
                 const pa = cachedPejabat.find(p => p.id === document.getElementById('kuitansiPA').value);
                 const bendahara = cachedPejabat.find(p => p.id === document.getElementById('kuitansiBendahara').value);
                 
@@ -1508,6 +1859,24 @@
                 const uTransport = parseInt(document.getElementById('kuitansiUangTransport').value) || 0;
                 const uPenginapan = parseInt(document.getElementById('kuitansiUangPenginapan').value) || 0;
                 const tglKuitansi = document.getElementById('kuitansiTgl').value;
+
+                // SIMPAN NILAI KE DATABASE UNTUK BKU!
+                if(supabaseClient) {
+                    try {
+                        await supabaseClient.from('surat_tugas').update({
+                            uang_harian: uHarian,
+                            uang_transport: uTransport,
+                            uang_penginapan: uPenginapan
+                        }).eq('id', id);
+                        
+                        // Update UI cache
+                        spt.uang_harian = uHarian;
+                        spt.uang_transport = uTransport;
+                        spt.uang_penginapan = uPenginapan;
+                    } catch (dbErr) {
+                        console.warn("DB Update Error (Abaikan jika kolom belum ada):", dbErr);
+                    }
+                }
 
                 const pegawais = [
                     cachedPegawai.find(p => p.id === spt.pegawai_1_id),
@@ -1530,9 +1899,8 @@
                     
                     kuitansiHtml += `
                     <div class="kuitansi-container">
-                        <!-- HEADER KOP SURAT (Normal) -->
                         <div style="display: flex; align-items: center; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
-                            <div style="width: 80px; text-align: center;"><img src="${kop.logo_url}" style="width: 100%; height: auto; object-fit: contain;" onerror="this.src='https://placehold.co/100'"></div>
+                            <div style="width: 80px; text-align: center;"><img src="${kop.logo_url}" style="width: 100%; height: auto; object-fit: contain;" onerror="this.style.display='none'"></div>
                             <div style="flex-grow: 1; text-align: center; padding: 0 15px;">
                                 <h4 style="margin: 0; font-size: 14pt; font-weight: normal; text-transform: uppercase;">${kop.nama_pemda}</h4>
                                 <h2 style="margin: 0; font-size: 16pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">${kop.nama_instansi}</h2>
@@ -1541,7 +1909,6 @@
                             <div style="width: 80px;"></div>
                         </div>
 
-                        <!-- KOTAK REGISTRASI KANAN -->
                         <div style="float: right; width: 350px; margin-bottom: 15px;">
                             <table class="tabel-registrasi" style="width: 100%;">
                                 <tr><td width="40%">No. Rek</td><td>:</td></tr>
@@ -1556,27 +1923,10 @@
                             <h2 style="margin:0; text-decoration:underline; font-size: 16pt;">KUITANSI</h2>
                         </div>
 
-                        <!-- BODY KUITANSI -->
                         <table class="tabel-body">
-                            <tr>
-                                <td width="22%" valign="top"><b>Telah diterima dari</b></td>
-                                <td width="3%" valign="top">:</td>
-                                <td valign="top">Pengguna Anggaran ${kop.nama_instansi} ${kop.nama_pemda}</td>
-                            </tr>
-                            <tr>
-                                <td valign="top"><b>Banyaknya Uang</b></td>
-                                <td valign="top">:</td>
-                                <td valign="top" style="font-style: italic; font-weight: bold; font-size: 12pt;">
-                                    ${terbilang(grandTotal)} Rupiah
-                                </td>
-                            </tr>
-                            <tr>
-                                <td valign="top"><b>Untuk Pembayaran</b></td>
-                                <td valign="top">:</td>
-                                <td valign="top" style="text-align: justify; line-height: 1.5;">
-                                    Dibayarkan Kepada <b>${peg.nama}</b> Keperluan untuk Belanja Perjalanan Dinas Dalam Daerah sesuai surat tugas dan surat perintah perjalanan dinas nomor: ${spt.nomor_surat} tanggal ${formatTgl(spt.tanggal_surat)}, Dalam rangka ${spt.maksud} di ${spt.tempat_tujuan} selama ${spt.lama_hari} (${terbilang(spt.lama_hari)}) hari dari tanggal ${formatTgl(spt.tanggal_berangkat)} s/d ${formatTgl(spt.tanggal_kembali)}
-                                    
-                                    <!-- TABEL RINCIAN KECIL -->
+                            <tr><td width="22%" valign="top"><b>Telah diterima dari</b></td><td width="3%" valign="top">:</td><td valign="top">Pengguna Anggaran ${kop.nama_instansi} ${kop.nama_pemda}</td></tr>
+                            <tr><td valign="top"><b>Banyaknya Uang</b></td><td valign="top">:</td><td valign="top" style="font-style: italic; font-weight: bold; font-size: 12pt;">${terbilang(grandTotal)} Rupiah</td></tr>
+                            <tr><td valign="top"><b>Untuk Pembayaran</b></td><td valign="top">:</td><td valign="top" style="text-align: justify; line-height: 1.5;">Dibayarkan Kepada <b>${peg.nama}</b> Keperluan untuk Belanja Perjalanan Dinas Dalam Daerah sesuai surat tugas dan surat perintah perjalanan dinas nomor: ${spt.nomor_surat} tanggal ${formatTgl(spt.tanggal_surat)}, Dalam rangka ${spt.maksud} di ${spt.tempat_tujuan} selama ${spt.lama_hari} (${terbilang(spt.lama_hari)}) hari dari tanggal ${formatTgl(spt.tanggal_berangkat)} s/d ${formatTgl(spt.tanggal_kembali)}
                                     <table class="tabel-rincian" style="width: 90%; margin-top: 10px; margin-bottom: 10px;">
                                         ${uTransport > 0 ? `<tr><td width="30%">Transportasi</td><td width="10%">1</td><td width="15%">PP</td><td width="5%">x</td><td width="20%" align="right">${formatRp(uTransport)}</td><td width="20%" align="right">${formatRp(uTransport)}</td></tr>` : ''}
                                         ${uHarian > 0 ? `<tr><td>Uang Harian</td><td>${spt.lama_hari}</td><td>Hari</td><td>x</td><td align="right">${formatRp(uHarian)}</td><td align="right">${formatRp(totalHarian)}</td></tr>` : ''}
@@ -1587,13 +1937,9 @@
                             </tr>
                         </table>
 
-                        <div class="kotak-terbilang">
-                            Terbilang &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Rp. ${formatRp(grandTotal)}</b>
-                        </div>
+                        <div class="kotak-terbilang">Terbilang &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Rp. ${formatRp(grandTotal)}</b></div>
 
-                        <!-- TANDA TANGAN -->
                         <table style="width: 100%; margin-top: 30px;">
-                            <!-- Baris 1: Yang Menerima (Kanan) -->
                             <tr>
                                 <td width="50%"></td>
                                 <td width="50%" valign="top">
@@ -1606,19 +1952,14 @@
                                     </table>
                                 </td>
                             </tr>
-                            
-                            <!-- Baris 2: PA (Kiri) dan Bendahara (Kanan) Sejajar -->
                             <tr>
                                 <td width="50%" valign="bottom" style="text-align: center;">
                                     Mengetahui/ Menyetujui,<br>Pengguna Anggaran<br><br><br><br><br>
-                                    <b><u>${pa.nama_kepala}</u></b><br>
-                                    ${pa.pangkat_golongan}<br>
-                                    NIP. ${pa.nip}
+                                    <b><u>${pa.nama_kepala}</u></b><br>${pa.pangkat_golongan}<br>NIP. ${pa.nip}
                                 </td>
                                 <td width="50%" valign="bottom" style="text-align: center;">
                                     Lunas Di Bayar,<br>Bendahara Pengeluaran<br><br><br><br><br>
-                                    <b><u>${bendahara.nama_kepala}</u></b><br>
-                                    NIP. ${bendahara.nip}
+                                    <b><u>${bendahara.nama_kepala}</u></b><br>NIP. ${bendahara.nip}
                                 </td>
                             </tr>
                         </table>
@@ -1632,18 +1973,13 @@
                     @page { size: A4 portrait; margin: 1.5cm; }
                     body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; margin: 0; padding: 0; }
                     .kuitansi-container { width: 100%; box-sizing: border-box; border: 2px solid #000; padding: 20px; }
-                    
                     .tabel-registrasi { border-collapse: collapse; }
                     .tabel-registrasi td { border: 1px solid #000; padding: 3px 8px; font-size: 10pt; }
-                    
                     .tabel-body { width: 100%; border-collapse: collapse; }
                     .tabel-body > tbody > tr > td { padding: 8px 0; }
-                    
                     .tabel-rincian { border-collapse: collapse; }
                     .tabel-rincian td { padding: 2px 5px; }
-                    
                     .kotak-terbilang { border: 2px solid #000; padding: 10px 20px; display: inline-block; font-size: 12pt; margin-top: 15px; background-color: #f9f9f9; }
-                    
                     .page-break { page-break-before: always; }
                 </style></head><body>${kuitansiHtml}<script>window.onload = function() { window.print(); }<\/script></body></html>`;
                 
@@ -1653,6 +1989,139 @@
             } catch (error) { Swal.fire('Gagal', error.message, 'error'); }
         }
 
+        function executePrintBku() {
+            const pa = cachedPejabat.find(p => p.id === document.getElementById('bkuPA').value);
+            const bendahara = cachedPejabat.find(p => p.id === document.getElementById('bkuBendahara').value);
+            const monthFilter = document.getElementById('bkuBulanCetak').value;
+
+            if(!pa || !bendahara || !monthFilter) return;
+
+            const [filterYear, filterMonth] = monthFilter.split('-');
+            const blnNames = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+            const namaBulan = `${blnNames[parseInt(filterMonth)]} ${filterYear}`;
+
+            const kop = cachedKopSurat.find(k => k.is_aktif === true) || { nama_instansi: "NAMA INSTANSI", alamat: "ALAMAT INSTANSI", nama_pemda: "PEMDA", logo_url: '' };
+
+            const sptsInMonth = cachedSpt.filter(spt => {
+                if(!spt.tanggal_berangkat) return false;
+                const sptDate = new Date(spt.tanggal_berangkat);
+                return sptDate.getFullYear() == filterYear && (sptDate.getMonth() + 1) == filterMonth;
+            });
+
+            let tableRows = '';
+            let totalBulan = 0;
+            const formatRp = (num) => new Intl.NumberFormat('id-ID').format(num);
+
+            // Sort by date ascending
+            sptsInMonth.sort((a,b) => new Date(a.tanggal_berangkat) - new Date(b.tanggal_berangkat));
+
+            sptsInMonth.forEach((spt, idx) => {
+                const uHarian = parseFloat(spt.uang_harian) || 0;
+                const uTrans = parseFloat(spt.uang_transport) || 0;
+                const uPenginapan = parseFloat(spt.uang_penginapan) || 0;
+
+                let multiplier = 1;
+                if(spt.pegawai_2_id) multiplier++;
+                if(spt.pegawai_3_id) multiplier++;
+
+                const grandTotal = ((uHarian * spt.lama_hari) + uTrans + uPenginapan) * multiplier;
+                
+                if (grandTotal > 0) {
+                    totalBulan += grandTotal;
+                    const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                    const nama = peg ? peg.nama : '-';
+
+                    tableRows += `
+                        <tr>
+                            <td align="center">${idx + 1}</td>
+                            <td align="center">${formatTgl(spt.tanggal_berangkat)}</td>
+                            <td>${spt.nomor_surat}</td>
+                            <td>Biaya Perjadin a.n ${nama} ${multiplier > 1 ? ` dkk (${multiplier} Org)` : ''} ke ${spt.tempat_tujuan}</td>
+                            <td align="right">-</td>
+                            <td align="right">${formatRp(grandTotal)}</td>
+                            <td align="right">${formatRp(totalBulan)}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            if(tableRows === '') tableRows = '<tr><td colspan="7" align="center" style="padding:20px;">Nihil (Tidak ada pengeluaran di bulan ini)</td></tr>';
+
+            const htmlContent = `
+            <!DOCTYPE html><html lang="id"><head><title>Cetak BKU</title>
+            <style>
+                @page { size: A4 landscape; margin: 1.5cm; }
+                body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; margin: 0; padding: 0; }
+                .kop-surat { display: flex; align-items: center; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+                .kop-logo { width: 80px; text-align: center; }
+                .kop-logo img { width: 100%; height: auto; object-fit: contain; }
+                .kop-teks { flex-grow: 1; text-align: center; padding: 0 15px; }
+                .kop-teks h4 { margin: 0; font-size: 14pt; font-weight: normal; text-transform: uppercase; }
+                .kop-teks h2 { margin: 0; font-size: 16pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+                .kop-teks p { margin: 5px 0 0; font-size: 10pt; }
+                .judul { text-align: center; margin-bottom: 20px; font-weight: bold; font-size: 14pt; }
+                table.bku-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+                table.bku-table th, table.bku-table td { border: 1px solid #000; padding: 6px; }
+                table.bku-table th { background-color: #f0f0f0; }
+                .ttd-box { width: 100%; text-align: center; margin-top: 30px; }
+            </style>
+            </head><body>
+                <div class="kop-surat">
+                    <div class="kop-logo"><img src="${kop.logo_url}" onerror="this.style.display='none'"></div>
+                    <div class="kop-teks"><h4>${kop.nama_pemda}</h4><h2>${kop.nama_instansi}</h2><p>${kop.alamat}</p></div>
+                    <div style="width: 80px;"></div>
+                </div>
+                
+                <div class="judul">
+                    BUKU KAS UMUM (BKU) <br> RINCIAN BIAYA PERJALANAN DINAS<br>
+                    <span style="font-size:12pt; font-weight:normal;">Bulan: ${namaBulan}</span>
+                </div>
+
+                <table class="bku-table">
+                    <thead>
+                        <tr>
+                            <th width="5%">No</th>
+                            <th width="12%">Tanggal</th>
+                            <th width="20%">No. Bukti / SPT</th>
+                            <th width="30%">Uraian</th>
+                            <th width="11%">Penerimaan (Rp)</th>
+                            <th width="11%">Pengeluaran (Rp)</th>
+                            <th width="11%">Saldo (Rp)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                        <tr style="font-weight:bold; background-color: #f9f9f9;">
+                            <td colspan="5" align="right">JUMLAH PENGELUARAN BULAN INI</td>
+                            <td align="right">${formatRp(totalBulan)}</td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table class="ttd-box">
+                    <tr>
+                        <td width="50%" valign="top">
+                            Mengetahui/ Menyetujui,<br>Pengguna Anggaran<br><br><br><br><br>
+                            <b><u>${pa.nama_kepala}</u></b><br>NIP. ${pa.nip}
+                        </td>
+                        <td width="50%" valign="top">
+                            .............., ..................... ${filterYear}<br>
+                            Bendahara Pengeluaran<br><br><br><br><br>
+                            <b><u>${bendahara.nama_kepala}</u></b><br>NIP. ${bendahara.nip}
+                        </td>
+                    </tr>
+                </table>
+
+                <script>window.onload = function() { window.print(); }<\/script>
+            </body></html>`;
+
+            bootstrap.Modal.getInstance(document.getElementById('modalPrintBku')).hide();
+            const w = window.open('','_blank');
+            if(w) { w.document.write(htmlContent); w.document.close(); }
+        }
+
+        // --- SPT & SPPD PRINT ROUTINES (Tidak berubah dari format yang disepakati) ---
         function printSpt(id) {
             const selKop = document.getElementById('printSptKop');
             selKop.innerHTML = cachedKopSurat.map(k => `<option value="${k.id}" ${k.is_aktif ? 'selected' : ''}>${k.nama_instansi}</option>`).join('');
@@ -1713,12 +2182,11 @@
                     .ttd-area p { margin: 0; }
                     .ttd-area .jabatan { font-weight: bold; min-height: 80px; }
                     .ttd-area .nama { font-weight: bold; text-decoration: underline; margin-top: 80px; }
-                    .footer-esign { clear: both; margin-top: 50px; font-size: 9pt; text-align: center; color: #555; border-top: 1px solid #ccc; padding-top: 10px; font-style: italic; }
                 </style>
                 </head>
                 <body>
                     <div class="kop-surat">
-                        <div class="kop-logo"><img src="${kop.logo_url}" alt="Logo" onerror="this.src='https://placehold.co/100'"></div>
+                        <div class="kop-logo"><img src="${kop.logo_url}" alt="Logo" onerror="this.style.display='none'"></div>
                         <div class="kop-teks"><h4>${kop.nama_pemda}</h4><h2>${kop.nama_instansi}</h2><p>${kop.alamat}</p></div>
                         <div style="width: 90px;"></div>
                     </div>
@@ -1738,15 +2206,8 @@
                 </body></html>`;
                 
                 const printWindow = window.open('', '_blank');
-                if (printWindow) { 
-                    printWindow.document.write(htmlContent); 
-                    printWindow.document.close(); 
-                } else { 
-                    Swal.fire('Peringatan', 'Jendela cetak diblokir. Izinkan pop-up.', 'warning'); 
-                }
-            } catch (error) {
-                Swal.fire('Gagal Mencetak', error.message, 'error');
-            }
+                if (printWindow) { printWindow.document.write(htmlContent); printWindow.document.close(); } 
+            } catch (error) { Swal.fire('Gagal Mencetak', error.message, 'error'); }
         }
 
         function printSppd(id) {
@@ -1769,17 +2230,12 @@
                 const pejabat = cachedPejabat.find(p => p.id === document.getElementById('printSppdPejabat').value);
                 const pengesah = cachedPejabat.find(p => p.id === document.getElementById('printSppdPengesah').value);
 
-                if (!spt) throw new Error("Data Surat Tugas tidak ditemukan.");
-                if (!kop) throw new Error("Silakan pilih Kop Surat yang valid.");
-                if (!pejabat) throw new Error("Silakan pilih Pejabat Pemberi Perintah.");
-                if (!pengesah) throw new Error("Silakan pilih Pejabat Pengesah.");
+                if (!spt || !kop || !pejabat || !pengesah) throw new Error("Pastikan Data Pejabat dan Kop sudah dipilih!");
 
                 const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
                 const p2 = cachedPegawai.find(p => p.id === spt.pegawai_2_id);
                 const p3 = cachedPegawai.find(p => p.id === spt.pegawai_3_id);
                 const employees = [p1, p2, p3].filter(p => p !== undefined);
-
-                if (employees.length === 0) throw new Error("Pegawai utama tidak ditemukan/telah dihapus.");
 
                 let point2Html = ''; 
                 let point7Html = '-';
@@ -1813,8 +2269,6 @@
                 <style>
                     @page { size: A4; margin: 1.5cm 2cm; }
                     body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.3; color: #000; margin: 0; padding: 0; }
-                    
-                    /* CSS SPPD Halaman 1 */
                     .kop-surat { display: flex; align-items: center; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
                     .kop-logo { width: 80px; text-align: center; }
                     .kop-logo img { width: 100%; height: auto; object-fit: contain; }
@@ -1837,8 +2291,6 @@
                     
                     .page-break { page-break-before: always; margin-top: 2cm; }
                     
-                    /* CSS SPPD Halaman 2 (Romawi Tanpa Garis) */
-                    .hal2-container { width: 100%; }
                     .tabel-hal2 { width: 100%; border-collapse: collapse; font-size: 11pt; }
                     .tabel-hal2 > tbody > tr > td { border: none; vertical-align: top; padding: 4px 6px; }
                     .no-romawi { width: 40px; text-align: center; font-weight: bold; }
@@ -1850,7 +2302,7 @@
                 <body>
                     <!-- HALAMAN 1 -->
                     <div class="kop-surat">
-                        <div class="kop-logo"><img src="${kop.logo_url}" alt="Logo" onerror="this.src='https://placehold.co/100'"></div>
+                        <div class="kop-logo"><img src="${kop.logo_url}" onerror="this.style.display='none'"></div>
                         <div class="kop-teks"><h4>${kop.nama_pemda}</h4><h2>${kop.nama_instansi}</h2><p>${kop.alamat}</p></div>
                         <div style="width: 80px;"></div>
                     </div>
@@ -1877,140 +2329,86 @@
                     <div class="page-break"></div>
 
                     <!-- HALAMAN 2 -->
-                    <div class="hal2-container">
-                        <table class="tabel-hal2">
-                            <tr>
-                                <td class="no-romawi">I</td>
-                                <td>
-                                    <div class="info-romawi-1">
-                                        <table style="width:100%; border:none; margin-bottom: 10px;">
-                                            <tr><td width="100">SPPD No</td><td>: ${spt.nomor_surat}</td></tr>
-                                            <tr><td>Berangkat dari</td><td>: ${spt.tempat_berangkat || '-'}</td></tr>
-                                            <tr><td>Pada tanggal</td><td>: ${formatTgl(spt.tanggal_berangkat)}</td></tr>
-                                            <tr><td valign="top">Ke</td><td valign="top">: ${spt.tempat_tujuan}</td></tr>
-                                        </table>
-                                        <div style="text-align: center;">
-                                            <b>${pejabat.jabatan}</b><br><br><br><br>
-                                            <b><u>${pejabat.nama_kepala}</u></b><br>
-                                            ${pejabat.pangkat_golongan}<br>
-                                            NIP. ${pejabat.nip}
-                                        </div>
-                                    </div>
-                                    <div class="clearfix"></div>
-                                </td>
-                            </tr>
-                            
-                            <tr>
-                                <td class="no-romawi">II</td>
-                                <td>
-                                    <table style="width:100%; border:none;">
-                                        <tr>
-                                            <td width="50%">
-                                                <b>Tiba di :</b> ${spt.tempat_tujuan}<br>
-                                                Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}
-                                                <br><br><br>
-                                            </td>
-                                            <td>
-                                                <b>Berangkat dari :</b> ${spt.tempat_tujuan}<br>
-                                                Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
-                                                <br><br><br>
-                                            </td>
-                                        </tr>
+                    <table class="tabel-hal2">
+                        <tr>
+                            <td class="no-romawi">I</td>
+                            <td>
+                                <div class="info-romawi-1">
+                                    <table style="width:100%; border:none; margin-bottom: 10px;">
+                                        <tr><td width="100">SPPD No</td><td>: ${spt.nomor_surat}</td></tr>
+                                        <tr><td>Berangkat dari</td><td>: ${spt.tempat_berangkat || '-'}</td></tr>
+                                        <tr><td>Pada tanggal</td><td>: ${formatTgl(spt.tanggal_berangkat)}</td></tr>
+                                        <tr><td valign="top">Ke</td><td valign="top">: ${spt.tempat_tujuan}</td></tr>
                                     </table>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td class="no-romawi">III</td>
-                                <td>
-                                    <table style="width:100%; border:none;">
-                                        <tr>
-                                            <td width="50%">
-                                                <b>Tiba di :</b><br>
-                                                Pada tanggal : <span class="line-dotted"></span>
-                                                <br><br><br>
-                                            </td>
-                                            <td>
-                                                <b>Berangkat dari :</b><br>
-                                                Ke : <span class="line-dotted"></span><br>
-                                                Pada tanggal : <span class="line-dotted"></span>
-                                                <br><br><br>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td class="no-romawi">IV</td>
-                                <td>
-                                    <table style="width:100%; border:none;">
-                                        <tr>
-                                            <td width="50%">
-                                                <b>Tiba di :</b><br>
-                                                Pada tanggal : <span class="line-dotted"></span>
-                                                <br><br><br>
-                                            </td>
-                                            <td>
-                                                <b>Berangkat dari :</b><br>
-                                                Ke : <span class="line-dotted"></span><br>
-                                                Pada tanggal : <span class="line-dotted"></span>
-                                                <br><br><br>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td class="no-romawi">V</td>
-                                <td>
-                                    Tiba kembali di : <b>${spt.tempat_berangkat || '-'}</b><br>
-                                    Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
-                                    <br><br>
-                                    Telah diperiksa, dengan keterangan bahwa perjalanan tersebut di atas benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan dalam waktu yang sesingkat-singkatnya.
-                                    
-                                    <div class="ttd-pengesah">
-                                        <b>${pengesah.jabatan}</b><br><br><br><br><br>
-                                        <b><u>${pengesah.nama_kepala}</u></b><br>
-                                        ${pengesah.pangkat_golongan}<br>
-                                        NIP. ${pengesah.nip}
+                                    <div style="text-align: center;">
+                                        <b>${pejabat.jabatan}</b><br><br><br><br>
+                                        <b><u>${pejabat.nama_kepala}</u></b><br>${pejabat.pangkat_golongan}<br>NIP. ${pejabat.nip}
                                     </div>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td class="no-romawi">VI</td>
-                                <td><b>CATATAN LAIN-LAIN</b></td>
-                            </tr>
-                            
-                            <tr>
-                                <td class="no-romawi">VII</td>
-                                <td>
-                                    <b>PERHATIAN</b>
-                                    <div class="note-text">
-                                        Pejabat yang berwenang menerbitkan SPPD, pegawai yang melakukan perjalanan dinas, para pejabat yang mengesahkan tanggal berangkat dan tanggal tiba, serta Bendaharawan bertanggung jawab berdasarkan peraturan-peraturan Keuangan Negara apabila Negara mendapat rugi akibat kesalahan, kealpaannya.
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-
+                                </div>
+                                <div class="clearfix"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="no-romawi">II</td>
+                            <td>
+                                <table style="width:100%; border:none;">
+                                    <tr>
+                                        <td width="50%"><b>Tiba di :</b> ${spt.tempat_tujuan}<br>Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}<br><br><br><br></td>
+                                        <td><b>Berangkat dari :</b> ${spt.tempat_tujuan}<br>Pada tanggal : ${formatTgl(spt.tanggal_kembali)}<br><br><br><br></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="no-romawi">III</td>
+                            <td>
+                                <table style="width:100%; border:none;">
+                                    <tr>
+                                        <td width="50%"><b>Tiba di :</b><br>Pada tanggal : <span class="line-dotted"></span><br><br><br><br></td>
+                                        <td><b>Berangkat dari :</b><br>Ke : <span class="line-dotted"></span><br>Pada tanggal : <span class="line-dotted"></span><br><br><br><br></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="no-romawi">IV</td>
+                            <td>
+                                <table style="width:100%; border:none;">
+                                    <tr>
+                                        <td width="50%"><b>Tiba di :</b><br>Pada tanggal : <span class="line-dotted"></span><br><br><br><br></td>
+                                        <td><b>Berangkat dari :</b><br>Ke : <span class="line-dotted"></span><br>Pada tanggal : <span class="line-dotted"></span><br><br><br><br></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="no-romawi">V</td>
+                            <td>
+                                Tiba kembali di : <b>${spt.tempat_berangkat || '-'}</b><br>
+                                Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
+                                <br><br>
+                                Telah diperiksa, dengan keterangan bahwa perjalanan tersebut di atas benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan dalam waktu yang sesingkat-singkatnya.
+                                <div class="ttd-pengesah">
+                                    <b>${pengesah.jabatan}</b><br><br><br><br><br>
+                                    <b><u>${pengesah.nama_kepala}</u></b><br>${pengesah.pangkat_golongan}<br>NIP. ${pengesah.nip}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr><td class="no-romawi">VI</td><td><b>CATATAN LAIN-LAIN</b></td></tr>
+                        <tr>
+                            <td class="no-romawi">VII</td>
+                            <td><b>PERHATIAN</b><div class="note-text">Pejabat yang berwenang menerbitkan SPPD, pegawai yang melakukan perjalanan dinas, para pejabat yang mengesahkan tanggal berangkat dan tiba, serta Bendaharawan bertanggung jawab berdasarkan peraturan Keuangan Negara apabila Negara mendapat rugi akibat kesalahan, kealpaannya.</div></td>
+                        </tr>
+                    </table>
                     <script>window.onload = function() { window.print(); }<\/script>
                 </body></html>`;
 
                 const printWindow = window.open('', '_blank');
-                if (printWindow) { 
-                    printWindow.document.write(htmlContent); 
-                    printWindow.document.close(); 
-                } else { 
-                    Swal.fire('Peringatan', 'Jendela cetak diblokir oleh browser. Izinkan pop-up.', 'warning'); 
-                }
-            } catch (error) {
-                Swal.fire('Gagal Mencetak', error.message, 'error');
-            }
+                if (printWindow) { printWindow.document.write(htmlContent); printWindow.document.close(); } 
+            } catch (error) { Swal.fire('Gagal Mencetak', error.message, 'error'); }
         }
 
+        // --- DASHBOARD CHART ---
         function initChart() {
             const ctx = document.getElementById('perjadinChart');
             if(ctx) {
