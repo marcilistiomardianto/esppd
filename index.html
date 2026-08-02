@@ -1223,7 +1223,7 @@
             const container = document.getElementById('kopPreviewContainer');
             const activeKop = cachedKopSurat.find(k => k.is_aktif === true);
             if (activeKop) {
-                container.innerHTML = `<div class="p-4 bg-white" style="border: 1px solid #e0e0e0;"><div class="d-flex align-items-center"><div style="width: 120px; text-align: center;"><img src="${activeKop.logo_url || 'https://placehold.co/100'}" style="max-width:100px;max-height:100px;"></div><div class="flex-grow-1 text-center px-3" style="font-family:'Times New Roman',serif;color:#000;"><h4 class="m-0 text-uppercase" style="font-size:1.3rem;">${activeKop.nama_pemda}</h4><h2 class="m-0 fw-bold text-uppercase" style="font-size:1.6rem;">${activeKop.nama_instansi}</h2><p class="m-0 mt-1">${activeKop.alamat}</p></div><div style="width: 120px;"></div></div><div style="border-bottom: 3px solid #000; margin-top: 15px;"></div></div>`;
+                container.innerHTML = `<div class="p-4 bg-white" style="border: 1px solid #e0e0e0;"><div class="d-flex align-items-center"><div style="width: 120px; text-align: center;"><img src="${activeKop.logo_url || 'https://placehold.co/100'}" style="max-width:100px;max-height:100px;" onerror="this.src='https://placehold.co/100'"></div><div class="flex-grow-1 text-center px-3" style="font-family:'Times New Roman',serif;color:#000;"><h4 class="m-0 text-uppercase" style="font-size:1.3rem;">${activeKop.nama_pemda}</h4><h2 class="m-0 fw-bold text-uppercase" style="font-size:1.6rem;">${activeKop.nama_instansi}</h2><p class="m-0 mt-1">${activeKop.alamat}</p></div><div style="width: 120px;"></div></div><div style="border-bottom: 3px solid #000; margin-top: 15px;"></div></div>`;
             } else {
                 container.innerHTML = `<div class="alert alert-warning m-0 text-center">Belum ada Kop Surat yang Aktif.</div>`;
             }
@@ -1235,7 +1235,7 @@
             if (cachedKopSurat.length === 0) return tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data.</td></tr>';
             cachedKopSurat.forEach(kop => {
                 const btn = kop.is_aktif ? `<span class="badge bg-success">Aktif</span>` : `<button class="btn btn-sm btn-outline-success" onclick="setKopSuratAktif('${kop.id}')">Set Aktif</button>`;
-                tbody.innerHTML += `<tr><td><img src="${kop.logo_url || 'https://placehold.co/100'}" style="width:40px;"></td><td class="fw-bold">${kop.nama_pemda}</td><td>${kop.nama_instansi}</td><td>${btn}</td><td class="text-end"><button class="btn btn-sm btn-outline-warning" onclick="editKopSurat('${kop.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteKopSurat('${kop.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
+                tbody.innerHTML += `<tr><td><img src="${kop.logo_url || 'https://placehold.co/100'}" style="width:40px;" onerror="this.src='https://placehold.co/100'"></td><td class="fw-bold">${kop.nama_pemda}</td><td>${kop.nama_instansi}</td><td>${btn}</td><td class="text-end"><button class="btn btn-sm btn-outline-warning" onclick="editKopSurat('${kop.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger" onclick="deleteKopSurat('${kop.id}')"><i class="fas fa-trash"></i></button></td></tr>`;
             });
         }
         async function saveKopSurat() {
@@ -1518,6 +1518,8 @@
                 bootstrap.Modal.getInstance(document.getElementById('modalPrintKuitansi')).hide();
                 
                 const formatRp = (num) => new Intl.NumberFormat('id-ID').format(num);
+
+                // Dapatkan Kop Surat yang Aktif
                 const kop = cachedKopSurat.find(k => k.is_aktif === true) || { nama_instansi: "NAMA INSTANSI", alamat: "ALAMAT INSTANSI", nama_pemda: "PEMDA" };
 
                 let kuitansiHtml = '';
@@ -1528,24 +1530,27 @@
                     
                     kuitansiHtml += `
                     <div class="kuitansi-container">
-                        <!-- HEADER KUITANSI -->
-                        <table style="width: 100%; border: none; margin-bottom: 20px;">
-                            <tr>
-                                <td width="55%" valign="top">
-                                    <div style="font-weight: bold; font-size: 13pt; text-transform: uppercase;">${kop.nama_instansi}</div>
-                                    <div style="font-size: 10pt; line-height: 1.2;">${kop.alamat}</div>
-                                    <div style="font-weight: bold; font-size: 14pt; margin-top: 15px; text-transform: uppercase;">${spt.tempat_berangkat || 'Tempat Kedudukan'}</div>
-                                </td>
-                                <td width="45%" valign="top">
-                                    <table class="tabel-registrasi" style="width: 100%;">
-                                        <tr><td width="40%">No. Rek</td><td>:</td></tr>
-                                        <tr><td>No. BKU</td><td>:</td></tr>
-                                        <tr><td>Lembaran ke / TA</td><td>: ${dpa ? dpa.tahun_anggaran : new Date().getFullYear()}</td></tr>
-                                        <tr><td>Tgl. Dibukukan</td><td>:</td></tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
+                        <!-- HEADER KOP SURAT (Normal) -->
+                        <div style="display: flex; align-items: center; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 15px;">
+                            <div style="width: 80px; text-align: center;"><img src="${kop.logo_url}" style="width: 100%; height: auto; object-fit: contain;" onerror="this.src='https://placehold.co/100'"></div>
+                            <div style="flex-grow: 1; text-align: center; padding: 0 15px;">
+                                <h4 style="margin: 0; font-size: 14pt; font-weight: normal; text-transform: uppercase;">${kop.nama_pemda}</h4>
+                                <h2 style="margin: 0; font-size: 16pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">${kop.nama_instansi}</h2>
+                                <p style="margin: 5px 0 0; font-size: 10pt;">${kop.alamat}</p>
+                            </div>
+                            <div style="width: 80px;"></div>
+                        </div>
+
+                        <!-- KOTAK REGISTRASI KANAN -->
+                        <div style="float: right; width: 350px; margin-bottom: 15px;">
+                            <table class="tabel-registrasi" style="width: 100%;">
+                                <tr><td width="40%">No. Rek</td><td>:</td></tr>
+                                <tr><td>No. BKU</td><td>:</td></tr>
+                                <tr><td>Lembaran ke / TA</td><td>: ${dpa ? dpa.tahun_anggaran : new Date().getFullYear()}</td></tr>
+                                <tr><td>Tgl. Dibukukan</td><td>:</td></tr>
+                            </table>
+                        </div>
+                        <div style="clear: both;"></div>
                         
                         <div style="text-align: center; margin-bottom: 15px;">
                             <h2 style="margin:0; text-decoration:underline; font-size: 16pt;">KUITANSI</h2>
@@ -1572,7 +1577,7 @@
                                     Dibayarkan Kepada <b>${peg.nama}</b> Keperluan untuk Belanja Perjalanan Dinas Dalam Daerah sesuai surat tugas dan surat perintah perjalanan dinas nomor: ${spt.nomor_surat} tanggal ${formatTgl(spt.tanggal_surat)}, Dalam rangka ${spt.maksud} di ${spt.tempat_tujuan} selama ${spt.lama_hari} (${terbilang(spt.lama_hari)}) hari dari tanggal ${formatTgl(spt.tanggal_berangkat)} s/d ${formatTgl(spt.tanggal_kembali)}
                                     
                                     <!-- TABEL RINCIAN KECIL -->
-                                    <table class="tabel-rincian" style="width: 80%; margin-top: 10px; margin-bottom: 10px;">
+                                    <table class="tabel-rincian" style="width: 90%; margin-top: 10px; margin-bottom: 10px;">
                                         ${uTransport > 0 ? `<tr><td width="30%">Transportasi</td><td width="10%">1</td><td width="15%">PP</td><td width="5%">x</td><td width="20%" align="right">${formatRp(uTransport)}</td><td width="20%" align="right">${formatRp(uTransport)}</td></tr>` : ''}
                                         ${uHarian > 0 ? `<tr><td>Uang Harian</td><td>${spt.lama_hari}</td><td>Hari</td><td>x</td><td align="right">${formatRp(uHarian)}</td><td align="right">${formatRp(totalHarian)}</td></tr>` : ''}
                                         ${uPenginapan > 0 ? `<tr><td>Penginapan</td><td>${spt.lama_hari}</td><td>Malam</td><td>x</td><td align="right">${formatRp(uPenginapan)}</td><td align="right">${formatRp(uPenginapan)}</td></tr>` : ''}
@@ -1587,25 +1592,30 @@
                         </div>
 
                         <!-- TANDA TANGAN -->
-                        <table style="width: 100%; text-align: center; margin-top: 30px;">
+                        <table style="width: 100%; margin-top: 30px;">
+                            <!-- Baris 1: Yang Menerima (Kanan) -->
                             <tr>
-                                <td width="33%" valign="top">
+                                <td width="50%"></td>
+                                <td width="50%" valign="top">
+                                    <table style="width:100%; text-align: left; border:none; margin-left: 20px;">
+                                        <tr><td colspan="3">${spt.tempat_berangkat || 'Tempat'}, ..................... ${new Date(tglKuitansi).getFullYear()}</td></tr>
+                                        <tr><td colspan="3" style="padding-top: 5px; padding-bottom: 5px;"><b>Yang menerima</b></td></tr>
+                                        <tr><td width="25%">Nama</td><td width="5%">:</td><td><b>${peg.nama}</b></td></tr>
+                                        <tr><td valign="top">Jabatan</td><td valign="top">:</td><td valign="top">${peg.jabatan}</td></tr>
+                                        <tr><td colspan="3" style="padding-top: 20px; padding-bottom: 20px;">Tanda Tangan : ......................................</td></tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            
+                            <!-- Baris 2: PA (Kiri) dan Bendahara (Kanan) Sejajar -->
+                            <tr>
+                                <td width="50%" valign="bottom" style="text-align: center;">
                                     Mengetahui/ Menyetujui,<br>Pengguna Anggaran<br><br><br><br><br>
                                     <b><u>${pa.nama_kepala}</u></b><br>
                                     ${pa.pangkat_golongan}<br>
                                     NIP. ${pa.nip}
                                 </td>
-                                <td width="34%" valign="top">
-                                    <table style="width:100%; text-align: left; border:none; margin:0 auto; max-width: 200px;">
-                                        <tr><td colspan="3" style="text-align: center; padding-bottom: 5px;"><b>Yang menerima</b></td></tr>
-                                        <tr><td width="40%">Nama</td><td width="5%">:</td><td><b>${peg.nama}</b></td></tr>
-                                        <tr><td valign="top">Jabatan</td><td valign="top">:</td><td valign="top">${peg.jabatan}</td></tr>
-                                        <tr><td colspan="3" style="padding-top: 15px; padding-bottom: 25px;">Tanda Tangan Penerima</td></tr>
-                                        <tr><td colspan="3">......................................</td></tr>
-                                    </table>
-                                </td>
-                                <td width="33%" valign="top">
-                                    ${spt.tempat_berangkat || 'Tempat'}, ${formatTgl(tglKuitansi)}<br>
+                                <td width="50%" valign="bottom" style="text-align: center;">
                                     Lunas Di Bayar,<br>Bendahara Pengeluaran<br><br><br><br><br>
                                     <b><u>${bendahara.nama_kepala}</u></b><br>
                                     NIP. ${bendahara.nip}
@@ -1619,9 +1629,9 @@
 
                 const htmlContent = `<!DOCTYPE html><html lang="id"><head><title>Cetak Kuitansi</title>
                 <style>
-                    @page { size: A4 landscape; margin: 1.5cm; }
+                    @page { size: A4 portrait; margin: 1.5cm; }
                     body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; margin: 0; padding: 0; }
-                    .kuitansi-container { width: 100%; box-sizing: border-box; border: 2px solid #000; padding: 20px; min-height: 15cm; position: relative; }
+                    .kuitansi-container { width: 100%; box-sizing: border-box; border: 2px solid #000; padding: 20px; }
                     
                     .tabel-registrasi { border-collapse: collapse; }
                     .tabel-registrasi td { border: 1px solid #000; padding: 3px 8px; font-size: 10pt; }
@@ -1708,7 +1718,7 @@
                 </head>
                 <body>
                     <div class="kop-surat">
-                        <div class="kop-logo"><img src="${kop.logo_url}" alt="Logo"></div>
+                        <div class="kop-logo"><img src="${kop.logo_url}" alt="Logo" onerror="this.src='https://placehold.co/100'"></div>
                         <div class="kop-teks"><h4>${kop.nama_pemda}</h4><h2>${kop.nama_instansi}</h2><p>${kop.alamat}</p></div>
                         <div style="width: 90px;"></div>
                     </div>
@@ -1827,20 +1837,20 @@
                     
                     .page-break { page-break-before: always; margin-top: 2cm; }
                     
-                    /* CSS SPPD Halaman 2 (Romawi Baru) */
+                    /* CSS SPPD Halaman 2 (Romawi Tanpa Garis) */
                     .hal2-container { width: 100%; }
                     .tabel-hal2 { width: 100%; border-collapse: collapse; font-size: 11pt; }
-                    .tabel-hal2 > tbody > tr > td { border: none; vertical-align: top; padding: 8px 6px; }
+                    .tabel-hal2 > tbody > tr > td { border: none; vertical-align: top; padding: 4px 6px; }
                     .no-romawi { width: 40px; text-align: center; font-weight: bold; }
                     .line-dotted { display: inline-block; border-bottom: 1px dotted #000; width: 220px; }
-                    .note-text { margin-top: 15px; text-align: justify; font-size: 11pt; }
-                    .ttd-pengesah { text-align: center; width: 350px; margin: 0 auto; margin-top: 30px; }
+                    .note-text { margin-top: 10px; text-align: justify; font-size: 11pt; }
+                    .ttd-pengesah { text-align: center; width: 350px; margin: 0 auto; margin-top: 20px; }
                     .info-romawi-1 { float: right; width: 350px; text-align: left; }
                 </style></head>
                 <body>
                     <!-- HALAMAN 1 -->
                     <div class="kop-surat">
-                        <div class="kop-logo"><img src="${kop.logo_url}" alt="Logo"></div>
+                        <div class="kop-logo"><img src="${kop.logo_url}" alt="Logo" onerror="this.src='https://placehold.co/100'"></div>
                         <div class="kop-teks"><h4>${kop.nama_pemda}</h4><h2>${kop.nama_instansi}</h2><p>${kop.alamat}</p></div>
                         <div style="width: 80px;"></div>
                     </div>
@@ -1873,7 +1883,7 @@
                                 <td class="no-romawi">I</td>
                                 <td>
                                     <div class="info-romawi-1">
-                                        <table style="width:100%; border:none; margin-bottom: 20px;">
+                                        <table style="width:100%; border:none; margin-bottom: 10px;">
                                             <tr><td width="100">SPPD No</td><td>: ${spt.nomor_surat}</td></tr>
                                             <tr><td>Berangkat dari</td><td>: ${spt.tempat_berangkat || '-'}</td></tr>
                                             <tr><td>Pada tanggal</td><td>: ${formatTgl(spt.tanggal_berangkat)}</td></tr>
