@@ -1128,6 +1128,14 @@
 
     <!-- JAVASCRIPT -->
     <script>
+        // =========================================================================
+        // KONFIGURASI DATABASE DEFAULT
+        // Masukkan URL dan Key Supabase Anda di sini agar web otomatis terhubung
+        // untuk semua user (Admin/User biasa) tanpa perlu konfigurasi manual.
+        // =========================================================================
+        window.DEFAULT_SUPABASE_URL = 'https://bmbzoguskapeotwfvdrz.supabase.co';
+        window.DEFAULT_SUPABASE_KEY = 'sb_publishable_vPygC6tHUWpX9MJvcj-QEQ_QH0Ggo7m';
+
         // Logika Navigasi UI
         function switchView(viewId, element) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none'));
@@ -1158,7 +1166,6 @@
         let cachedKopSurat = [];
         let cachedPejabat = [];
         let cachedSpt = [];
-        let perjadinChartInstance = null; // Tambahan variabel untuk menyimpan instance grafik
 
         function generateId() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -1171,8 +1178,8 @@
         }
 
         document.addEventListener("DOMContentLoaded", function() {
-            const sUrl = localStorage.getItem('supaUrl');
-            const sKey = localStorage.getItem('supaKey');
+            const sUrl = localStorage.getItem('supaUrl') || window.DEFAULT_SUPABASE_URL;
+            const sKey = localStorage.getItem('supaKey') || window.DEFAULT_SUPABASE_KEY;
             
             if (sUrl && sKey) {
                 try {
@@ -1197,7 +1204,7 @@
                 });
             }
 
-            // Hapus pemanggilan initChart() awal karena grafik akan di-render saat data selesai di-load
+            initChart();
         });
 
         function showConfigModal() {
@@ -1293,16 +1300,27 @@
 
         async function deletePegawai(id) {
             if (!supabaseClient) return;
-            if(confirm('Yakin ingin menghapus pegawai ini?')) {
-                try {
-                    const { error } = await supabaseClient.from('pegawai').delete().eq('id', id);
-                    if (error) throw error;
-                    await loadPegawai(true);
-                    Swal.fire('Terhapus!', '', 'success');
-                } catch (error) {
-                    Swal.fire('Gagal', error.message, 'error');
+            Swal.fire({
+                title: 'Yakin ingin menghapus?',
+                text: "Data pegawai ini akan dihapus secara permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const { error } = await supabaseClient.from('pegawai').delete().eq('id', id);
+                        if (error) throw error;
+                        await loadPegawai(true);
+                        Swal.fire('Terhapus!', 'Data pegawai berhasil dihapus.', 'success');
+                    } catch (error) {
+                        Swal.fire('Gagal', error.message, 'error');
+                    }
                 }
-            }
+            });
         }
 
         function openImportPegawaiModal() {
@@ -1376,10 +1394,23 @@
             if (!supabaseClient) return;
             const id = document.getElementById('dpaId').value || generateId();
             const payload = { id: id, kegiatan: document.getElementById('dpaKegiatan').value, sub_kegiatan: document.getElementById('dpaSubKegiatan').value, tahun_anggaran: parseInt(document.getElementById('dpaTahun').value || new Date().getFullYear()) };
-            try { await supabaseClient.from('dpa').upsert(payload); await loadDpa(true); bootstrap.Modal.getInstance(document.getElementById('modalDpa')).hide(); Swal.fire('Sukses', '', 'success'); } catch (e) { Swal.fire('Error', e.message, 'error'); }
+            try { await supabaseClient.from('dpa').upsert(payload); await loadDpa(true); bootstrap.Modal.getInstance(document.getElementById('modalDpa')).show(); Swal.fire('Sukses', '', 'success'); } catch (e) { Swal.fire('Error', e.message, 'error'); }
         }
         function editDpa(id) { const d = cachedDpa.find(x => x.id === id); if(d) { document.getElementById('dpaId').value = d.id; document.getElementById('dpaKegiatan').value = d.kegiatan; document.getElementById('dpaSubKegiatan').value = d.sub_kegiatan; document.getElementById('dpaTahun').value = d.tahun_anggaran; new bootstrap.Modal(document.getElementById('modalDpa')).show(); } }
-        async function deleteDpa(id) { if(confirm('Hapus?')) { await supabaseClient.from('dpa').delete().eq('id', id); await loadDpa(true); } }
+        
+        async function deleteDpa(id) { 
+            Swal.fire({
+                title: 'Hapus DPA?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal'
+            }).then(async (result) => {
+                if(result.isConfirmed) {
+                    try {
+                        await supabaseClient.from('dpa').delete().eq('id', id); 
+                        await loadDpa(true); 
+                        Swal.fire('Terhapus!', 'DPA berhasil dihapus.', 'success');
+                    } catch(e) { Swal.fire('Error', e.message, 'error'); }
+                }
+            });
+        }
 
         // --- KOP SURAT ---
         async function loadKopSurat(isInit = false) {
@@ -1413,7 +1444,21 @@
             await supabaseClient.from('kop_surat').upsert(payload); await loadKopSurat(true); bootstrap.Modal.getInstance(document.getElementById('modalKopSurat')).hide();
         }
         function editKopSurat(id) { const k = cachedKopSurat.find(x => x.id === id); if(k) { document.getElementById('kopId').value = k.id; document.getElementById('kopLogoUrl').value = k.logo_url; document.getElementById('kopNamaPemda').value = k.nama_pemda; document.getElementById('kopNamaInstansi').value = k.nama_instansi; document.getElementById('kopAlamat').value = k.alamat; new bootstrap.Modal(document.getElementById('modalKopSurat')).show(); } }
-        async function deleteKopSurat(id) { if(confirm('Hapus?')) { await supabaseClient.from('kop_surat').delete().eq('id', id); await loadKopSurat(true); } }
+        
+        async function deleteKopSurat(id) { 
+            Swal.fire({
+                title: 'Hapus Kop Surat?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal'
+            }).then(async (result) => {
+                if(result.isConfirmed) {
+                    try {
+                        await supabaseClient.from('kop_surat').delete().eq('id', id); 
+                        await loadKopSurat(true); 
+                        Swal.fire('Terhapus!', 'Kop surat berhasil dihapus.', 'success');
+                    } catch(e) { Swal.fire('Error', e.message, 'error'); }
+                }
+            });
+        }
+        
         async function setKopSuratAktif(id) {
             const curr = cachedKopSurat.find(k => k.is_aktif);
             if (curr) await supabaseClient.from('kop_surat').update({ is_aktif: false }).eq('id', curr.id);
@@ -1461,7 +1506,21 @@
             } catch (e) { Swal.fire('Gagal', e.message, 'error'); }
         }
         function editPejabat(id) { const p = cachedPejabat.find(x => x.id === id); if(p) { document.getElementById('pejabatId').value = p.id; document.getElementById('pejNama').value = p.nama_kepala; document.getElementById('pejNip').value = p.nip; document.getElementById('pejPangkat').value = p.pangkat_golongan; document.getElementById('pejJabatan').value = p.jabatan; document.getElementById('pejInstansi').value = p.nama_instansi; new bootstrap.Modal(document.getElementById('modalPejabat')).show(); } }
-        async function deletePejabat(id) { if(confirm('Hapus?')) { await supabaseClient.from('penandatangan').delete().eq('id', id); await loadPejabat(true); } }
+        
+        async function deletePejabat(id) { 
+            Swal.fire({
+                title: 'Hapus Pejabat?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Ya, hapus!', cancelButtonText: 'Batal'
+            }).then(async (result) => {
+                if(result.isConfirmed) {
+                    try {
+                        await supabaseClient.from('penandatangan').delete().eq('id', id); 
+                        await loadPejabat(true); 
+                        Swal.fire('Terhapus!', 'Data pejabat dihapus.', 'success');
+                    } catch(e) { Swal.fire('Error', e.message, 'error'); }
+                }
+            });
+        }
+        
         async function setPejabatAktif(id) {
             const curr = cachedPejabat.find(p => p.is_aktif);
             if (curr) await supabaseClient.from('penandatangan').update({ is_aktif: false }).eq('id', curr.id);
@@ -1486,10 +1545,6 @@
                 renderTabelSppd();
                 renderTabelLaporan();
                 if(!document.getElementById('bkuView').classList.contains('d-none')) renderTabelBku();
-                
-                // Update widget dashboard dengan data asli
-                updateDashboardChart();
-                updatePerjalananTerbaru();
             } catch(e) { document.getElementById('tabelSpt').innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${e.message}</td></tr>`; }
         }
 
@@ -1642,7 +1697,26 @@
             }
         }
 
-        async function deleteSpt(id) { if(confirm('Hapus SPT?')) { await supabaseClient.from('surat_tugas').delete().eq('id', id); await loadSpt(true); } }
+        async function deleteSpt(id) { 
+            Swal.fire({
+                title: 'Hapus Surat Tugas (SPT)?', 
+                text: "Laporan atau data terkait mungkin ikut terdampak.", 
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#d33', 
+                cancelButtonColor: '#3085d6', 
+                confirmButtonText: 'Ya, hapus!', 
+                cancelButtonText: 'Batal'
+            }).then(async (result) => {
+                if(result.isConfirmed) {
+                    try {
+                        await supabaseClient.from('surat_tugas').delete().eq('id', id); 
+                        await loadSpt(true); 
+                        Swal.fire('Terhapus!', 'SPT berhasil dihapus', 'success');
+                    } catch(e) { Swal.fire('Error', e.message, 'error'); }
+                }
+            });
+        }
 
         // --- LAPORAN LHPD ---
         function renderTabelLaporan() {
@@ -2670,85 +2744,19 @@ ${logoBase64}
             if(w) { w.document.write(htmlContent); w.document.close(); }
         }
 
-        // --- DASHBOARD CHART & WIDGETS ---
-        function updateDashboardChart() {
+        // --- DASHBOARD CHART ---
+        function initChart() {
             const ctx = document.getElementById('perjadinChart');
-            if(!ctx) return;
-
-            const currentYear = new Date().getFullYear();
-            const monthlyCounts = new Array(12).fill(0);
-
-            // Hitung jumlah SPPD per bulan berdasarkan tanggal berangkat
-            cachedSpt.forEach(spt => {
-                if (spt.tanggal_berangkat) {
-                    const sptDate = new Date(spt.tanggal_berangkat);
-                    if (sptDate.getFullYear() === currentYear) {
-                        monthlyCounts[sptDate.getMonth()]++;
-                    }
-                }
-            });
-
-            if (perjadinChartInstance) {
-                perjadinChartInstance.data.datasets[0].data = monthlyCounts;
-                perjadinChartInstance.data.datasets[0].label = `Jumlah Perjalanan Dinas (${currentYear})`;
-                perjadinChartInstance.update();
-            } else {
-                perjadinChartInstance = new Chart(ctx.getContext('2d'), {
+            if(ctx) {
+                new Chart(ctx.getContext('2d'), {
                     type: 'bar',
                     data: {
                         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'],
-                        datasets: [{ 
-                            label: `Jumlah Perjalanan Dinas (${currentYear})`, 
-                            data: monthlyCounts, 
-                            backgroundColor: '#3498db', 
-                            borderRadius: 4 
-                        }]
+                        datasets: [{ label: 'Jumlah SPPD', data: [2, 5, 3, 8, 4, 1, 0, 0, 0, 0, 0, 0], backgroundColor: '#3498db', borderRadius: 4 }]
                     },
-                    options: { 
-                        responsive: true, 
-                        plugins: { legend: { position: 'top' } }, 
-                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
-                    }
+                    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
                 });
             }
-        }
-
-        function updatePerjalananTerbaru() {
-            // Mencari container "Perjalanan Terbaru" tanpa mengubah struktur HTML
-            const headers = document.querySelectorAll('.card-header');
-            let container = null;
-            headers.forEach(h => {
-                if(h.innerText.includes('Perjalanan Terbaru')) container = h.nextElementSibling;
-            });
-            
-            if(!container) return;
-
-            if (cachedSpt.length === 0) {
-                container.innerHTML = `<div class="text-center text-muted py-5"><p>Belum ada perjalanan dinas</p></div>`;
-                return;
-            }
-
-            // Urutkan dari yang paling baru, ambil 5 teratas
-            const sortedSpt = [...cachedSpt].sort((a, b) => new Date(b.tanggal_berangkat || 0) - new Date(a.tanggal_berangkat || 0)).slice(0, 5);
-            
-            let html = '<div class="list-group list-group-flush pb-3">';
-            sortedSpt.forEach(spt => {
-                const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
-                const nama = peg ? peg.nama : 'Tanpa Nama';
-                html += `
-                    <div class="list-group-item px-3 py-3 border-0 border-bottom">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <strong class="text-dark text-truncate" style="max-width: 65%; font-size: 0.95rem;">${spt.tempat_tujuan}</strong>
-                            <small class="text-muted" style="font-size: 0.75rem;">${formatTgl(spt.tanggal_berangkat)}</small>
-                        </div>
-                        <div class="small text-secondary text-truncate"><i class="fas fa-user-circle text-muted me-1"></i> ${nama}</div>
-                        <div class="small text-muted text-truncate mt-1">${spt.maksud}</div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            container.innerHTML = html;
-            container.style.padding = '0'; // Rapikan padding agar list melekat penuh
         }
     </script>
 </body>
