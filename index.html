@@ -1158,6 +1158,7 @@
         let cachedKopSurat = [];
         let cachedPejabat = [];
         let cachedSpt = [];
+        let perjadinChartInstance = null; // Tambahan variabel untuk menyimpan instance grafik
 
         function generateId() {
             if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -1196,7 +1197,7 @@
                 });
             }
 
-            initChart();
+            // Hapus pemanggilan initChart() awal karena grafik akan di-render saat data selesai di-load
         });
 
         function showConfigModal() {
@@ -1485,6 +1486,10 @@
                 renderTabelSppd();
                 renderTabelLaporan();
                 if(!document.getElementById('bkuView').classList.contains('d-none')) renderTabelBku();
+                
+                // Update widget dashboard dengan data asli
+                updateDashboardChart();
+                updatePerjalananTerbaru();
             } catch(e) { document.getElementById('tabelSpt').innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error: ${e.message}</td></tr>`; }
         }
 
@@ -2665,19 +2670,85 @@ ${logoBase64}
             if(w) { w.document.write(htmlContent); w.document.close(); }
         }
 
-        // --- DASHBOARD CHART ---
-        function initChart() {
+        // --- DASHBOARD CHART & WIDGETS ---
+        function updateDashboardChart() {
             const ctx = document.getElementById('perjadinChart');
-            if(ctx) {
-                new Chart(ctx.getContext('2d'), {
+            if(!ctx) return;
+
+            const currentYear = new Date().getFullYear();
+            const monthlyCounts = new Array(12).fill(0);
+
+            // Hitung jumlah SPPD per bulan berdasarkan tanggal berangkat
+            cachedSpt.forEach(spt => {
+                if (spt.tanggal_berangkat) {
+                    const sptDate = new Date(spt.tanggal_berangkat);
+                    if (sptDate.getFullYear() === currentYear) {
+                        monthlyCounts[sptDate.getMonth()]++;
+                    }
+                }
+            });
+
+            if (perjadinChartInstance) {
+                perjadinChartInstance.data.datasets[0].data = monthlyCounts;
+                perjadinChartInstance.data.datasets[0].label = `Jumlah Perjalanan Dinas (${currentYear})`;
+                perjadinChartInstance.update();
+            } else {
+                perjadinChartInstance = new Chart(ctx.getContext('2d'), {
                     type: 'bar',
                     data: {
                         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'],
-                        datasets: [{ label: 'Jumlah SPPD', data: [2, 5, 3, 8, 4, 1, 0, 0, 0, 0, 0, 0], backgroundColor: '#3498db', borderRadius: 4 }]
+                        datasets: [{ 
+                            label: `Jumlah Perjalanan Dinas (${currentYear})`, 
+                            data: monthlyCounts, 
+                            backgroundColor: '#3498db', 
+                            borderRadius: 4 
+                        }]
                     },
-                    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+                    options: { 
+                        responsive: true, 
+                        plugins: { legend: { position: 'top' } }, 
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } 
+                    }
                 });
             }
+        }
+
+        function updatePerjalananTerbaru() {
+            // Mencari container "Perjalanan Terbaru" tanpa mengubah struktur HTML
+            const headers = document.querySelectorAll('.card-header');
+            let container = null;
+            headers.forEach(h => {
+                if(h.innerText.includes('Perjalanan Terbaru')) container = h.nextElementSibling;
+            });
+            
+            if(!container) return;
+
+            if (cachedSpt.length === 0) {
+                container.innerHTML = `<div class="text-center text-muted py-5"><p>Belum ada perjalanan dinas</p></div>`;
+                return;
+            }
+
+            // Urutkan dari yang paling baru, ambil 5 teratas
+            const sortedSpt = [...cachedSpt].sort((a, b) => new Date(b.tanggal_berangkat || 0) - new Date(a.tanggal_berangkat || 0)).slice(0, 5);
+            
+            let html = '<div class="list-group list-group-flush pb-3">';
+            sortedSpt.forEach(spt => {
+                const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                const nama = peg ? peg.nama : 'Tanpa Nama';
+                html += `
+                    <div class="list-group-item px-3 py-3 border-0 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="text-dark text-truncate" style="max-width: 65%; font-size: 0.95rem;">${spt.tempat_tujuan}</strong>
+                            <small class="text-muted" style="font-size: 0.75rem;">${formatTgl(spt.tanggal_berangkat)}</small>
+                        </div>
+                        <div class="small text-secondary text-truncate"><i class="fas fa-user-circle text-muted me-1"></i> ${nama}</div>
+                        <div class="small text-muted text-truncate mt-1">${spt.maksud}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+            container.style.padding = '0'; // Rapikan padding agar list melekat penuh
         }
     </script>
 </body>
