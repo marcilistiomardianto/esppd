@@ -2095,7 +2095,9 @@
                 let logoBase64 = null;
                 let logoMime = 'image/png';
                 let originalLogoUrl = kop.logo_url || 'https://via.placeholder.com/100x100.png?text=Logo';
-                const embedUrl = 'file:///C:/logo_image_embedded';
+                
+                // FIX: Jangan gunakan absolute path file:///C:/ karena diblokir oleh keamanan Word modern. Gunakan nama file relatif/virtual.
+                const embedUrl = 'logo_image_embedded';
 
                 try {
                     const response = await fetch(originalLogoUrl);
@@ -2107,7 +2109,26 @@
                         reader.readAsDataURL(blob);
                     });
                 } catch(e) {
-                    console.warn('Gagal download gambar (CORS/Network). Fallback ke online link.', e);
+                    console.warn('Gagal fetch gambar (CORS/Network). Mencoba alternatif canvas...', e);
+                    // Fallback alternatif via Canvas jika diblokir policy Fetch API namun diizinkan di Image Element
+                    try {
+                        logoBase64 = await new Promise((resolve, reject) => {
+                            const img = new Image();
+                            img.crossOrigin = 'Anonymous';
+                            img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                canvas.width = img.width;
+                                canvas.height = img.height;
+                                canvas.getContext('2d').drawImage(img, 0, 0);
+                                resolve(canvas.toDataURL('image/png').split(',')[1]);
+                            };
+                            img.onerror = reject;
+                            img.src = originalLogoUrl;
+                        });
+                        logoMime = 'image/png';
+                    } catch(err) {
+                        console.warn('Canvas fallback gagal. Akan menggunakan link asli (gambar mungkin perlu di-allow di Word).', err);
+                    }
                 }
 
                 const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
@@ -2212,7 +2233,7 @@
 Content-Type: multipart/related; boundary="${boundary}"
 
 --${boundary}
-Content-Location: file:///C:/document.html
+Content-Location: document.html
 Content-Type: text/html; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
