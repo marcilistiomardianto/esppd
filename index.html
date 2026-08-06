@@ -1167,18 +1167,24 @@
             });
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", async function() {
             const sUrl = localStorage.getItem('supaUrl') || window.DEFAULT_SUPABASE_URL;
             const sKey = localStorage.getItem('supaKey') || window.DEFAULT_SUPABASE_KEY;
             
             if (sUrl && sKey) {
                 try {
                     supabaseClient = supabase.createClient(sUrl, sKey);
-                    loadPegawai(true);
-                    loadDpa(true);
-                    loadKopSurat(true);
-                    loadPejabat(true);
-                    loadSpt(true);
+                    
+                    // PERBAIKAN: Menunggu Master Data selesai diload secara paralel
+                    await Promise.all([
+                        loadPegawai(true),
+                        loadDpa(true),
+                        loadKopSurat(true),
+                        loadPejabat(true)
+                    ]);
+                    
+                    // Setelah Master Data siap, baru load data Transaksi (SPT)
+                    await loadSpt(true);
                 } catch (e) {
                     console.error("Supabase Init Error", e);
                 }
@@ -1545,7 +1551,8 @@
             if (cachedSpt.length === 0) return tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data.</td></tr>';
 
             cachedSpt.forEach(spt => {
-                const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                // PERBAIKAN: Menggunakan == (loose equality) menghindari error tipe data
+                const peg = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
                 const nama = peg ? peg.nama : '<i>Dihapus</i>';
                 tbody.innerHTML += `
                     <tr>
@@ -1568,7 +1575,8 @@
             if (cachedSpt.length === 0) return tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data.</td></tr>';
 
             cachedSpt.forEach(spt => {
-                const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                // PERBAIKAN: Menggunakan == (loose equality) 
+                const peg = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
                 const nama = peg ? peg.nama : '<i>Dihapus</i>';
                 tbody.innerHTML += `
                     <tr>
@@ -1802,7 +1810,8 @@
                 if (grandTotal > 0) {
                     totalBulan += grandTotal;
                     
-                    const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                    // PERBAIKAN: Menggunakan == 
+                    const peg = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
                     const nama = peg ? peg.nama : '-';
 
                     tbody.innerHTML += `
@@ -1906,9 +1915,9 @@
                 }
 
                 const pegawais = [
-                    cachedPegawai.find(p => p.id === spt.pegawai_1_id),
-                    cachedPegawai.find(p => p.id === spt.pegawai_2_id),
-                    cachedPegawai.find(p => p.id === spt.pegawai_3_id)
+                    cachedPegawai.find(p => p.id == spt.pegawai_1_id),
+                    cachedPegawai.find(p => p.id == spt.pegawai_2_id),
+                    cachedPegawai.find(p => p.id == spt.pegawai_3_id)
                 ].filter(p => p !== undefined);
 
                 bootstrap.Modal.getInstance(document.getElementById('modalPrintKuitansi')).hide();
@@ -2061,9 +2070,9 @@
 
                 bootstrap.Modal.getInstance(document.getElementById('modalPrintSpt')).hide();
 
-                const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
-                const p2 = cachedPegawai.find(p => p.id === spt.pegawai_2_id);
-                const p3 = cachedPegawai.find(p => p.id === spt.pegawai_3_id);
+                const p1 = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
+                const p2 = cachedPegawai.find(p => p.id == spt.pegawai_2_id);
+                const p3 = cachedPegawai.find(p => p.id == spt.pegawai_3_id);
                 const pegawais = [p1, p2, p3].filter(p => p !== undefined);
 
                 let pegawaiHtml = '';
@@ -2200,9 +2209,9 @@
                     }
                 }
 
-                const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
-                const p2 = cachedPegawai.find(p => p.id === spt.pegawai_2_id);
-                const p3 = cachedPegawai.find(p => p.id === spt.pegawai_3_id);
+                const p1 = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
+                const p2 = cachedPegawai.find(p => p.id == spt.pegawai_2_id);
+                const p3 = cachedPegawai.find(p => p.id == spt.pegawai_3_id);
                 const pegawais = [p1, p2, p3].filter(p => p !== undefined);
 
                 let pegawaiHtml = '';
@@ -2359,9 +2368,9 @@ ${logoBase64}
 
                 if (!spt || !kop || !pejabat || !pengesah) throw new Error("Pastikan Data Pejabat dan Kop sudah dipilih!");
 
-                const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
-                const p2 = cachedPegawai.find(p => p.id === spt.pegawai_2_id);
-                const p3 = cachedPegawai.find(p => p.id === spt.pegawai_3_id);
+                const p1 = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
+                const p2 = cachedPegawai.find(p => p.id == spt.pegawai_2_id);
+                const p3 = cachedPegawai.find(p => p.id == spt.pegawai_3_id);
                 const employees = [p1, p2, p3].filter(p => p !== undefined);
 
                 let point2Html = ''; 
@@ -2542,7 +2551,7 @@ ${logoBase64}
             if(!spt || !spt.hasil_laporan) return Swal.fire('Warning', 'Isi laporan terlebih dahulu.', 'warning');
 
             const kop = cachedKopSurat.find(k => k.is_aktif === true) || { nama_instansi: "NAMA INSTANSI", alamat: "ALAMAT INSTANSI", nama_pemda: "PEMDA", logo_url: '' };
-            const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+            const p1 = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
             if(!p1) return;
 
             const htmlContent = `
@@ -2642,7 +2651,7 @@ ${logoBase64}
                 
                 if (grandTotal > 0) {
                     totalBulan += grandTotal;
-                    const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                    const peg = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
                     const nama = peg ? peg.nama : '-';
 
                     tableRows += `
