@@ -1,4 +1,14 @@
-://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e-SPPD | Sistem Administrasi Perjalanan Dinas</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Chart.js -->
@@ -1167,24 +1177,18 @@
             });
         }
 
-        document.addEventListener("DOMContentLoaded", async function() {
+        document.addEventListener("DOMContentLoaded", function() {
             const sUrl = localStorage.getItem('supaUrl') || window.DEFAULT_SUPABASE_URL;
             const sKey = localStorage.getItem('supaKey') || window.DEFAULT_SUPABASE_KEY;
             
             if (sUrl && sKey) {
                 try {
                     supabaseClient = supabase.createClient(sUrl, sKey);
-                    
-                    // PERBAIKAN: Menunggu Master Data selesai diload secara paralel
-                    await Promise.all([
-                        loadPegawai(true),
-                        loadDpa(true),
-                        loadKopSurat(true),
-                        loadPejabat(true)
-                    ]);
-                    
-                    // Setelah Master Data siap, baru load data Transaksi (SPT)
-                    await loadSpt(true);
+                    loadPegawai(true);
+                    loadDpa(true);
+                    loadKopSurat(true);
+                    loadPejabat(true);
+                    loadSpt(true);
                 } catch (e) {
                     console.error("Supabase Init Error", e);
                 }
@@ -1551,8 +1555,7 @@
             if (cachedSpt.length === 0) return tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data.</td></tr>';
 
             cachedSpt.forEach(spt => {
-                // PERBAIKAN: Menggunakan == (loose equality) menghindari error tipe data
-                const peg = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
+                const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
                 const nama = peg ? peg.nama : '<i>Dihapus</i>';
                 tbody.innerHTML += `
                     <tr>
@@ -1575,8 +1578,7 @@
             if (cachedSpt.length === 0) return tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Belum ada data.</td></tr>';
 
             cachedSpt.forEach(spt => {
-                // PERBAIKAN: Menggunakan == (loose equality) 
-                const peg = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
+                const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
                 const nama = peg ? peg.nama : '<i>Dihapus</i>';
                 tbody.innerHTML += `
                     <tr>
@@ -1810,8 +1812,7 @@
                 if (grandTotal > 0) {
                     totalBulan += grandTotal;
                     
-                    // PERBAIKAN: Menggunakan == 
-                    const peg = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
+                    const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
                     const nama = peg ? peg.nama : '-';
 
                     tbody.innerHTML += `
@@ -1915,9 +1916,9 @@
                 }
 
                 const pegawais = [
-                    cachedPegawai.find(p => p.id == spt.pegawai_1_id),
-                    cachedPegawai.find(p => p.id == spt.pegawai_2_id),
-                    cachedPegawai.find(p => p.id == spt.pegawai_3_id)
+                    cachedPegawai.find(p => p.id === spt.pegawai_1_id),
+                    cachedPegawai.find(p => p.id === spt.pegawai_2_id),
+                    cachedPegawai.find(p => p.id === spt.pegawai_3_id)
                 ].filter(p => p !== undefined);
 
                 bootstrap.Modal.getInstance(document.getElementById('modalPrintKuitansi')).hide();
@@ -2070,9 +2071,9 @@
 
                 bootstrap.Modal.getInstance(document.getElementById('modalPrintSpt')).hide();
 
-                const p1 = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
-                const p2 = cachedPegawai.find(p => p.id == spt.pegawai_2_id);
-                const p3 = cachedPegawai.find(p => p.id == spt.pegawai_3_id);
+                const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                const p2 = cachedPegawai.find(p => p.id === spt.pegawai_2_id);
+                const p3 = cachedPegawai.find(p => p.id === spt.pegawai_3_id);
                 const pegawais = [p1, p2, p3].filter(p => p !== undefined);
 
                 let pegawaiHtml = '';
@@ -2209,9 +2210,9 @@
                     }
                 }
 
-                const p1 = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
-                const p2 = cachedPegawai.find(p => p.id == spt.pegawai_2_id);
-                const p3 = cachedPegawai.find(p => p.id == spt.pegawai_3_id);
+                const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                const p2 = cachedPegawai.find(p => p.id === spt.pegawai_2_id);
+                const p3 = cachedPegawai.find(p => p.id === spt.pegawai_3_id);
                 const pegawais = [p1, p2, p3].filter(p => p !== undefined);
 
                 let pegawaiHtml = '';
@@ -2368,9 +2369,9 @@ ${logoBase64}
 
                 if (!spt || !kop || !pejabat || !pengesah) throw new Error("Pastikan Data Pejabat dan Kop sudah dipilih!");
 
-                const p1 = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
-                const p2 = cachedPegawai.find(p => p.id == spt.pegawai_2_id);
-                const p3 = cachedPegawai.find(p => p.id == spt.pegawai_3_id);
+                const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
+                const p2 = cachedPegawai.find(p => p.id === spt.pegawai_2_id);
+                const p3 = cachedPegawai.find(p => p.id === spt.pegawai_3_id);
                 const employees = [p1, p2, p3].filter(p => p !== undefined);
 
                 let point2Html = ''; 
@@ -2425,17 +2426,15 @@ ${logoBase64}
                     .ttd-area .jabatan { font-weight: bold; min-height: 70px; }
                     .ttd-area .nama { font-weight: bold; text-decoration: underline; margin-top: 70px; }
                     
-                    /* PERBAIKAN: Menghapus margin-top yang berlebihan agar halaman 2 naik ke atas */
-                    .page-break { page-break-before: always; height: 0; margin: 0; padding: 0; border: none; display: block; }
+                    .page-break { page-break-before: always; margin-top: 2cm; }
                     
-                    /* PERBAIKAN: Mengurangi padding di tabel halaman 2 dan ukuran font sedikit agar muat 1 halaman */
-                    .tabel-hal2 { width: 100%; border-collapse: collapse; font-size: 10.5pt; margin-top: 0; }
-                    .tabel-hal2 > tbody > tr > td { border: none; vertical-align: top; padding: 2px; border-bottom: 1px dashed #ccc; }
+                    .tabel-hal2 { width: 100%; border-collapse: collapse; font-size: 11pt; }
+                    .tabel-hal2 > tbody > tr > td { border: none; vertical-align: top; padding: 4px 6px; }
                     .no-romawi { width: 40px; text-align: center; font-weight: bold; }
                     .line-dotted { display: inline-block; border-bottom: 1px dotted #000; width: 220px; }
-                    .note-text { margin-top: 2px; text-align: justify; font-size: 9.5pt; line-height: 1.2; }
-                    .ttd-pengesah { text-align: center; width: 350px; margin: 0 auto; margin-top: 5px; }
-                    .space-ttd { height: 45px; } /* Jarak presisi untuk tanda tangan tanpa pakai <br> bertumpuk */
+                    .note-text { margin-top: 10px; text-align: justify; font-size: 11pt; }
+                    .ttd-pengesah { text-align: center; width: 350px; margin: 0 auto; margin-top: 20px; }
+                    .info-romawi-1 { float: right; width: 350px; text-align: left; }
                 </style></head>
                 <body>
                     <!-- HALAMAN 1 -->
@@ -2467,66 +2466,74 @@ ${logoBase64}
                     <div class="page-break"></div>
 
                     <!-- HALAMAN 2 -->
-                    <!-- PERBAIKAN: Layout tanpa float untuk menghindari bug spasi kosong besar di browser -->
                     <table class="tabel-hal2">
                         <tr>
-                            <td style="padding-top: 0;">
-                                <table style="width:100%; border:none; margin:0; padding:0;">
-                                    <tr>
-                                        <td width="50%"></td> <!-- Spacer kiri penahan layout -->
-                                        <td width="50%" valign="top">
-                                            <table style="width:100%; border:none; margin-bottom: 5px;">
-                                                <tr><td width="100">SPPD No</td><td>: ${spt.nomor_surat}</td></tr>
-                                                <tr><td>Berangkat dari</td><td>: ${spt.tempat_berangkat || '-'}</td></tr>
-                                                <tr><td>Pada tanggal</td><td>: ${formatTgl(spt.tanggal_berangkat)}</td></tr>
-                                                <tr><td valign="top">Ke</td><td valign="top">: ${spt.tempat_tujuan}</td></tr>
-                                            </table>
-                                            <div style="text-align: center;">
-                                                <b>${pejabat.jabatan}</b>
-                                                <div class="space-ttd"></div>
-                                                <b><u>${pejabat.nama_kepala}</u></b><br>${pejabat.pangkat_golongan}<br>NIP. ${pejabat.nip}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </table>
+                            <td class="no-romawi">I</td>
+                            <td>
+                                <div class="info-romawi-1">
+                                    <table style="width:100%; border:none; margin-bottom: 10px;">
+                                        <tr><td width="100">SPPD No</td><td>: ${spt.nomor_surat}</td></tr>
+                                        <tr><td>Berangkat dari</td><td>: ${spt.tempat_berangkat || '-'}</td></tr>
+                                        <tr><td>Pada tanggal</td><td>: ${formatTgl(spt.tanggal_berangkat)}</td></tr>
+                                        <tr><td valign="top">Ke</td><td valign="top">: ${spt.tempat_tujuan}</td></tr>
+                                    </table>
+                                    <div style="text-align: center;">
+                                        <b>${pejabat.jabatan}</b><br><br><br><br>
+                                        <b><u>${pejabat.nama_kepala}</u></b><br>${pejabat.pangkat_golongan}<br>NIP. ${pejabat.nip}
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
                             </td>
                         </tr>
                         <tr>
+                            <td class="no-romawi">II</td>
                             <td>
                                 <table style="width:100%; border:none;">
                                     <tr>
-                                        <td width="50%"><b>Tiba di :</b><br>Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}<div class="space-ttd"></div></td>
-                                        <td><b>Berangkat dari :</b><br>Ke :<br>Pada tanggal : ${formatTgl(spt.tanggal_kembali)}<div style="height: 25px;"></div></td>
+                                        <td width="50%"><b>Tiba di :</b> ${spt.tempat_tujuan}<br>Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}<br><br><br><br><br></td>
+                                        <td><b>Berangkat dari :</b> ${spt.tempat_tujuan}<br>Pada tanggal : ${formatTgl(spt.tanggal_kembali)}<br><br><br><br><br></td>
                                     </tr>
                                 </table>
                             </td>
                         </tr>
                         <tr>
+                            <td class="no-romawi">III</td>
                             <td>
                                 <table style="width:100%; border:none;">
                                     <tr>
-                                        <td width="50%"><b>Tiba di :</b><br>Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}<div class="space-ttd"></div></td>
-                                        <td><b>Berangkat dari :</b><br>Ke :<br>Pada tanggal : ${formatTgl(spt.tanggal_kembali)}<div style="height: 25px;"></div></td>
+                                        <td width="50%"><b>Tiba di :</b><br>Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}<br><br><br><br><br></td>
+                                        <td><b>Berangkat dari :</b><br>Ke : </b><br>Pada tanggal : ${formatTgl(spt.tanggal_kembali)}<br><br><br><br><br></td>
                                     </tr>
                                 </table>
                             </td>
                         </tr>
                         <tr>
+                            <td class="no-romawi">IV</td>
+                            <td>
+                                <table style="width:100%; border:none;">
+                                    <tr>
+                                        <td width="50%"><b>Tiba di :</b><br>Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}<br><br><br><br><br></td>
+                                        <td><b>Berangkat dari :</b><br>Ke : </b><br>Pada tanggal : ${formatTgl(spt.tanggal_kembali)}<br><br><br><br><br></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="no-romawi">V</td>
                             <td>
                                 Tiba kembali di : <b>${spt.tempat_berangkat || '-'}</b><br>
                                 Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
-                                <div style="margin: 5px 0; text-align: justify; line-height: 1.2;">
-                                    Telah diperiksa, dengan keterangan bahwa perjalanan tersebut di atas benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan dalam waktu yang sesingkat-singkatnya.
-                                </div>
+                                <br><br>
+                                Telah diperiksa, dengan keterangan bahwa perjalanan tersebut di atas benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan dalam waktu yang sesingkat-singkatnya.
                                 <div class="ttd-pengesah">
-                                    <b>${pengesah.jabatan}</b>
-                                    <div class="space-ttd"></div>
+                                    <b>${pengesah.jabatan}</b><br><br><br><br><br>
                                     <b><u>${pengesah.nama_kepala}</u></b><br>${pengesah.pangkat_golongan}<br>NIP. ${pengesah.nip}
                                 </div>
                             </td>
                         </tr>
-                        <tr><td><b>CATATAN LAIN-LAIN</b></td></tr>
+                        <tr><td class="no-romawi">VI</td><td><b>CATATAN LAIN-LAIN</b></td></tr>
                         <tr>
+                            <td class="no-romawi">VII</td>
                             <td><b>PERHATIAN</b><div class="note-text">Pejabat yang berwenang menerbitkan SPPD, pegawai yang melakukan perjalanan dinas, para pejabat yang mengesahkan tanggal berangkat dan tiba, serta Bendaharawan bertanggung jawab berdasarkan peraturan Keuangan Negara apabila Negara mendapat rugi akibat kesalahan, kealpaannya.</div></td>
                         </tr>
                     </table>
@@ -2544,7 +2551,7 @@ ${logoBase64}
             if(!spt || !spt.hasil_laporan) return Swal.fire('Warning', 'Isi laporan terlebih dahulu.', 'warning');
 
             const kop = cachedKopSurat.find(k => k.is_aktif === true) || { nama_instansi: "NAMA INSTANSI", alamat: "ALAMAT INSTANSI", nama_pemda: "PEMDA", logo_url: '' };
-            const p1 = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
+            const p1 = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
             if(!p1) return;
 
             const htmlContent = `
@@ -2644,7 +2651,7 @@ ${logoBase64}
                 
                 if (grandTotal > 0) {
                     totalBulan += grandTotal;
-                    const peg = cachedPegawai.find(p => p.id == spt.pegawai_1_id);
+                    const peg = cachedPegawai.find(p => p.id === spt.pegawai_1_id);
                     const nama = peg ? peg.nama : '-';
 
                     tableRows += `
