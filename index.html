@@ -2419,14 +2419,15 @@ ${logoBase64}
                     /* PERBAIKAN: Menghapus margin-top yang berlebihan agar halaman 2 naik ke atas */
                     .page-break { page-break-before: always; }
                     
-                    /* PERBAIKAN: Mengurangi padding di tabel halaman 2 agar lebih padat */
-                    .tabel-hal2 { width: 100%; border-collapse: collapse; font-size: 11pt; }
-                    .tabel-hal2 > tbody > tr > td { border: none; vertical-align: top; padding: 2px 4px; border-bottom: 1px dashed #ccc; }
+                    /* PERBAIKAN: Mengurangi padding di tabel halaman 2 dan ukuran font sedikit agar muat 1 halaman */
+                    .tabel-hal2 { width: 100%; border-collapse: collapse; font-size: 10.5pt; margin-top: -5px; }
+                    .tabel-hal2 > tbody > tr > td { border: none; vertical-align: top; padding: 2px; border-bottom: 1px dashed #ccc; }
                     .no-romawi { width: 40px; text-align: center; font-weight: bold; }
                     .line-dotted { display: inline-block; border-bottom: 1px dotted #000; width: 220px; }
-                    .note-text { margin-top: 5px; text-align: justify; font-size: 10pt; }
-                    .ttd-pengesah { text-align: center; width: 350px; margin: 0 auto; margin-top: 15px; }
+                    .note-text { margin-top: 2px; text-align: justify; font-size: 9.5pt; line-height: 1.2; }
+                    .ttd-pengesah { text-align: center; width: 350px; margin: 0 auto; margin-top: 5px; }
                     .info-romawi-1 { float: right; width: 350px; text-align: left; }
+                    .space-ttd { height: 45px; } /* Jarak presisi untuk tanda tangan tanpa pakai <br> bertumpuk */
                 </style></head>
                 <body>
                     <!-- HALAMAN 1 -->
@@ -2458,10 +2459,10 @@ ${logoBase64}
                     <div class="page-break"></div>
 
                     <!-- HALAMAN 2 -->
-                    <!-- PERBAIKAN: Jumlah <br> diubah dari 5 menjadi 3 agar tinggi baris tidak meluap ke halaman 3 -->
+                    <!-- PERBAIKAN: Mengganti <br> berlebih dengan <div class="space-ttd"> presisi agar muat di 1 halaman -->
                     <table class="tabel-hal2">
                         <tr>
-                            <td>
+                            <td style="padding-top: 0;">
                                 <div class="info-romawi-1">
                                     <table style="width:100%; border:none; margin-bottom: 5px;">
                                         <tr><td width="100">SPPD No</td><td>: ${spt.nomor_surat}</td></tr>
@@ -2470,7 +2471,8 @@ ${logoBase64}
                                         <tr><td valign="top">Ke</td><td valign="top">: ${spt.tempat_tujuan}</td></tr>
                                     </table>
                                     <div style="text-align: center;">
-                                        <b>${pejabat.jabatan}</b><br><br><br>
+                                        <b>${pejabat.jabatan}</b>
+                                        <div class="space-ttd"></div>
                                         <b><u>${pejabat.nama_kepala}</u></b><br>${pejabat.pangkat_golongan}<br>NIP. ${pejabat.nip}
                                     </div>
                                 </div>
@@ -2481,8 +2483,8 @@ ${logoBase64}
                             <td>
                                 <table style="width:100%; border:none;">
                                     <tr>
-                                        <td width="50%"><b>Tiba di :</b> ${spt.tempat_tujuan}<br>Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}<br><br><br></td>
-                                        <td><b>Berangkat dari :</b> ${spt.tempat_tujuan}<br>Pada tanggal : ${formatTgl(spt.tanggal_kembali)}<br><br><br></td>
+                                        <td width="50%"><b>Tiba di :</b> ${spt.tempat_tujuan}<br>Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}<div class="space-ttd"></div></td>
+                                        <td><b>Berangkat dari :</b> ${spt.tempat_tujuan}<br>Pada tanggal : ${formatTgl(spt.tanggal_kembali)}<div class="space-ttd"></div></td>
                                     </tr>
                                 </table>
                             </td>
@@ -2491,8 +2493,8 @@ ${logoBase64}
                             <td>
                                 <table style="width:100%; border:none;">
                                     <tr>
-                                        <td width="50%"><b>Tiba di :</b><br>Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}<br><br><br></td>
-                                        <td><b>Berangkat dari :</b><br>Ke : </b><br>Pada tanggal : ${formatTgl(spt.tanggal_kembali)}<br><br><br></td>
+                                        <td width="50%"><b>Tiba di :</b><br>Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}<div class="space-ttd"></div></td>
+                                        <td><b>Berangkat dari :</b><br>Ke :<br>Pada tanggal : ${formatTgl(spt.tanggal_kembali)}<div style="height: 25px;"></div></td>
                                     </tr>
                                 </table>
                             </td>
@@ -2501,8 +2503,8 @@ ${logoBase64}
                             <td>
                                 <table style="width:100%; border:none;">
                                     <tr>
-                                        <td width="50%"><b>Tiba di :</b><br>Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}<br><br><br></td>
-                                        <td><b>Berangkat dari :</b><br>Ke : </b><br>Pada tanggal : ${formatTgl(spt.tanggal_kembali)}<br><br><br></td>
+                                        <td width="50%"><b>Tiba di :</b><br>Pada tanggal : ${formatTgl(spt.tanggal_berangkat)}<div class="space-ttd"></div></td>
+                                        <td><b>Berangkat dari :</b><br>Ke :<br>Pada tanggal : ${formatTgl(spt.tanggal_kembali)}<div style="height: 25px;"></div></td>
                                     </tr>
                                 </table>
                             </td>
@@ -2511,10 +2513,12 @@ ${logoBase64}
                             <td>
                                 Tiba kembali di : <b>${spt.tempat_berangkat || '-'}</b><br>
                                 Pada tanggal : ${formatTgl(spt.tanggal_kembali)}
-                                <br><br>
-                                Telah diperiksa, dengan keterangan bahwa perjalanan tersebut di atas benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan dalam waktu yang sesingkat-singkatnya.
+                                <div style="margin: 5px 0; text-align: justify; line-height: 1.2;">
+                                    Telah diperiksa, dengan keterangan bahwa perjalanan tersebut di atas benar dilakukan atas perintahnya dan semata-mata untuk kepentingan jabatan dalam waktu yang sesingkat-singkatnya.
+                                </div>
                                 <div class="ttd-pengesah">
-                                    <b>${pengesah.jabatan}</b><br><br><br>
+                                    <b>${pengesah.jabatan}</b>
+                                    <div class="space-ttd"></div>
                                     <b><u>${pengesah.nama_kepala}</u></b><br>${pengesah.pangkat_golongan}<br>NIP. ${pengesah.nip}
                                 </div>
                             </td>
