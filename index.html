@@ -2758,6 +2758,48 @@ ${logoBase64}
                 });
             }
         }
+
+        // Mencegah ReferenceError di Live Preview dengan mengekspos semua fungsi ke window
+        window.switchView = switchView;
+        window.showConfigModal = showConfigModal;
+        window.saveConfig = saveConfig;
+        window.openImportPegawaiModal = openImportPegawaiModal;
+        window.processImportPegawai = processImportPegawai;
+        window.savePegawai = savePegawai;
+        window.editPegawai = editPegawai;
+        window.deletePegawai = deletePegawai;
+        window.saveDpa = saveDpa;
+        window.editDpa = editDpa;
+        window.deleteDpa = deleteDpa;
+        window.saveKopSurat = saveKopSurat;
+        window.editKopSurat = editKopSurat;
+        window.deleteKopSurat = deleteKopSurat;
+        window.setKopSuratAktif = setKopSuratAktif;
+        window.savePejabat = savePejabat;
+        window.editPejabat = editPejabat;
+        window.deletePejabat = deletePejabat;
+        window.setPejabatAktif = setPejabatAktif;
+        window.openModalSpt = openModalSpt;
+        window.autoFillDasarDpa = autoFillDasarDpa;
+        window.calculateTglKembali = calculateTglKembali;
+        window.saveSpt = saveSpt;
+        window.editSpt = editSpt;
+        window.deleteSpt = deleteSpt;
+        window.printSpt = printSpt;
+        window.executePrintSpt = executePrintSpt;
+        window.setupExportWord = setupExportWord;
+        window.executeExportWord = executeExportWord;
+        window.printSppd = printSppd;
+        window.executePrintSppd = executePrintSppd;
+        window.printKuitansi = printKuitansi;
+        window.executePrintKuitansi = executePrintKuitansi;
+        window.editLaporan = editLaporan;
+        window.saveLaporan = saveLaporan;
+        window.renderTabelBku = renderTabelBku;
+        window.openPrintBkuModal = openPrintBkuModal;
+        window.executePrintBku = executePrintBku;
+        window.printLaporan = printLaporan;
+
     </script>
 </body>
 </html>
